@@ -46,7 +46,7 @@ let comments = loadData(commentsFile);
 let votes = loadData(votesFile);
 let files = loadData(filesFile);
 
-const ADMINPASSWORD = 'Shiro';
+const ADMINPASSWORD = process.env.ADMIN_PASSWORD || 'Shiro';
 
 const allowedTypes = [
   'application/pdf',
