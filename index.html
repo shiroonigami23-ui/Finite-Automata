@@ -1,1509 +1,1402 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Futuristic Advanced Quiz Helper</title>
-<style>
-  /* Custom fonts and base styles */
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
-
-  * {
-    box-sizing: border-box;
-  }
-  html, body {
-    margin: 0; padding: 0;
-    width: 100%; height: 100%;
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #2f335a, #4e54c8);
-    color: #222;
-    overflow-x: hidden;
-  }
-  #app {
-    background: #fbfbfb;
-    max-width: 1000px;
-    margin: 30px auto;
-    border-radius: 24px;
-    padding: 2rem 3rem 3rem 3rem;
-    box-shadow: 0 25px 50px rgba(40, 50, 75, 0.3);
-    min-height: 90vh;
-    display: flex;
-    flex-direction: column;
-  }
-  header {
-    font-weight: 600;
-    font-size: 2.5rem;
-    color: #222258;
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  nav {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 2.5rem;
-  }
-  nav button {
-    background: #4e54c8;
-    color: #fff;
-    border: none;
-    padding: 14px 28px;
-    font-size: 1.1rem;
-    border-radius: 12px;
-    box-shadow: 0 5px 12px rgba(78, 84, 200, 0.5);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  nav button.active, nav button:hover {
-    background: #1e1f9b;
-  }
-  main {
-    flex-grow: 1;
-    overflow-y: auto;
-  }
-
-  /* Login modal global styles */
-  #loginModal {
-    position: fixed;
-    top:0;
-    left:0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(58, 58, 90, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  #loginBox {
-    background: white;
-    padding: 2.5rem 3rem 3rem 3rem;
-    border-radius: 24px;
-    width: 360px;
-    box-shadow: 0 25px 45px rgba(40, 50, 75, 0.3);
-    text-align: center;
-  }
-  #loginBox h2 {
-    font-weight: 600;
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    color: #3d3d77;
-  }
-  #loginInput {
-    width: 100%;
-    padding: 12px 18px;
-    font-size: 1.1rem;
-    border-radius: 12px;
-    border: 2.2px solid #908fd3;
-    outline: none;
-    transition: border-color 0.3s ease;
-  }
-  #loginInput:focus {
-    border-color: #4e54c8;
-  }
-  #loginError {
-    color: #b00020;
-    margin: 10px 0 0 0;
-    font-weight: 600;
-    display: none;
-  }
-  #loginBtn {
-    margin-top: 1.6rem;
-    background: #4e54c8;
-    color: white;
-    border: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    padding: 14px 0;
-    width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 12px 20px rgba(78, 84, 200, 0.45);
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  #loginBtn:hover {
-    background: #363c92;
-  }
-
-  /* Teacher Dashboard */
-  #teacherDashboard {
-    display: flex;
-    flex-direction: column;
-  }
-  #addQuestionBtn {
-    align-self: flex-end;
-    margin-bottom: 1.8rem;
-    background-color: #4e54c8;
-    color: white;
-    border: none;
-    font-size: 1.05rem;
-    font-weight: 600;
-    padding: 12px 24px;
-    border-radius: 14px;
-    box-shadow: 0 9px 22px rgba(78, 84, 200, 0.5);
-    cursor: pointer;
-    transition: 0.25s all ease;
-  }
-  #addQuestionBtn:hover {
-    background-color: #3a3eb2;
-  }
-
-  /* Question card for teacher */
-  .question-card {
-    background: #f7f9ff;
-    border-radius: 20px;
-    padding: 2rem 2.5rem;
-    margin-bottom: 1.8rem;
-    box-shadow: 0 12px 30px rgba(78, 84, 200, 0.1);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 20px;
-    align-items: center;
-    position: relative;
-    transition: box-shadow 0.3s ease;
-  }
-  .question-card:hover {
-    box-shadow: 0 20px 40px rgba(78, 84, 200, 0.3);
-  }
-  .question-text-area {
-    grid-column: 1 / -1;
-    font-weight: 600;
-    font-size: 1.1rem;
-    background-color: #e4e8ff;
-    border-radius: 14px;
-    padding: 14px;
-    border: none;
-    resize: vertical;
-    font-family: 'Poppins', sans-serif;
-    min-height: 4.5rem;
-    color: #40477a;
-    transition: background-color 0.3s ease;
-  }
-  .question-text-area:focus {
-    outline: none;
-    background-color: #d0d4ff;
-  }
-
-  /* Option input styles */
-  .option-input {
-    background-color: #ebeefb;
-    border-radius: 16px;
-    padding: 12px 20px;
-    border: none;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #4a4f7a;
-    width: 100%;
-    transition: background-color 0.3s ease;
-  }
-  .option-input:focus {
-    outline: none;
-    background-color: #d0d4ff;
-  }
-
-  /* Correct answer radios */
-  .correct-answer-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .correct-answer-label input[type='radio'] {
-    height: 20px; width: 20px;
-    accent-color: #4e54c8;
-  }
-  .remove-question-btn {
-    position: absolute;
-    top: 16px;
-    right: 18px;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #bbb;
-    cursor: pointer;
-    transition: color 0.3s;
-  }
-  .remove-question-btn:hover {
-    color: #4e54c8;
-  }
-
-  /* Share link & export data */
-  #shareLinkWrapper {
-    background-color: #f0f4ff;
-    border: 2px solid #4e54c8;
-    padding: 16px 20px;
-    margin-top: 2rem;
-    border-radius: 16px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  #shareableLink {
-    flex-grow: 1;
-    background: white;
-    padding: 10px 16px;
-    border-radius: 14px;
-    border: 1.5px solid #bbc;
-    font-family: monospace;
-    font-size: 0.95rem;
-    color: #555;
-    overflow-x: auto;
-  }
-  #copyLinkBtn {
-    background-color: #4e54c8;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 14px;
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow:  0 8px 18px rgba(78, 84, 200, 0.3);
-    transition: background-color 0.2s ease;
-  }
-  #copyLinkBtn:hover {
-    background-color: #3a3eb3;
-  }
-</style>
+<meta charset="utf-8" />
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Finite Automata Practice — Enhanced Interactive Studio</title>
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>:root{--bg1:linear-gradient(135deg,#0f172a 0%, #0b1220 100%);--panel-bg: rgba(255,255,255,0.98);--accent1:#667eea;--accent2:#764ba2;--muted:#94a3b8;--success:#38a169;--danger:#e53e3e}*{box-sizing:border-box}html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg1);color:#0b1220;-webkit-font-smoothing:antialiased}.app-container{max-width:1400px;margin:12px auto;padding:18px;display:flex;flex-direction:column;gap:14px}.header {background:linear-gradient(90deg,var(--accent1),var(--accent2));padding:8px 14px;border-radius:12px;color:#fff;box-shadow:0 6px 20px rgba(2,6,23,0.4);display:flex;flex-direction:column;gap:4px}.main-content{display:grid;grid-template-columns: minmax(200px,260px) 1fr;gap:20px;align-items:start}@media(max-width:1024px){.main-content{grid-template-columns:1fr;grid-auto-rows:auto} .control-panel{position:relative;max-height:none} .visualization-panel{position:relative} #dfaSVG{min-width:auto;min-height:auto;width:100%;height:clamp(500px, 70vh, 700px)}}@media(max-width:768px){.app-container{padding:10px;margin:8px auto} .header{padding:10px} .control-panel{position:static;max-height:none;overflow:visible} .visualization-panel{position:static;max-height:none} .canvas-toolbar{flex-wrap:wrap}}@media(max-width:600px){.app-container{margin:4px;padding:6px} .header{font-size:0.9rem;padding:8px} .toolbar-icon{width:38px;height:38px} .canvas-toolbar .toolbar-icon{width:34px;height:34px} .section-title{font-size:0.95rem}}.control-panel{background:var(--panel-bg);border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(6px);max-height:calc(100vh - 160px);overflow:auto;position:sticky;top:20px}.section-title{font-size:1.05rem;margin-bottom:12px;color:#111827;display:flex;align-items:center;gap:10px}.icon-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid rgba(2,6,23,0.06);background:#fff;cursor:pointer;font-weight:600}.toolbar-icon{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:linear-gradient(180deg,#fff,#f7fafc);cursor:pointer;font-size:20px;transition: transform 0.2s, box-shadow 0.2s;}.toolbar-icon.active{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;box-shadow:0 6px 18px rgba(99,102,241,0.18);transform:translateY(-2px)}.toolbar-icon:hover {transform: scale(1.15);box-shadow: 0 4px 12px rgba(0,0,0,0.15);}.visualization-panel{background:var(--panel-bg);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 160px);overflow:hidden;position:sticky;top:20px}.canvas-wrapper{background:#fff;border-radius:12px;padding:12px;border:1px solid #e6eef8;flex:1;min-height:420px;display:flex;flex-direction:column}@media(max-width:768px){.canvas-wrapper{min-height:60vh}}.canvas-toolbar { display:flex;
+gap:8px; margin-bottom:8px; position: sticky; top: 0; z-index: 30; background: linear-gradient(180deg,#ffffff,#fbfdff); padding: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+border-bottom: 1px solid rgba(0,0,0,0.04); position: relative; }.canvas-area{flex:1;display:flex;gap:12px;align-items:flex-start;overflow:auto;}.svg-canvas{flex:1;min-height:360px;border-radius:10px;border:1px dashed #e6eef8;overflow:auto;padding:8px;background:linear-gradient(180deg,#ffffff,#fbfdff)}#dfaSVG{width:100%;height:650px;min-width:900px;min-height:540px;display:block}@media(max-width:768px){#dfaSVG{min-width:320px;width:100%;height:clamp(400px, 60vh, 600px);min-height:auto}}@media(max-width:600px){#dfaSVG{min-width:280px;width:100%;height:clamp(350px, 55vh, 500px);min-height:auto}}.zoom-controls{width:60px;display:flex;flex-direction:column;align-items:center;gap:10px}.zoom-controls button{all:unset;}.zoom-controls .toolbar-icon{width:40px;height:40px;margin:2px;}.test-panel{display:flex;gap:12px;align-items:center}.input{flex:1;display:flex;gap:8px}.input input{flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef8}.run-btn{padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;cursor:pointer;font-weight:700}.output-display{padding:12px;border-radius:10px;border:1px solid #eef2ff;background:linear-gradient(90deg,#f8fafc,#fff);font-weight:700;text-align:center}.state-circle{fill:#fff;stroke:var(--accent1);stroke-width:3;cursor:pointer}.state-label{font-weight:700;fill:#0b1220;text-anchor:middle;dominant-baseline:central;font-size:14px;pointer-events:none;}.transition-path{fill:none;stroke:var(--accent1);stroke-width:2;marker-end:url(#arrowhead)}.transition-label{font-weight:700;fill:#0b1220;text-anchor:middle;font-size:13px}.kv{font-size:13px;color:var(--muted)}.footer-note{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}.canvas-wrapper::-webkit-scrollbar{height:10px;width:10px}.canvas-wrapper::-webkit-scrollbar-thumb{background:linear-gradient(90deg,var(--accent1),var(--accent2));border-radius:10px}@keyframes pulseState {  0%   { stroke-width: 3;
+stroke: gold; }  50%  { stroke-width: 8; stroke: orange; }  100% { stroke-width: 3; stroke: gold;
+}}@keyframes pulseTransition {  0%   { stroke-width: 2; stroke: gold; }  50%  { stroke-width: 6;
+stroke: orange; }  100% { stroke-width: 2; stroke: gold; }}.state-animating {  animation-name: pulseState;  animation-timing-function: ease-in-out;
+animation-fill-mode: forwards;}.transition-animating {  animation-name: pulseTransition;  animation-timing-function: ease-in-out;  animation-fill-mode: forwards;}@keyframes drawState {  0%   { opacity: 0;
+transform: scale(0); }  60%  { opacity: 1; transform: scale(1.15); }  100% { opacity: 1; transform: scale(1);
+}}@keyframes drawTransition {  0%   { stroke-dashoffset: 1000; opacity: 0; }  100% { stroke-dashoffset: 0; opacity: 1;
+}}.state-drawing {  animation: drawState 0.6s ease-out forwards;  transform-origin: center;}.transition-drawing {  stroke-dasharray: 1000;
+animation: drawTransition 0.8s ease-out forwards;}.state-selected {  stroke: yellow !important;  stroke-width: 6 !important;
+filter: drop-shadow(0 0 6px gold);}.initial-arrow {  stroke: black !important;  stroke-width: 3 !important;  marker-end: url(#arrowhead);}#zoomSlider {  writing-mode: bt-lr;
+-webkit-appearance: slider-vertical;  width: 8px;  height: 120px;}.modal-overlay {  position: fixed;  inset: 0;  background: rgba(0,0,0,0.4);  display: flex;  align-items: center;  justify-content: center;
+z-index: 200;}.modal-box {  background: rgba(255, 255, 255, 0.95);  border-radius: 18px;  padding: 20px;  max-width: 360px;  width: 92%;  backdrop-filter: blur(10px) saturate(180%);
+box-shadow: 0 8px 28px rgba(0,0,0,0.4);  animation: modalPop 0.35s ease-out;  border: 1px solid rgba(255,255,255,0.2);}.modal-title {  font-weight: bold;
+margin-bottom: 8px;}.modal-actions {  display: flex;  gap: 8px;  justify-content: flex-end;}@keyframes popIn {  from { transform: scale(0.9); opacity:0;
+}  to { transform: scale(1); opacity:1; }}.modal-input {  width: 100%;  padding: 10px 12px;  border-radius: 12px;
+border: 2px solid rgba(102,126,234,0.5);  background: rgba(255,255,255,0.7);  font-size: 0.95rem;  margin-bottom: 14px;  transition: all 0.25s ease;}.modal-input:focus {  border-color: var(--accent1);  background: #f0f5ff;
+box-shadow: 0 0 8px rgba(102,126,234,0.5);  outline: none;}.header h1 {font-size:1.2rem;margin:0;}.header p { font-size: 0.9rem; margin: 2px 0 0 0;
+}.final-ring {  fill: none;  stroke: #ff9800;  stroke-width: 4;  filter: drop-shadow(0 0 8px rgba(255,152,0,0.7));
+vector-effect: non-scaling-stroke;}@keyframes finalGlow {  0%   { stroke-width: 3; stroke: #ff9800; filter: drop-shadow(0 0 4px rgba(255,152,0,0.6));
+}  50%  { stroke-width: 6; stroke: gold; filter: drop-shadow(0 0 12px rgba(255,215,0,0.9)); }  100% { stroke-width: 3;
+stroke: #ff9800; filter: drop-shadow(0 0 4px rgba(255,152,0,0.6)); }}@keyframes initialArrowPulse {  0%   { stroke-width: 2; stroke: dodgerblue;
+filter: drop-shadow(0 0 4px rgba(30,144,255,0.6)); }  50%  { stroke-width: 5; stroke: #00bfff; filter: drop-shadow(0 0 10px rgba(0,191,255,0.9));
+}  100% { stroke-width: 2; stroke: dodgerblue; filter: drop-shadow(0 0 4px rgba(30,144,255,0.6));
+}}@keyframes ripple {  0%   { r: 36; opacity: 0.7; stroke-width: 2;
+}  70%  { r: 50; opacity: 0; stroke-width: 1; }  100% { r: 50; opacity: 0;
+stroke-width: 1; }}.anim-final-ring {  animation: finalGlow 3s ease-in-out infinite;
+transform-origin: center;}.anim-initial-arrow {  animation: initialArrowPulse 2.5s ease-in-out infinite;}@keyframes finalInnerGlow {  0%   { stroke: var(--accent1);
+filter: drop-shadow(0 0 2px rgba(255,152,0,0.3)); }  50%  { stroke: var(--accent1); filter: drop-shadow(0 0 6px rgba(255,215,0,0.5));
+}  100% { stroke: var(--accent1); filter: drop-shadow(0 0 2px rgba(255,152,0,0.3));
+}}.anim-final-inner {  animation: finalInnerGlow 3s ease-in-out infinite;}.control-section { margin-top: 8px; }.control-row { display: flex; gap: 6px; margin: 4px 0;
+}.control-row button { flex: 1; padding: 6px; border-radius: 6px; border: none; background: var(--accent2); color: #fff; cursor: pointer;
+}.control-row button:hover { opacity: 0.85; }.validation-box {  background: linear-gradient(90deg,#ffffff,#f9fafc);  border: 1px solid #cbd5e1;  padding: 6px 10px;  border-radius: 8px;
+font-size: 13px;  color: #111827;  margin-left: 8px;  display: none;  transition: opacity 0.25s ease, transform 0.25s ease;}.validation-box.show {  display: inline-block;
+opacity: 1;  transform: translateY(0);}.validation-box.success {  border-color: #38a169;  color: #065f46;  background: #ecfdf5;}.validation-box.error {  border-color: #e53e3e;  color: #7f1d1d;
+background: #fef2f2;}#stepLog {  max-height: 10em;  overflow-y: auto;  border-radius: 8px;  padding: 8px 12px;  font-family: monospace;  font-size: 0.9em;
+background: linear-gradient(180deg, #1e293b, #0f172a);  color: #f8fafc;  box-shadow: inset 0 0 6px rgba(0,0,0,0.4);}#stepLog div {  padding: 4px 6px;
+border-bottom: 1px solid rgba(255,255,255,0.1);  display: flex;  align-items: center;  gap: 6px;  opacity: 0.9;}#stepLog div:last-child { border-bottom: none;
+}#stepLog i { color: #38bdf8; }button:disabled { opacity: 0.5; cursor: not-allowed;
+}@keyframes glowIn {  0%   { background: rgba(220,38,38,0.3); box-shadow: 0 0 10px rgba(220,38,38,0.9); color: #fca5a5;
+}  60%  { background: rgba(220,38,38,0.15); box-shadow: 0 0 5px rgba(220,38,38,0.6); color: #fecaca; }  100% { background: transparent;
+box-shadow: none; color: #f8fafc; }}#stepLog div.new-log {  animation: glowIn 1.4s ease-out;}@keyframes initialGlow {  0%   { stroke: skyblue;
+stroke-width: 3; opacity: 0.3; }  50%  { stroke: skyblue; stroke-width: 5; opacity: 0.8;
+}  100% { stroke: skyblue; stroke-width: 3; opacity: 0.3;
+}}.state-circle.initial-glow {  animation: initialGlow 2s infinite;}@keyframes initialStatePulse {  0%   { stroke: skyblue; stroke-width: 3;
+filter: drop-shadow(0 0 4px rgba(135,206,250,0.6)); }  50%  { stroke: deepskyblue; stroke-width: 6; filter: drop-shadow(0 0 12px rgba(30,144,255,0.9));
+}  100% { stroke: skyblue; stroke-width: 3; filter: drop-shadow(0 0 4px rgba(135,206,250,0.6));
+}}.state-circle.initial-pulse {  animation: initialStatePulse 2s ease-in-out infinite;}.modal-box h3 {  margin: 0 0 12px 0;  font-size: 1.25rem;  font-weight: 700;
+background: linear-gradient(90deg, var(--accent1), var(--accent2));  -webkit-background-clip: text;  -webkit-text-fill-color: transparent;}.modal-actions button {  padding: 8px 14px;  border-radius: 10px;  font-weight: 600;  border: none;
+cursor: pointer;  transition: all 0.25s ease;}.modal-actions button:first-child {  background: #e5e7eb;
+color: #111827;}.modal-actions button:first-child:hover {  background: #d1d5db;}.modal-actions button:last-child {  background: linear-gradient(90deg, var(--accent1), var(--accent2));
+color: #fff;}.modal-actions button:last-child:hover {  opacity: 0.9;  transform: scale(1.05);}@keyframes modalPop {  0% { transform: scale(0.85) translateY(20px); opacity: 0;
+}  100% { transform: scale(1) translateY(0); opacity: 1; }}</style>
 </head>
 <body>
-<div id="app">
-  <header>Futuristic Quiz Helper</header>
-  <nav>
-    <button id="teacherBtn" class="active">Teacher Dashboard</button>
-    <button id="studentBtn">Student Dashboard</button>
-  </nav>
-  <main>
-    <section id="teacherDashboard">
-      <button id="addQuestionBtn">+ Add New Question</button>
-      <div id="questionsList"></div>
-
-      <div id="shareLinkWrapper" style="display:none;">
-        <input type="text" id="shareableLink" readonly />
-        <button id="copyLinkBtn" title="Copy Link to Clipboard">Copy Link</button>
-      </div>
-
-      <h2 style="margin-top: 3rem;">Imported Student Submissions</h2>
-      <textarea id="studentSubmissionsInput" placeholder="Paste student JSON submissions here" spellcheck="false" style="width: 100%; min-height: 150px; font-family: monospace; font-size: 14px; padding: 12px;"></textarea>
-      <button id="checkSubmissionsBtn">Check & Grade Submissions</button>
-
-      <div id="gradingResults" style="margin-top: 2rem;"></div>
-    </section>
-
-    <section id="studentDashboard" class="hidden">
-      <label for="quizLinkInput" style="font-weight: bold; font-size: 1.1rem;">Paste Quiz Link or JSON here:</label>
-      <textarea id="quizLinkInput" placeholder="Paste full quiz JSON or link here..." spellcheck="false" style="width: 100%; height: 140px; font-family: monospace; font-size: 14px; padding: 12px; margin-bottom: 1rem;"></textarea>
-      <button id="loadQuizBtn">Load Quiz</button>
-
-      <div id="quizContainer" style="margin-top: 2rem;"></div>
-
-      <button id="submitQuizBtn" style="display:none; margin-top: 1.5rem;">Submit Quiz</button>
-
-      <div id="quizFeedback" style="margin-top: 1.8rem; font-weight: 600;"></div>
-    </section>
-  </main>
-</div>
-
-<!-- Teacher Login Modal -->
-<div id="loginModal" style="display:none;">
-  <div id="loginBox">
-    <h2>Teacher Login</h2>
-    <input id="loginInput" type="password" placeholder="Enter teacher password" autofocus autocomplete="new-password" />
-    <div id="loginError">Incorrect password</div>
-    <button id="loginButton">Login</button>
+<div id="splashScreen" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea,#764ba2);z-index:9999;flex-direction:column;gap:20px;color:#fff;transition:opacity 0.8s ease;">
+  <h1 style="font-size:3.5rem;margin:0;text-shadow:0 4px 12px rgba(0,0,0,0.4);">
+    Enhanced Studio
+  </h1>
+  <div style="display:flex; gap: 20px;">
+    <button class="splash-nav-btn" data-target="Automata" style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); cursor:pointer; font-weight:700; transition: background 0.3s;">
+      Finite Automata
+    </button>
+    <button class="splash-nav-btn" data-target="PDA" disabled style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.05); cursor:not-allowed; opacity:0.6; font-weight:700;">
+      PDA (Coming Soon)
+    </button>
+    <button class="splash-nav-btn" data-target="Turing" disabled style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.05); cursor:not-allowed; opacity:0.6; font-weight:700;">
+      Turing (Coming Soon)
+    </button>
   </div>
 </div>
-
-<script>
-  // Global backend URL placeholder
-  const API_BASE_URL = "http://REPLACE_WITH_YOUR_BACKEND_URL";
-
-  // Application scope and state
-  let teacherAuthenticated = false;
-  let questions = [];
-  let studentResponses = [];
-
-  // UI elements
-  const teacherBtn = document.getElementById('teacherBtn');
-  const studentBtn = document.getElementById('studentBtn');
-
-  const teacherDashboard = document.getElementById('teacherDashboard');
-  const studentDashboard = document.getElementById('studentDashboard');
-
-  const loginModal = document.getElementById('loginModal');
-  const loginInput = document.getElementById('loginInput');
-  const loginButton = document.getElementById('loginButton');
-  const loginError = document.getElementById('loginError');
-
-  const addQuestionBtn = document.getElementById('addQuestionBtn');
-  const questionsList = document.getElementById('questionsList');
-
-  const shareLinkWrapper = document.getElementById('shareLinkWrapper');
-  const shareableLink = document.getElementById('shareableLink');
-  const copyLinkBtn = document.getElementById('copyLinkBtn');
-
-  const studentSubmissionsInput = document.getElementById('studentSubmissionsInput');
-  const checkSubmissionsBtn = document.getElementById('checkSubmissionsBtn');
-  const gradingResults = document.getElementById('gradingResults');
-
-  const quizLinkInput = document.getElementById('quizLinkInput');
-  const loadQuizBtn = document.getElementById('loadQuizBtn');
-  const quizContainer = document.getElementById('quizContainer');
-  const submitQuizBtn = document.getElementById('submitQuizBtn');
-  const quizFeedback = document.getElementById('quizFeedback');
-
-  // Navigation event handlers
-  teacherBtn.addEventListener('click', async () => {
-    if (!teacherAuthenticated) {
-      // Show login modal
-      loginModal.style.display = 'flex';
-      loginInput.focus();
-    } else {
-      switchDashboard('teacher');
-    }
-  });
-
-  studentBtn.addEventListener('click', () => {
-    switchDashboard('student');
-  });
-
-  // Login button handler
-  loginButton.addEventListener('click', () => {
-    const pwd = loginInput.value;
-    if (pwd === 'teacherPassword123') {
-      teacherAuthenticated = true;
-      loginModal.style.display = 'none';
-      loginError.style.display = 'none';
-      loginInput.value = '';
-      switchDashboard('teacher');
-      renderQuestionsList();
-      shareLinkWrapper.style.display = 'none';
-      studentSubmissionsInput.value = '';
-      gradingResults.innerHTML = '';
-    } else {
-      loginError.style.display = 'block';
-    }
-  });
-
-  // Close login modal on outside click
-  loginModal.addEventListener('click', e => {
-    if (e.target === loginModal) {
-      loginModal.style.display = 'none';
-      loginInput.value = '';
-      loginError.style.display = 'none';
-    }
-  });
-
-  // Switch visible dashboard
-  function switchDashboard(mode) {
-    if (mode === 'teacher') {
-      teacherDashboard.style.display = 'block';
-      studentDashboard.style.display = 'none';
-      teacherBtn.classList.add('active');
-      studentBtn.classList.remove('active');
-    } else {
-      teacherDashboard.style.display = 'none';
-      studentDashboard.style.display = 'block';
-      teacherBtn.classList.remove('active');
-      studentBtn.classList.add('active');
-    }
-  }
-
-  // Question template creation for teacher
-  function createQuestionCard(id, question = '', options = ['', '', '', ''], correct = '') {
-    const card = document.createElement('div');
-    card.classList.add('question-card');
-    card.dataset.id = id;
-
-    card.innerHTML = `
-      <textarea class="question-text-area" placeholder="Enter question here..." rows="3"></textarea>
-      <input type="text" class="option-input" placeholder="Option A" />
-      <input type="text" class="option-input" placeholder="Option B" />
-      <input type="text" class="option-input" placeholder="Option C" />
-      <input type="text" class="option-input" placeholder="Option D" />
-      <div style="display:flex; align-items:center; justify-content: space-between; margin-top: 14px;">
-        <label class="correct-answer-label">
-          <input type="radio" name="correctAnswer${id}" value="0" />
-          Correct Option
-        </label>
-        <button class="remove-question-btn" title="Remove question">&times;</button>
+<div id="mainApp" style="display:none">
+  <div class="app-container" role="application" aria-label="Finite Automata Practice Studio">
+    <header class="header">
+      <h1>Finite Automata Practice — Enhanced Interactive Studio</h1>
+      <p>Create, validate, and test DFA, NFA, and ε-NFA with step-by-step animation and conversion modes</p>
+    </header>
+    <main class="main-content">
+      <aside class="control-panel" aria-label="Controls">
+        <div class="section-title">⚙️ Mode & Interaction</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <select id="modeSelect" aria-label="Mode select" style="flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef8">
+            <option value="DFA">DFA</option>
+            <option value="NFA">NFA</option>
+            <option value="ENFA">ε-NFA</option>
+            <option value="ENFA_TO_NFA">ε-NFA → NFA</option>
+            <option value="NFA_TO_DFA">NFA → DFA</option>
+            <option value="NFA_TO_MIN_DFA">NFA → Minimal DFA</option>
+            <option value="DFA_TO_MIN_DFA">DFA → Minimal DFA</option>
+          </select>
+        </div>
+        <details class="control-section" open>
+          <summary style="cursor:pointer;
+font-weight:600; color:#374151; background:linear-gradient(90deg,#fff,#f7fafc); padding:6px 8px; border-radius:8px;">🧩 Practice Generator</summary>
+          <div style="padding:8px 6px;">
+            <div style="margin-bottom:12px">
+              <div style="display:flex;gap:8px">
+                <select id="practiceMode" style="flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef8">
+                  <option value="basic">Basic</option>
+                  <option value="medium">Medium</option>
+                  <option value="easy">Easy</option>
+                  <option value="hard">Hard</option>
+                </select>
+                <button class="icon-btn" id="genPracticeBtn">Generate</button>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+                <button class="icon-btn" id="showSolBtn">Show Solution</button>
+                <button class="icon-btn" id="resetPractice">Reset</button>
+                <button class="icon-btn" id="checkAnswerBtn">Check Answer</button>
+              </div>
+              <div style="margin-top:10px;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #eef2ff;min-height:120px" id="practiceBox">No practice generated yet.</div>
+            </div>
+          </div>
+        </details>
+        <details class="control-section">
+          <summary style="cursor:pointer;
+font-weight:600; color:#374151; background:linear-gradient(90deg,#fff,#f7fafc); padding:6px 8px; border-radius:8px;">🧪 Testing</summary>
+          <div style="padding:8px 6px;">
+            <div class="controls-group">
+              <div class="test-panel">
+                <div class="input"><input id="testInput" placeholder="Enter string (e.g., abbab)" /></div>
+                <button id="runTestBtn" class="run-btn">Run</button>
+              </div>
+              <div id="randomStringBox" style="margin:6px 0; font-size:0.9em; background:linear-gradient(90deg,#fff,#f7fafc); padding:6px 8px; border-radius:8px;">
+                🎲 <button id="genRandBtn" class="icon-btn">Random</button>
+              </div>
+              <details id="testOptionsCollapse" style="margin:6px 0;
+font-size:0.9em;">
+                <summary style="cursor:pointer; font-weight:600; color:#374151; background:linear-gradient(90deg,#fff,#f7fafc);
+padding:6px 8px; border-radius:8px;">⚙️ Simulation Options</summary>
+                <div id="testOptions" style="padding:8px 6px;">
+                  <label style="margin-right:8px;"><input type="radio" name="simMode" value="auto" checked> Auto</label>
+                  <label style="margin-right:8px;"><input type="radio" name="simMode" value="manual"> Manual</label>
+                  <label style="display:inline-flex;align-items:center;gap:6px;">Speed:
+                    <select
+id="testSpeed" style="margin-left:6px;padding:6px;border-radius:6px;border:1px solid #e6eef8">
+                      <option value="500">Fast</option>
+                      <option value="1000">Normal</option>
+                      <option value="2000" selected>Slow</option>
+                    </select>
+                  </label>
+                  <div id="manualButtons" style="display:none;margin-top:8px;display:flex;gap:6px;">
+                    <button id="stepPrev" class="icon-btn">◀ Prev</button>
+                    <button id="stepNext" class="icon-btn">Next ▶</button>
+                    <button id="stepReset" class="icon-btn">⟲ Reset</button>
+                  </div>
+                </div>
+              </details>
+              <div style="margin-top:8px" id="testOutput" class="output-display">Ready</div>
+            </div>
+          </div>
+        </details>
+        <details class="control-section">
+          <summary style="cursor:pointer;
+font-weight:600; color:#374151; background:linear-gradient(90deg,#fff,#f7fafc); padding:6px 8px; border-radius:8px;">📁 File</summary>
+          <div class="control-row">
+            <button id="saveMachineBtn" title="Save machine (JSON)">💾 Save</button>
+            <button id="loadMachineBtn" title="Load machine (JSON)">📂 Load</button>
+          </div>
+          <div class="control-row">
+            <button id="exportPngBtn" title="Export canvas as PNG">🖼️ Export PNG</button>
+          </div>
+          <input type="file" id="loadFileInput" accept=".json" style="display:none"/>
+        </details>
+      </aside>
+      <section class="visualization-panel" aria-label="Visualization">
+        <div class="visualization-header" style="display:flex;align-items:center;gap:12px;">
+          <div style="flex:1"><strong>Automata Visualization</strong><div class="kv">Mode: <span id="modeLabel">DFA</span></div></div>
+        </div>
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <div class="canvas-top">
+            <div class="canvas-toolbar" role="toolbar" aria-label="Canvas toolbar">
+              <div class="toolbar-icon" id="tool-addclick" title="Add state on canvas click" data-mode="addclick"><i data-lucide="plus-circle" style="color:#4caf50"></i></div>
+              <div class="toolbar-icon" id="tool-move" title="Move states" data-mode="move"><i data-lucide="move" style="color:#2196f3"></i></div>
+              <div class="toolbar-icon" id="tool-transition" title="Add transition" data-mode="transition"><i data-lucide="git-branch" style="color:#9c27b0"></i></div>
+              <div class="toolbar-icon" id="tool-rename" title="Rename state" data-mode="rename"><i data-lucide="edit-3" style="color:#009688"></i></div>
+              <div class="toolbar-icon" id="tool-delete" title="Delete state/transition" data-mode="delete"><i data-lucide="trash-2" style="color:#f44336"></i></div>
+              <div class="toolbar-icon" id="tool-stateprops" title="Set state properties" data-mode="stateprops"><i data-lucide="settings" style="color:#607d8b"></i></div>
+              <button id="validateBtn" class="toolbar-icon" title="Validate Automaton" style="margin-left:8px"><i data-lucide="check-circle"></i></button>
+              <div id="validationLine" class="validation-box"></div>
+              <button id="undoBtn" class="toolbar-icon" title="Undo" style="margin-left:auto"><i data-lucide="corner-up-left"></i></button>
+              <button id="redoBtn" class="toolbar-icon" title="Redo"><i data-lucide="corner-up-right"></i></button>
+            </div>
+          </div>
+          <div class="canvas-area">
+            <div class="svg-canvas" id="svgWrapper" tabindex="0">
+              <svg id="dfaSVG" viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Automaton canvas">
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#667eea" />
+                  </marker>
+                  <marker id="arrowhead-export" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#000000" />
+                  </marker>
+                </defs>
+                <g id="edges"></g>
+                <g id="states"></g>
+                <text id="canvasHint" x="700" y="420" text-anchor="middle" fill="#9aa6b2" font-size="18">Tap canvas to add a state (use ➕ tool)</text>
+              </svg>
+            </div>
+            <div
+class="zoom-controls">
+              <button id="zoomInBtn" class="toolbar-icon" title="Zoom In"><i data-lucide="zoom-in"></i></button>
+              <input id="zoomSlider" type="range" min="50" max="200" value="100" />
+              <button id="zoomOutBtn" class="toolbar-icon" title="Zoom Out"><i data-lucide="zoom-out"></i></button>
+              <button id="zoomResetBtn" class="toolbar-icon" title="Reset Zoom"><i data-lucide="refresh-ccw"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div style="max-width:1400px;margin:8px auto 0 auto;padding:0 18px;">
+      <div style="display:flex;gap:12px;align-items:center;margin-top:8px">
+        <div style="flex:1" id="stepLog">Step log appears here.</div>
       </div>
-    `;
+    </div>
+  </div>
+  <div id="transitionModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <h3>Add Transition</h3>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="transFrom" class="modal-input" placeholder="from (q0)" readonly />
+        <input id="transTo" class="modal-input" placeholder="to (q1)" readonly />
+      </div>
+      <input id="transSymbol" class="modal-input" placeholder="symbol (blank for ε)" />
+      <div class="modal-actions">
+        <button id="transCancel">Cancel</button>
+        <button id="transSave">Save</button>
+      </div>
+    </div>
+  </div>
+  <div id="statePropsModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <h3>State Properties</h3>
+      <label><input type="checkbox" id="propInitial"> Initial</label>
+      <label><input type="checkbox" id="propFinal"> Final</label>
+      <div class="modal-actions">
+        <button id="propCancel">Cancel</button>
+        <button id="propSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // === MAIN APPLICATION SCRIPT ===
+document.addEventListener("DOMContentLoaded", () => {
+// --- ELEMENT REFERENCES ---
+const svg = document.getElementById('dfaSVG');
+const statesGroup = document.getElementById('states');
+const edgesGroup = document.getElementById('edges');
+const testOutput = document.getElementById('testOutput');
+const testInput = document.getElementById('testInput');
+const practiceBox = document.getElementById('practiceBox');
+const genPracticeBtn = document.getElementById('genPracticeBtn');
+const showSolBtn = document.getElementById('showSolBtn');
+const resetPractice = document.getElementById('resetPractice');
+const checkAnswerBtn =
+document.getElementById('checkAnswerBtn');
+const runTestBtn = document.getElementById('runTestBtn');
+const validateBtn = document.getElementById('validateBtn');
+const exportBtn = document.getElementById('exportPngBtn');
+const modeSelect = document.getElementById('modeSelect');
+const undoBtn = document.getElementById('undoBtn');
+const redoBtn = document.getElementById('redoBtn');
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomResetBtn = document.getElementById('zoomResetBtn');
+const genRandBtn = document.getElementById("genRandBtn");
+const stepNextBtn = document.getElementById("stepNext");
+const stepPrevBtn = document.getElementById("stepPrev");
+const stepResetBtn = document.getElementById("stepReset");
+const saveMachineBtn = document.getElementById("saveMachineBtn");
+const loadMachineBtn = document.getElementById("loadMachineBtn");
+const loadFileInput = document.getElementById("loadFileInput");
+const validationLine = document.getElementById('validationLine');
 
-    // Fill values
-    const textarea = card.querySelector('.question-text-area');
-    const optionInputs = card.querySelectorAll('.option-input');
-    const correctRadios = card.querySelectorAll(`input[name="correctAnswer${id}"]`);
-    textarea.value = question;
-    optionInputs.forEach((inp, idx) => { inp.value = options[idx]; });
-    if (['0','1','2','3'].includes(correct)) {
-      correctRadios[correct].checked = true;
+// --- APPLICATION STATE ---
+let MACHINE = {
+  type: 'DFA',
+  states: [],
+  transitions: [],
+  alphabet: []
+};
+let UNDO_STACK = [];
+let REDO_STACK = [];
+let CURRENT_MODE = 'addclick';
+let TRANS_FROM = null;
+let SELECTED_STATE = null;
+let CURRENT_PRACTICE = null;
+let simSteps = [], simIndex = 0, simTimer = null;
+
+// --- PRACTICE
+// Data bank structure with more comprehensive content. (See Chunk 2 for full data)
+const PRACTICE_BANK = { /* ... full data in next chunk ... */ };
+
+// --- CORE FUNCTIONS ---
+
+// ... (Functions start here in the next chunk)
+       // ... (Continued from Chunk 1)
+
+// --- PRACTICE
+// Data bank structure with 30+ questions total
+const PRACTICE_BANK = {
+  DFA: {
+    easy: [
+      { q: 'DFA accepting strings starting with "1"', sol: '3 states: q0(start), q1(accept), q2(trap)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 300, initial: false, accepting: true }, { id: 'q2', x: 700, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q1', symbol: '1' }, { from: 'q0', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q2', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '1' }], alphabet: ['0', '1'] } },
+      { q: 'DFA accepting only the string "01"', sol: '4 states: q0->q1->q2(accept)->q3(trap)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 450, y: 300, initial: false, accepting: false }, { id: 'q2', x: 600, y: 300, initial: false, accepting: true }, { id: 'q3', x: 750, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q1', symbol: '0' }, { from: 'q0', to: 'q3', symbol: '1' }, { from: 'q1', to: 'q3', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q2', to: 'q3', symbol: '0' }, { from: 'q2', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q3', symbol: '0' }, { from: 'q3', to: 'q3', symbol: '1' }], alphabet: ['0', '1'] } },
+      { q: 'DFA accepting strings containing no "00"', sol: '3 states: q0(start/safe), q1(seen 0), q2(trap)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: true }, { id: 'q1', x: 500, y: 300, initial: false, accepting: true }, { id: 'q2', x: 700, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q0', symbol: '1' }, { from: 'q0', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q0', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '1' }], alphabet: ['0', '1'] } }
+    ],
+    basic: [
+      { q: 'DFA accepting strings ending with "01"', sol: '3 states: q0 (start), q1 (ends with 0), q2 (accepting, ends with 01)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 300, initial: false, accepting: false }, { id: 'q2', x: 700, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q1', symbol: '0' }, { from: 'q0', to: 'q0', symbol: '1' }, { from: 'q1', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q2', to: 'q1', symbol: '0' }, { from: 'q2', to: 'q0', symbol: '1' }], alphabet: ['0', '1'] } },
+      { q: 'DFA accepting strings with even number of 1s', sol: '2 states: q0 (start/even, accept), q1 (odd)', machine: { states: [{ id: 'q0', x: 400, y: 300, initial: true, accepting: true }, { id: 'q1', x: 600, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q0', symbol: '1' }], alphabet: ['0', '1'] } },
+      { q: 'DFA for $\Sigma^* \cdot 1$', sol: '2 states: q0 (start), q1 (accept), always looking for final 1', machine: { states: [{ id: 'q0', x: 400, y: 300, initial: true, accepting: false }, { id: 'q1', x: 600, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q0', symbol: '0' }], alphabet: ['0', '1'] } }
+    ],
+    medium: [
+      { q: 'DFA accepting strings where the number of 0s is divisible by 3', sol: 'Three states representing mod 3 counts: q0(mod 0, accept), q1(mod 1), q2(mod 2)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: true }, { id: 'q1', x: 500, y: 300, initial: false, accepting: false }, { id: 'q2', x: 700, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q1', symbol: '0' }, { from: 'q0', to: 'q0', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q2', to: 'q0', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '1' }], alphabet: ['0', '1'] } },
+      { q: 'DFA for strings containing "101" as a substring', sol: '4 states: q0(start), q1(seen 1), q2(seen 10), q3(accept)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 450, y: 300, initial: false, accepting: false }, { id: 'q2', x: 600, y: 300, initial: false, accepting: false }, { id: 'q3', x: 750, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q2', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q3', symbol: '0' }, { from: 'q3', to: 'q3', symbol: '1' }], alphabet: ['0', '1'] } },
+      { q: 'DFA for strings of length $\geq 3$ with the third-to-last symbol being 1', sol: '4 states to track last 3 symbols', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 450, y: 300, initial: false, accepting: false }, { id: 'q2', x: 600, y: 300, initial: false, accepting: false }, { id: 'q3', x: 750, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q2', to: 'q3', symbol: '0' }, { from: 'q2', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q3', symbol: '0' }, { from: 'q3', to: 'q3', symbol: '1' }], alphabet: ['0', '1'] } }
+    ],
+    hard: [
+      { q: 'DFA that accepts strings whose binary value is divisible by 5', sol: '5 states for mod 5, $\Sigma=\{0, 1\}$', machine: {} },
+      { q: 'DFA for strings that start and end with the same symbol ($\Sigma=\{a, b\}$)', sol: '6 states required', machine: {} },
+      { q: 'DFA for $(ab)^n$ OR $(ba)^n$ for $n \geq 1$', sol: '5 states required', machine: {} }
+    ]
+  },
+  NFA: {
+    easy: [
+      { q: 'NFA for strings containing "ab"', sol: '3 states, non-deterministic jump on "a"', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 300, initial: false, accepting: false }, { id: 'q2', x: 700, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: 'a' }, { from: 'q0', to: 'q0', symbol: 'b' }, { from: 'q0', to: 'q1', symbol: 'a' }, { from: 'q1', to: 'q2', symbol: 'b' }, { from: 'q2', to: 'q2', symbol: 'a' }, { from: 'q2', to: 'q2', symbol: 'b' }], alphabet: ['a', 'b'] } },
+      { q: 'NFA for strings ending with "01" OR "10"', sol: '5 states, with non-determinism at start', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 200, initial: false, accepting: false }, { id: 'q2', x: 700, y: 200, initial: false, accepting: true }, { id: 'q3', x: 500, y: 400, initial: false, accepting: false }, { id: 'q4', x: 700, y: 400, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q0', symbol: '1' }, { from: 'q0', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q0', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q4', symbol: '0' }], alphabet: ['0', '1'] } },
+      { q: 'NFA for $\Sigma^* \cdot 1 \cdot \Sigma$', sol: '4 states, accepting strings where the second-to-last symbol is 1', machine: {} }
+    ],
+    basic: [
+      { q: 'NFA for $(00)^* \cup (11)^*$ ($\Sigma=\{0, 1\}$)', sol: '5 states, non-deterministic choice from start', machine: {} },
+      { q: 'NFA for strings where the fourth symbol from the end is "a"', sol: '5 states in a line', machine: {} }
+    ],
+    medium: [
+      { q: 'NFA for strings containing exactly two "1"s', sol: '3 states, path through 1, 1', machine: {} }
+    ],
+    hard: [
+      { q: 'NFA for all strings except $\epsilon$', sol: '2 states, loops at start, jumps on a, b to accept', machine: {} }
+    ]
+  },
+  ENFA: {
+    easy: [
+      { q: 'ε-NFA to connect two paths: $(a) \cup (b)$', sol: '3 states, ε from start to two parallel paths', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 200, initial: false, accepting: true }, { id: 'q2', x: 500, y: 400, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q1', symbol: 'ε' }, { from: 'q0', to: 'q2', symbol: 'ε' }, { from: 'q1', to: 'q1', symbol: 'a' }, { from: 'q2', to: 'q2', symbol: 'b' }], alphabet: ['a', 'b'] } },
+      { q: 'ε-NFA for $a?b$ (optional a, then b)', sol: '3 states, ε skip for "a"', machine: {} }
+    ],
+    basic: [
+      { q: 'ε-NFA to achieve $a^*b$', sol: 'Connect loop on $a$ to $b$ with ε', machine: {} }
+    ],
+    medium: [
+      { q: 'ε-NFA equivalent to Regular Expression $(0|1)^* 0$', sol: '6 states, standard RE construction', machine: {} }
+    ],
+    hard: [
+      { q: 'ε-NFA for Regular Expression $(a|b)^* \cdot (a \cdot a \cup b \cdot b)$', sol: 'Complex RE construction', machine: {} }
+    ]
+  }
+};
+// END PRACTICE DATA BANK
+
+function enforceInitialStateRule() {
+  // Enforce DFA rule: only one initial state
+  if (MACHINE.type === 'DFA' || MACHINE.type.includes('DFA')) {
+    const initialStates = MACHINE.states.filter(s => s.initial);
+    if (initialStates.length > 1) {
+      initialStates.slice(1).forEach(s => s.initial = false);
     }
-
-    // Remove button
-    card.querySelector('.remove-question-btn').addEventListener('click', () => {
-      questions.splice(id, 1);
-      renderQuestionsList();
-      shareLinkWrapper.style.display = 'none';
-    });
-
-    return card;
   }
-
-  // Render questions list in teacher dashboard
-  function renderQuestionsList() {
-    questionsList.innerHTML = '';
-    questions.forEach((q, i) => {
-      const card = createQuestionCard(i, q.question, q.options, q.correct);
-      questionsList.appendChild(card);
-    });
+  // Ensure at least one state is initial if any exist
+  if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
+    MACHINE.states[0].initial = true;
   }
+}
 
-  // Add question button logic
-  addQuestionBtn.addEventListener('click', () => {
-    questions.push({question: '', options: ['', '', '', ''], correct: ''});
-    renderQuestionsList();
-  });
-
-  // Generate shareable quiz JSON and URL
-  const encodeQuizToUrl = (quiz) => {
-    const data = encodeURIComponent(JSON.stringify(quiz));
-    return `${window.location.origin}${window.location.pathname}#quiz=${data}`;
+function getLoopPathAndLabel(cx, cy, r) {
+  const loopRadius = 35;
+  return {
+    pathData: `M ${cx} ${cy - r} C ${cx - loopRadius} ${cy - r - loopRadius}, ${cx + loopRadius} ${cy - r - loopRadius}, ${cx} ${cy - r}`,
+    labelX: cx,
+    labelY: cy - r - (loopRadius / 2) - 10
   };
-  const decodeQuizFromUrl = () => {
-    if(!window.location.hash.startsWith('#quiz=')) return null;
-    try {
-      const json = decodeURIComponent(window.location.hash.replace('#quiz=', ''));
-      return JSON.parse(json);
-    } catch(e) {
-      return null;
+}
+
+function renderAll() {
+  statesGroup.innerHTML = '';
+  edgesGroup.innerHTML = '';
+  if (!MACHINE.states || MACHINE.states.length === 0) {
+    document.getElementById('canvasHint').style.display = 'block';
+    return;
+  }
+  document.getElementById('canvasHint').style.display = 'none';
+
+  // FIX: Use a Set to prevent rendering labels for the same arc multiple times
+  const processedArcs = new Set();
+  MACHINE.transitions.forEach((t, i) => {
+    const from = MACHINE.states.find(s => s.id === t.from);
+    const to = MACHINE.states.find(s => s.id === t.to);
+    if (!from || !to) return;
+    const arcKey = `${t.from}->${t.to}`;
+    if (processedArcs.has(arcKey)) return;
+    processedArcs.add(arcKey);
+
+    let pathD, labelX, labelY;
+
+    if (t.from === t.to) {
+      const loop = getLoopPathAndLabel(from.x, from.y, 30);
+      pathD = loop.pathData;
+      labelX =
+        loop.labelX;
+      labelY = loop.labelY;
+    } else {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const angle = Math.atan2(dy, dx);
+      const r = 30;
+      const startX = from.x + r * Math.cos(angle);
+      const startY = from.y + r * Math.sin(angle);
+      const endX = to.x - r * Math.cos(angle);
+      const endY = to.y - r * Math.sin(angle);
+
+      const reverse = MACHINE.transitions.some(
+        (other) => other.from === t.to && other.to === t.from
+      );
+      if (reverse) {
+        const offset = 40;
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        const normX = -dy / Math.hypot(dx, dy);
+        const normY = dx / Math.hypot(dx, dy);
+        const cpx = midX + normX * offset;
+        const cpy = midY + normY * offset;
+        pathD = `M ${startX} ${startY} Q ${cpx} ${cpy} ${endX} ${endY}`;
+        labelX = cpx;
+        labelY = cpy;
+      } else {
+        pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
+        labelX = (startX + endX) / 2;
+        labelY = (startY + endY) / 2;
+      }
     }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', pathD);
+    path.classList.add('transition-path');
+    path.setAttribute('data-from', t.from);
+    path.setAttribute('data-to', t.to);
+    edgesGroup.appendChild(path);
+
+    path.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (CURRENT_MODE === 'delete') {
+        // Deleting an arc deletes all transitions on it
+        pushUndo();
+        MACHINE.transitions = MACHINE.transitions.filter(trans => trans.from !== t.from || trans.to !== t.to);
+        renderAll();
+      }
+    });
+    const arcSymbols = MACHINE.transitions
+      .filter(tt => tt.from === t.from && tt.to === t.to)
+      .map(tt => (tt.symbol === '' || tt.symbol === undefined) ? 'ε' : tt.symbol);
+
+    // FIX: Condense symbols into comma-separated list
+    const uniqueSymbols = [...new Set(arcSymbols)];
+    const symbols = [uniqueSymbols.join(', ')]; // Only one symbol line for rendering
+
+    const spacing = 14;
+    const dxEdge = to.x - from.x;
+    const dyEdge = to.y - from.y;
+    const lenEdge = Math.hypot(dxEdge, dyEdge) || 1;
+    const nx = -dyEdge / lenEdge;
+    const ny = dxEdge / lenEdge;
+    const startOffset = -((symbols.length - 1) / 2) * spacing;
+
+    symbols.forEach((sym, idx) => {
+      const offset = startOffset + idx * spacing;
+      const tx = labelX + nx * offset;
+      const ty = labelY + ny * offset;
+      const text = document.createElementNS(svg.namespaceURI, 'text');
+      text.setAttribute('class', 'transition-label');
+      text.setAttribute('x', tx);
+      text.setAttribute('y', ty);
+      text.setAttribute('data-from', t.from);
+
+      text.setAttribute('data-to', t.to);
+      text.textContent = sym;
+      edgesGroup.appendChild(text);
+    });
+  });
+
+  // Render states
+  MACHINE.states.forEach(state => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('data-id', state.id);
+
+    if (state.initial) {
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      arrow.setAttribute('x1', state.x - 60);
+      arrow.setAttribute('y1', state.y);
+      arrow.setAttribute('x2', state.x - 32);
+      arrow.setAttribute('y2', state.y);
+      arrow.classList.add('initial-arrow', 'anim-initial-arrow');
+      g.appendChild(arrow);
+    }
+
+    const circle =
+      document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', state.x);
+    circle.setAttribute('cy', state.y);
+    circle.setAttribute('r', 30);
+    circle.classList.add('state-circle');
+    circle.setAttribute('data-id', state.id);
+    if (state.initial) circle.classList.add('initial-pulse');
+    g.appendChild(circle);
+
+    if (state.accepting) {
+      const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      innerCircle.setAttribute('cx', state.x);
+      innerCircle.setAttribute('cy', state.y);
+      innerCircle.setAttribute('r', 24);
+      innerCircle.classList.add('final-ring', 'anim-final-ring');
+      g.appendChild(innerCircle);
+    }
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', state.x);
+    text.setAttribute('y', state.y);
+    text.classList.add('state-label');
+    text.textContent = state.id;
+    g.appendChild(text);
+
+    g.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (CURRENT_MODE === 'transition') {
+        if (!TRANS_FROM) {
+          TRANS_FROM = state.id;
+          SELECTED_STATE = state.id;
+          circle.classList.add('state-selected');
+        } else {
+          showTransModal(TRANS_FROM, state.id);
+          document.querySelectorAll('.state-circle').forEach(c => c.classList.remove('state-selected'));
+          TRANS_FROM = null;
+          SELECTED_STATE = null;
+        }
+      } else if (CURRENT_MODE === 'delete') {
+        deleteState(state.id);
+      } else if (CURRENT_MODE === 'rename') {
+        renameState(state.id);
+      } else if (CURRENT_MODE === 'stateprops') {
+        openPropsModal(state.id);
+      }
+    });
+
+    statesGroup.appendChild(g);
+  });
+
+  document.getElementById('modeLabel').textContent = getModeLabel();
+  updateUndoRedoButtons();
+}
+
+function getModeLabel() {
+  const val = modeSelect.value;
+  const labels = {
+    'DFA': 'DFA', 'NFA': 'NFA', 'ENFA': 'ε-NFA',
+    'ENFA_TO_NFA': 'ε-NFA → NFA (Conversion)',
+    'NFA_TO_DFA': 'NFA → DFA (Conversion)',
+    'NFA_TO_MIN_DFA': 'NFA → Minimal DFA (Conversion)',
+    'DFA_TO_MIN_DFA': 'DFA → Minimal DFA (Conversion)'
   };
+  return labels[val] || val;
+}
 
-  // Extract quiz data from teacher inputs
-  function extractQuizData() {
-    const cards = questionsList.querySelectorAll('.question-card');
-    const quizData = [];
-    cards.forEach(card => {
-      const questionTxt = card.querySelector('.question-text-area').value.trim();
-      const optionInputs = card.querySelectorAll('.option-input');
-      const options = Array.from(optionInputs).map(input => input.value.trim());
-      const correctRadio = card.querySelector('input[type="radio"]:checked');
-      if(questionTxt && options.every(op => op) && correctRadio) {
-        quizData.push({
-          question: questionTxt,
-          options: options,
-          correct: correctRadio.value,
-        });
-      }
-    });
-    return quizData;
-  }
+function layoutStatesLine(states) {
+  if (!states || states.length === 0) return;
+  const canvasWidth = 1400;
+  const canvasHeight = 900;
+  const marginX = 100; const marginY = 100;
+  const spacingX = 160; const spacingY = 120;
 
-  // Button click to generate share link and show in UI
-  function generateShareLink() {
-    questions = extractQuizData();
-    if(questions.length === 0) {
-      alert('Please enter at least one valid question with all options and a correct answer.');
-      return;
-    }
-    // Convert correct from '0','1','2','3' string to corresponding char 'A' 'B' 'C' 'D'
-    questions = questions.map(q => ({
-      question: q.question,
-      options: q.options,
-      correct: ['A','B','C','D'][q.correct] ?? '',
-    }));
-    const url = encodeQuizToUrl(questions);
-    shareableLink.value = url;
-    shareLinkWrapper.style.display = 'flex';
-  }
+  const perRow = Math.max(1, Math.floor((canvasWidth - marginX * 2) / spacingX));
 
-  // Copy shareable quiz link to clipboard
-  copyLinkBtn.addEventListener('click', () => {
-    shareableLink.select();
-    document.execCommand('copy');
-    copyLinkBtn.textContent = 'Copied!';
-    setTimeout(() => {
-      copyLinkBtn.textContent = 'Copy Link';
-    }, 2500);
+  states.forEach((s, i) => {
+    const row = Math.floor(i / perRow);
+    const col = i % perRow;
+    s.x = marginX + col * spacingX;
+    s.y = marginY + row * spacingY;
+    if (row % 2 === 1) s.y += 40;
   });
-
-  // Check and score student submissions JSON pasted in textarea
-  checkSubmissionsBtn.addEventListener('click', () => {
-    const rawData = studentSubmissionsInput.value.trim();
-    if (!rawData) {
-      alert('Please paste the student submission JSON data before checking.');
-      return;
-    }
-
-    let submissions;
-    try {
-      submissions = JSON.parse(rawData);
-    } catch (e) {
-      alert('Invalid JSON data. Please check and try again.');
-      return;
-    }
-
-    if (!Array.isArray(submissions)) {
-      alert('Student submissions should be an array of submission objects.');
-      return;
-    }
-
-    // For each submission check answers and compute score
-    let resultsHTML = '';
-
-    for (const submission of submissions) {
-      if (!submission.answers || !Array.isArray(submission.answers)) {
-        resultsHTML += `<p style="color: red;">Invalid submission format, skipping one submission.</p>`;
-        continue;
-      }
-
-      let score = 0;
-      const total = questions.length;
-      const answers = submission.answers;
-
-      resultsHTML += `<div style="margin-top: 16px; border-bottom: 2px solid #4e54c8; padding-bottom: 16px;">
-        <h3>Submission <small style="font-weight: 400; font-size: 14px; color: #666;">${submission.studentName || 'Student'}</small></h3>`;
-      for(let i=0; i<questions.length; i++) {
-        const q = questions[i];
-        const ans = answers[i] ?? null;
-        const isCorrect = ans === q.correct;
-        if(isCorrect) score++;
-
-        resultsHTML += `
-          <div style="margin-top: 8px;">
-            <strong>Q${i+1}:</strong> ${q.question}<br />
-            <em>Your answer:</em>
-            <span style="color: ${isCorrect ? '#2e7d32' : '#b00020'}; font-weight: 600;">
-              ${ans ?? 'No answer'}
-            </span><br />
-            <em>Correct answer:</em> <span>${q.correct}</span>
-          </div>`;
-      }
-      resultsHTML += `<h4 style="color: #222258; margin-top: 12px;">Score: ${score} / ${total}</h4></div>`;
-    }
-    gradingResults.innerHTML = resultsHTML;
-  });
-
-  // Student side quiz rendering and interaction
-  function renderStudentQuiz(quiz = []) {
-    if (!quiz.length) {
-      quizContainer.innerHTML = '<p>No quiz loaded. Please paste a valid quiz link or data.</p>';
-      submitQuizBtn.style.display = 'none';
-      quizFeedback.textContent = '';
-      return;
-    }
-    quizContainer.innerHTML = '';
-
-    // Store answers locally
-    let studentAnswers = new Array(quiz.length).fill(null);
-
-    // Create question elements with radio buttons
-    quiz.forEach((q, i) => {
-      const card = document.createElement('article');
-      card.classList.add('question-card');
-      card.style.gridTemplateColumns = "1fr";
-      card.style.marginBottom = "1.8rem";
-
-      const qTitle = document.createElement('h3');
-      qTitle.textContent = `Q${i + 1}: ${q.question}`;
-      qTitle.style.color = '#4e54c8';
-      card.appendChild(qTitle);
-
-      const optionsDiv = document.createElement('div');
-
-      ['A', 'B', 'C', 'D'].forEach((opt, idx) => {
-        const label = document.createElement('label');
-        label.style.display = 'block';
-        label.style.marginBottom = '8px';
-        label.style.cursor = 'pointer';
-
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = `answer-${i}`;
-        radio.value = opt;
-        radio.style.marginRight = '10px';
-
-        radio.addEventListener('change', () => {
-          studentAnswers[i] = radio.value;
-        });
-
-        label.appendChild(radio);
-        label.appendChild(document.createTextNode(`${opt}: ${q.options[idx]}`));
-        optionsDiv.appendChild(label);
-      });
-
-      card.appendChild(optionsDiv);
-      quizContainer.appendChild(card);
-    });
-
-    submitQuizBtn.style.display = 'block';
-quizFeedback.textContent = '';
-
-// Submit button handler
-submitQuizBtn.onclick = () => {
-  if (studentAnswers.includes(null)) {
-    if (!confirm('Some questions are unanswered. Submit anyway?')) return;
-  }
-  // Create result data object to share with teacher
-  const submission = {
-    studentName: 'Anonymous',
-    timestamp: new Date().toISOString(),
-    answers: studentAnswers,
-  };
-  const submissionJson = JSON.stringify([submission], null, 2);
-
-  quizFeedback.innerHTML = `
-    <h3>Quiz Submitted!</h3>
-    <p>Copy and send this submission JSON to your teacher:</p>
-    <textarea style="width: 100%; height: 160px; font-family: monospace;" readonly>${submissionJson}</textarea>
-  `;
-  submitQuizBtn.style.display = 'none';
-  quizContainer.innerHTML = '';
-};
-
-// Drag & drop question reordering (using Drag and Drop API)
-function enableDragDrop() {
-  let dragSrcEl = null;
-
-  function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.outerHTML);
-    this.classList.add('dragging');
-  }
-
-  function handleDragOver(e) {
-    if (e.preventDefault) e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    return false;
-  }
-
-  function handleDragEnter(e) {
-    this.classList.add('over');
-  }
-
-  function handleDragLeave(e) {
-    this.classList.remove('over');
-  }
-
-  function handleDrop(e) {
-    if (e.stopPropagation) e.stopPropagation();
-
-    if (dragSrcEl != this) {
-      this.parentNode.removeChild(dragSrcEl);
-      const dropHTML = e.dataTransfer.getData('text/html');
-      this.insertAdjacentHTML('beforebegin', dropHTML);
-      const dropElem = this.previousSibling;
-      addDnDHandlers(dropElem);
-      updateQuestionsOrder();
-    }
-    this.classList.remove('over');
-    return false;
-  }
-
-  function handleDragEnd(e) {
-    this.classList.remove('dragging');
-    const cards = questionsList.querySelectorAll('.question-card');
-    cards.forEach(card => {
-      card.classList.remove('over');
-    });
-  }
-
-  function addDnDHandlers(elem) {
-    elem.addEventListener('dragstart', handleDragStart, false);
-    elem.addEventListener('dragenter', handleDragEnter, false);
-    elem.addEventListener('dragover', handleDragOver, false);
-    elem.addEventListener('dragleave', handleDragLeave, false);
-    elem.addEventListener('drop', handleDrop, false);
-    elem.addEventListener('dragend', handleDragEnd, false);
-  }
-
-  const cards = questionsList.querySelectorAll('.question-card');
-  cards.forEach(card => {
-    card.setAttribute('draggable', 'true');
-    addDnDHandlers(card);
-  });
+  renderAll();
 }
 
-// After reordering update questions array to match UI order
-function updateQuestionsOrder() {
-  const cards = questionsList.querySelectorAll('.question-card');
-  const newQuestions = [];
-  cards.forEach(card => {
-    const questionText = card.querySelector('.question-text-area').value.trim();
-    const optionInputs = card.querySelectorAll('.option-input');
-    const options = Array.from(optionInputs).map(input => input.value.trim());
-    const correctRadio = card.querySelector('input[type="radio"]:checked');
-    if(questionText && options.length === 4 && correctRadio) {
-      newQuestions.push({
-        question: questionText,
-        options: options,
-        correct: ['A','B','C','D'][correctRadio.value] || '',
-      });
-    }
-  });
-  questions = newQuestions;
-}
+// --- STATE & TRANSITION MODIFICATION ---
 
-// Auto-enable drag-drop any time questions list changes
-function initDragDrop() {
-  new MutationObserver(() => {
-    enableDragDrop();
-  }).observe(questionsList, {childList: true});
-}
-
-// Initialize drag and drop after initial render
-initDragDrop();
-
-// Rich text editor for question text using contentEditable
-function enableRichTextEditing() {
-  questionsList.querySelectorAll('.question-text-area').forEach(textArea => {
-    textArea.contentEditable = true;
-  });
-}
-
-// Debounced autosave
-let autosaveTimer = null;
-function initAutoSave() {
-  questionsList.addEventListener('input', () => {
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(() => {
-      saveToLocalStorage();
-    }, 1200);
-  });
-}
-
-// Save quiz questions to localStorage
-function saveToLocalStorage() {
-  const data = extractQuizData();
-  localStorage.setItem('savedQuiz', JSON.stringify(data));
-}
-
-// Load quiz questions from localStorage
-function loadFromLocalStorage() {
-  const data = localStorage.getItem('savedQuiz');
-  if (data) {
-    try {
-      const parsed = JSON.parse(data);
-      questions = parsed;
-      renderQuestionsList();
-    } catch(e) {
-      console.warn('Failed to load quiz from local storage');
+function addState(x, y) {
+  const id = 'q' + MACHINE.states.length;
+  const isFirst = MACHINE.states.length === 0;
+  pushUndo();
+  MACHINE.states.push({ id, x, y, initial: isFirst, accepting: false });
+  renderAll();
+  const stateG = document.querySelector(`[data-id="${id}"]`);
+  if (stateG) {
+    const circle = stateG.querySelector('circle');
+    if (circle) {
+      circle.classList.add('state-drawing');
+      setTimeout(() => circle.classList.remove('state-drawing'), 600);
     }
   }
 }
 
-// Event: check submissions button with analytics
-checkSubmissionsBtn.addEventListener('click', () => {
-  const rawData = studentSubmissionsInput.value.trim();
-  if (!rawData) {
-    alert('Paste submission JSON data to grade.');
+function renameState(oldId) {
+  const newId = prompt('Enter new state name:', oldId);
+  if (!newId || newId === oldId) return;
+  if (MACHINE.states.find(s => s.id === newId)) {
+    alert('State name already exists');
     return;
   }
-  let submissions;
-  try {
-    submissions = JSON.parse(rawData);
-  } catch(e) {
-    alert('Invalid JSON data.');
-    return;
-  }
-  if (!Array.isArray(submissions)) {
-    alert('Submissions should be an array.');
-    return;
-  }
-  let aggregateScores = 0;
-  let validSubmissions = 0;
-  let outputHTML = '';
-  submissions.forEach((submission, index) => {
-    if (!submission.answers) return;
+  pushUndo();
+  const st = MACHINE.states.find(s => s.id === oldId);
+  if (st) st.id = newId;
 
-    validSubmissions++;
-    let score = 0;
-    const total = questions.length;
-
-    outputHTML += `<h4>Submission #${index + 1} by ${submission.studentName || 'Student'}</h4>`;
-    outputHTML += `<ul>`;
-    submission.answers.forEach((ans, qIndex) => {
-      const correctAns = questions[qIndex]?.correct;
-      const isCorrect = ans === correctAns;
-      if (isCorrect) score++;
-      outputHTML += `<li>Q${qIndex + 1}: ${isCorrect ? '<span style="color:green;">Correct</span>' : '<span style="color:red;">Wrong</span>'} (Your answer: ${ans || 'None'}, Correct: ${correctAns || 'N/A'})</li>`;
-    });
-    outputHTML += `</ul>`;
-    outputHTML += `<b>Score: ${score} / ${total}</b><hr/>`;
-
-    aggregateScores += score;
+  MACHINE.transitions.forEach(t => {
+    if (t.from === oldId) t.from = newId;
+    if (t.to === oldId) t.to = newId;
   });
-  if (validSubmissions) {
-    outputHTML += `<h3>Average Score: ${(aggregateScores / validSubmissions).toFixed(2)} / ${questions.length}</h3>`;
-  }
-  gradingResults.innerHTML = outputHTML;
-});
 
-// Load saved quiz data on page load
-window.onload = () => {
-  loadFromLocalStorage();
-  renderQuestionsList();
-  shareLinkWrapper.style.display = 'none';
-};
-    // Additional UI polish and user experience improvements
-
-// Floating labels for inputs and textareas
-const floatingLabels = () => {
-  document.querySelectorAll('input[type="text"], textarea').forEach(input => {
-    input.addEventListener('focus', () => {
-      input.parentNode.classList.add('focused');
-    });
-    input.addEventListener('blur', () => {
-      if (!input.value) {
-        input.parentNode.classList.remove('focused');
-      }
-    });
-  });
-};
-floatingLabels();
-
-// Smooth scroll to top on dashboard switches
-function scrollToTopSmooth() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-teacherBtn.addEventListener('click', scrollToTopSmooth);
-studentBtn.addEventListener('click', scrollToTopSmooth);
-
-// Data validation helpers
-const isValidQuestion = q => q.question.trim() !== '' && q.options.length === 4 && q.options.every(opt => opt.trim() !== '') && ['A','B','C','D'].includes(q.correct);
-
-// Helper: deep copy quiz before security operations
-function deepCopyQuiz(quiz) {
-  return quiz.map(q => ({
-    question: q.question,
-    options: [...q.options],
-    correct: q.correct,
-  }));
+  renderAll();
 }
 
-// Implement quiz preview feature for teacher dashboard
-const previewBtn = document.createElement('button');
-previewBtn.textContent = 'Preview Quiz';
-previewBtn.style.marginTop = '20px';
-previewBtn.style.width = '150px';
-previewBtn.style.alignSelf = 'flex-end';
-previewBtn.style.backgroundColor = '#3f42b5';
-previewBtn.style.boxShadow = '0 5px 15px rgba(63, 66, 181, 0.5)';
-previewBtn.style.color = '#fff';
-previewBtn.style.cursor = 'pointer';
-previewBtn.style.borderRadius = '14px';
-previewBtn.style.border = 'none';
+function deleteState(id) {
+  pushUndo();
+  MACHINE.states = MACHINE.states.filter(s => s.id !== id);
+  MACHINE.transitions = MACHINE.transitions.filter(t => t.from !== id && t.to !== id);
+  enforceInitialStateRule();
+  renderAll();
+}
 
-teacherDashboard.insertBefore(previewBtn, shareLinkWrapper);
-
-previewBtn.onclick = () => {
-  const currentQuiz = extractQuizData();
-  if (currentQuiz.length === 0 || !currentQuiz.every(isValidQuestion)) {
-    alert('Please complete all questions with valid options and correct answers before preview.');
-    return;
-  }
-  showQuizPreview(currentQuiz);
-};
-
-function showQuizPreview(quiz) {
-  const modal = document.createElement('div');
-  modal.style.position = 'fixed';
-  modal.style.top = 0;
-  modal.style.left = 0;
-  modal.style.width = '100vw';
-  modal.style.height = '100vh';
-  modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+function openPropsModal(stateId) {
+  const modal = document.getElementById('statePropsModal');
+  modal.dataset.stateId = stateId;
+  const st = MACHINE.states.find(s => s.id === stateId);
+  if (!st) return;
+  document.getElementById('propInitial').checked = st.initial;
+  document.getElementById('propFinal').checked = st.accepting;
   modal.style.display = 'flex';
-  modal.style.justifyContent = 'center';
-  modal.style.alignItems = 'center';
-  modal.style.zIndex = 10000;
-
-  const container = document.createElement('div');
-  container.style.width = '90vw';
-  container.style.maxHeight = '80vh';
-  container.style.overflowY = 'auto';
-  container.style.background = '#fff';
-  container.style.borderRadius = '20px';
-  container.style.padding = '2rem';
-  container.style.boxShadow = '0 20px 30px rgba(78, 84, 200, 0.4)';
-  container.style.position = 'relative';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = 'Close Preview';
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.top = '10px';
-  closeBtn.style.right = '10px';
-  closeBtn.style.background = '#3f42b5';
-  closeBtn.style.color = 'white';
-  closeBtn.style.border = 'none';
-  closeBtn.style.padding = '10px 20px';
-  closeBtn.style.cursor = 'pointer';
-  closeBtn.style.borderRadius = '12px';
-
-  closeBtn.onclick = () => {
-    document.body.removeChild(modal);
-  };
-
-  container.appendChild(closeBtn);
-  const title = document.createElement('h2');
-  title.textContent = 'Quiz Preview';
-  title.style.color = '#4e54c8';
-  title.style.marginBottom = '20px';
-  container.appendChild(title);
-
-  quiz.forEach((q, idx) => {
-    const div = document.createElement('div');
-    div.style.padding = '1rem 0';
-    div.style.borderBottom = '1px solid #ddd';
-
-    const qTitle = document.createElement('h3');
-    qTitle.textContent = `Q${idx + 1}: ${q.question}`;
-    qTitle.style.marginBottom = '10px';
-    div.appendChild(qTitle);
-
-    const ul = document.createElement('ul');
-    ul.style.listStyle = 'none';
-    ul.style.padding = 0;
-
-    ['A', 'B', 'C', 'D'].forEach((opt, i) => {
-      const li = document.createElement('li');
-      li.textContent = `${opt}: ${q.options[i]}`;
-      li.style.color = opt === q.correct ? '#2e7d32' : '#444';
-      li.style.fontWeight = opt === q.correct ? 'bold' : 'normal';
-      li.style.marginBottom = '6px';
-      ul.appendChild(li);
-    });
-    div.appendChild(ul);
-    container.appendChild(div);
-  });
-
-  modal.appendChild(container);
-  document.body.appendChild(modal);
 }
 
-// Accessibility improvements: Keyboard navigation hints
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    const modals = document.querySelectorAll('div[style*="position: fixed"]');
-    modals.forEach(modal => {
-      if (modal.parentNode) {
-        modal.parentNode.removeChild(modal);
+function showTransModal(from, to) {
+  const modal = document.getElementById('transitionModal');
+  document.getElementById('transFrom').value = from;
+  document.getElementById('transTo').value = to;
+  document.getElementById('transSymbol').value = '';
+  document.getElementById('transSymbol').focus();
+  modal.style.display = 'flex';
+}
+
+function hideTransModal() {
+  document.getElementById('transitionModal').style.display = 'none';
+}
+
+function updateAlphabet() {
+  const set = new Set();
+  MACHINE.transitions.forEach(t => {
+    if (t.symbol && t.symbol !== 'ε' && t.symbol !== '') set.add(t.symbol);
+  });
+
+  MACHINE.alphabet = Array.from(set).sort();
+}
+
+// --- UNDO/REDO ---
+function pushUndo() {
+  UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
+  REDO_STACK = [];
+
+  updateUndoRedoButtons();
+}
+
+function doUndo() {
+  if (UNDO_STACK.length === 0) return;
+  REDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
+  MACHINE = UNDO_STACK.pop();
+
+  renderAll();
+}
+
+function doRedo() {
+  if (REDO_STACK.length === 0) return;
+  UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
+  MACHINE = REDO_STACK.pop();
+
+  renderAll();
+}
+
+function updateUndoRedoButtons() {
+  if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
+
+  if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
+}
+  // ... (Continued from Chunk 2)
+
+// --- SIMULATION LOGIC ---
+async function runSimulation(inputStr) {
+  simSteps = [];
+  simIndex = 0; clearTimeout(simTimer);
+  document.getElementById('stepLog').innerHTML = '';
+  testOutput.textContent = 'Simulating...';
+  const startStates = MACHINE.states.filter(s => s.initial).map(s => s.id);
+
+  if (startStates.length === 0) {
+    validationLine.textContent = 'Invalid: No initial state set.';
+    validationLine.classList.add('error', 'show');
+    return;
+  }
+  let currentSet = (MACHINE.type === 'ENFA') ?
+    epsilonClosure(startStates) : [...startStates];
+  if (MACHINE.type === 'DFA' && currentSet.length > 1) currentSet = [currentSet[0]];
+  simSteps.push({ start: true, active: [...currentSet] });
+
+  for (const sym of inputStr) {
+    const frame = { before: [...currentSet], symbol: sym, steps: [], after: [] };
+    const next = new Set();
+    const transitions = MACHINE.transitions.filter(t => t.symbol === sym);
+
+    if (MACHINE.type === 'DFA') {
+      // DFA: One transition per symbol
+      if (currentSet.length > 0) {
+        const t = transitions.find(tt => tt.from === currentSet[0]);
+
+        if (t) {
+          frame.steps.push({ from: t.from, to: t.to, symbol: t.symbol }); next.add(t.to);
+        }
       }
+    } else {
+      // NFA/ENFA: Multiple transitions possible
+      for (const q of currentSet) {
+        transitions.filter(t => t.from === q).forEach(t => {
+          frame.steps.push({ from: q, to: t.to, symbol: t.symbol }); next.add(t.to);
+        });
+      }
+    }
+    const after = (MACHINE.type === 'ENFA') ? epsilonClosure([...next]) : [...next];
+    frame.after = after; simSteps.push(frame); currentSet = after;
+    if (currentSet.length === 0) break;
+  }
+  simSteps.push({ end: true, active: [...currentSet] });
+
+  const mode = document.querySelector('input[name="simMode"]:checked')?.value || 'auto';
+  if (mode === 'manual') {
+    document.getElementById('manualButtons').style.display = 'flex';
+    simIndex = 0;
+    showStep(0);
+  } else {
+    document.getElementById('manualButtons').style.display = 'none';
+    playAuto();
+  }
+}
+
+function epsilonClosure(list) {
+  const out = new Set(list);
+  const stack = [...list];
+  while (stack.length) {
+    const q = stack.pop();
+
+    MACHINE.transitions.filter(t => t.from === q && (t.symbol === '' || t.symbol === 'ε')).forEach(t => {
+      if (!out.has(t.to)) { out.add(t.to); stack.push(t.to); }
     });
   }
-});
+  return [...out];
+}
 
-// Better user feedback for clipboard copy success/fail
-copyLinkBtn.addEventListener('click', () => {
-  navigator.clipboard.writeText(shareableLink.value).then(() => {
-    copyLinkBtn.textContent = 'Copied!';
-    setTimeout(() => {
-      copyLinkBtn.textContent = 'Copy Link';
-    }, 2000);
-  }, () => {
-    alert('Failed to copy link automatically. Please copy manually.');
+async function showStep(idx) {
+  if (idx < 0 || idx >= simSteps.length) {
+    simIndex = Math.max(0, Math.min(idx, simSteps.length - 1));
+    return;
+  }
+  simIndex = idx;
+  const step = simSteps[idx];
+  const log = document.getElementById('stepLog');
+  const speed = parseInt(document.getElementById('testSpeed').value || '500');
+
+  // Reset all visuals
+  document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
+
+  if (idx === 0) log.innerHTML = '';
+
+  if (step.end) {
+    const accept = (step.active || []).some(sid => MACHINE.states.find(s => s.id === sid && s.accepting));
+
+    testOutput.textContent = accept ? 'Accepted' : 'Rejected';
+    testOutput.style.color = accept ? '#38a169' : '#e53e3e';
+    step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+
+    log.innerHTML = `<div><strong>Final active states: {${(step.active || []).join(', ')}}</strong></div>` + log.innerHTML;
+    log.innerHTML = `<div><strong style="color:${accept ? '#4ade80' : '#f87171'}">${accept ?
+      '✔ Accepted' : '✘ Rejected'}</strong></div>` + log.innerHTML;
+    return;
+  }
+
+  if (step.start) {
+    log.innerHTML = `<div><strong>Initial active states: {${(step.active || []).join(', ')}}</strong></div>` + log.innerHTML;
+    step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+    return;
+  }
+
+  testOutput.textContent = `After '${step.symbol}', active: {${(step.after || []).join(', ')}}`;
+
+  // Animate
+  step.before.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+  await sleep(speed / 2);
+
+  if (step.steps.length > 0) {
+    step.steps.forEach(s => {
+      log.innerHTML = `<div>Read '<b>${s.symbol}</b>': δ(${s.from}, ${s.symbol}) → ${s.to}</div>` + log.innerHTML;
+      document.querySelector(`.transition-path[data-from="${s.from}"][data-to="${s.to}"]`)?.classList.add('transition-animating');
+    });
+  } else {
+    log.innerHTML = `<div>Read '<b>${step.symbol}</b>': No transitions from {${step.before.join(', ')}}.
+      Halting.</div>` + log.innerHTML;
+  }
+
+  await sleep(speed / 2);
+  document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
+  step.after.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+}
+
+async function playAuto() {
+  for (let i = 0; i < simSteps.length; i++) {
+    await showStep(i);
+    const speed = parseInt(document.getElementById('testSpeed').value || '500');
+    await sleep(speed);
+  }
+}
+
+// --- CONVERSION ALGORITHMS ---
+
+function computeEpsilonClosure(stateId, transitions) {
+  const stack = [stateId];
+  const closure = new Set([stateId]);
+  while (stack.length) {
+    const s = stack.pop();
+
+    for (const t of transitions) {
+      if (t.from === s && (t.symbol === '' || t.symbol === 'ε')) {
+        if (!closure.has(t.to)) {
+          closure.add(t.to);
+          stack.push(t.to);
+        }
+      }
+    }
+  }
+  return Array.from(closure);
+}
+
+function convertEnfaToNfa(machine) {
+  const m = JSON.parse(JSON.stringify(machine));
+  const newTrans = []; const seen = new Set();
+  for (const st of m.states) {
+    const closure = computeEpsilonClosure(st.id, m.transitions);
+
+    for (const closureState of closure) {
+      for (const t of m.transitions) {
+        if (t.from === closureState && t.symbol !== '' && t.symbol !== 'ε') {
+          const destClosure = computeEpsilonClosure(t.to, m.transitions);
+
+          for (const dest of destClosure) {
+            const key = `${st.id}->${dest}:${t.symbol}`;
+
+            if (!seen.has(key)) {
+              newTrans.push({ from: st.id, to: dest, symbol: t.symbol });
+              seen.add(key);
+            }
+          }
+        }
+      }
+    }
+    // Update accepting states based on closure
+    for (const closureState of closure) {
+      const sf = m.states.find(x => x.id === closureState);
+      if (sf && sf.accepting) {
+        const orig = m.states.find(x => x.id === st.id);
+        if (orig) orig.accepting = true;
+      }
+    }
+  }
+  m.transitions = newTrans.filter(t => t.symbol !== '' && t.symbol !== 'ε');
+  m.type = 'NFA'; return m;
+}
+
+function convertNfaToDfa(nfa) {
+  const nfaMachine = nfa.type === 'ENFA' ? convertEnfaToNfa(nfa) : nfa;
+  const alphabet = Array.from(new Set(nfaMachine.transitions.map(t => t.symbol).filter(s => s !== 'ε')));
+  const initialClosure = epsilonClosure(nfaMachine.states.filter(s => s.initial).map(s => s.id));
+  const dfaStates = new Map();
+  const queue = [initialClosure];
+  const mapKey = (arr) => arr.sort().join(',');
+  dfaStates.set(mapKey(initialClosure), { id: mapKey(initialClosure), transitions: {}, states: initialClosure });
+
+  while (queue.length > 0) {
+    const currentSet = queue.shift();
+    const currentKey = mapKey(currentSet);
+
+    for (const symbol of alphabet) {
+      const nextStates = new Set();
+
+      for (const stateId of currentSet) {
+        nfaMachine.transitions
+          .filter(t => t.from === stateId && t.symbol === symbol)
+          .forEach(t => nextStates.add(t.to));
+      }
+      if (nextStates.size > 0) {
+        const nextSetClosure = epsilonClosure(Array.from(nextStates));
+
+        const nextKey = mapKey(nextSetClosure);
+        dfaStates.get(currentKey).transitions[symbol] = nextKey;
+        if (!dfaStates.has(nextKey)) {
+          dfaStates.set(nextKey, { id: nextKey, transitions: {}, states: nextSetClosure });
+          queue.push(nextSetClosure);
+        }
+      }
+    }
+  }
+  const newMachine = { type: 'DFA', states: [], transitions: [], alphabet };
+  let i = 0;
+  for (const [key, dfaState] of dfaStates.entries()) {
+    const isInitial = key === mapKey(initialClosure);
+
+    const isAccepting = dfaState.states.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting);
+
+    newMachine.states.push({ id: key, initial: isInitial, accepting: isAccepting, x: 200 + (i % 5) * 180, y: 150 + Math.floor(i / 5) * 150 });
+
+    for (const symbol in dfaState.transitions) {
+      newMachine.transitions.push({ from: key, to: dfaState.transitions[symbol], symbol });
+    }
+    i++;
+  }
+  return newMachine;
+}
+
+function minimizeDfa(dfa) {
+  const states = dfa.states.map(s => s.id);
+  const alph = dfa.alphabet;
+  let P = [
+    dfa.states.filter(s => s.accepting).map(s => s.id),
+    dfa.states.filter(s => !s.accepting).map(s => s.id)
+  ].filter(g => g.length > 0);
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+
+    for (const symbol of alph) {
+      const newP = [];
+
+      for (const group of P) {
+        const subgroups = {};
+
+        for (const state of group) {
+          const t = dfa.transitions.find(tr => tr.from === state && tr.symbol === symbol);
+
+          const destGroupIdx = t ? P.findIndex(g => g.includes(t.to)) : -1;
+          if (!subgroups[destGroupIdx]) subgroups[destGroupIdx] = [];
+          subgroups[destGroupIdx].push(state);
+        }
+        const splitGroups = Object.values(subgroups);
+        if (splitGroups.length > 1) changed = true;
+        newP.push(...splitGroups);
+      }
+      P = newP;
+    }
+  }
+  const repMap = {};
+
+  P.forEach(group => { const rep = group[0]; group.forEach(s => repMap[s] = rep); });
+
+  return {
+    type: 'DFA',
+    alphabet: alph,
+    states: P.map((group, i) => {
+      const rep = group[0];
+      const oldState = dfa.states.find(s => s.id === rep);
+      return { id: rep, initial: oldState.initial, accepting: oldState.accepting, x: 200 + (i % 5) * 180, y: 150 + Math.floor(i / 5) * 150 };
+    }),
+    transitions: dfa.transitions
+      .map(t => ({ from: repMap[t.from], to: repMap[t.to], symbol: t.symbol }))
+      .filter((t, i, self) => i === self.findIndex(o
+        => o.from === t.from && o.to === t.to && o.symbol === t.symbol))
+  };
+}
+
+// --- UTILITY & HELPER FUNCTIONS ---
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function validateAutomaton() {
+  const mode = modeSelect.value;
+  const states = MACHINE.states; const transitions = MACHINE.transitions;
+  const errors = [];
+
+  if (states.length === 0) return 'Invalid: No states defined.';
+  const initialCount = states.filter(s => s.initial).length;
+
+  if (states.filter(s => s.accepting).length === 0) errors.push('Warning: No accepting states.');
+
+  if (mode.includes('DFA')) {
+    if (initialCount !== 1) errors.push(`DFA must have 1 initial state (found ${initialCount}).`);
+
+    if (transitions.some(t => t.symbol === '' || t.symbol === 'ε')) errors.push('DFA cannot have ε-transitions.');
+
+    for (const st of states) {
+      const symbols = new Set();
+
+      for (const t of transitions.filter(tt => tt.from === st.id)) {
+        if (symbols.has(t.symbol)) {
+          errors.push(`State '${st.id}' is non-deterministic on symbol '${t.symbol}'.`);
+          break;
+        }
+        symbols.add(t.symbol);
+      }
+    }
+  } else if (mode.includes('NFA')) {
+    if (initialCount < 1) errors.push(`Automaton must have ≥1 initial state.`);
+    if (mode === 'NFA' && transitions.some(t => t.symbol === '' || t.symbol === 'ε')) {
+      errors.push('NFA cannot have ε-transitions (use ε-NFA mode).');
+    }
+  } else if (mode.includes('ENFA')) {
+    if (initialCount < 1) errors.push(`Automaton must have ≥1 initial state.`);
+  }
+
+  return errors.length > 0 ? 'Invalid: ' + errors.join('; ') : 'Valid';
+}
+
+// ... (Event listeners and initialization continue in Chunk 4)
+  // ... (Continued from Chunk 3)
+
+// --- EVENT LISTENERS ---
+
+// Toolbar
+document.querySelectorAll('.toolbar-icon[data-mode]').forEach(tool => {
+  tool.addEventListener('click', () => {
+    document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
+    tool.classList.add('active');
+    CURRENT_MODE = tool.dataset.mode;
+    TRANS_FROM = null; SELECTED_STATE = null;
+    document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
   });
 });
 
-// Initialize with loading saved quiz data or a sample
-window.addEventListener('load', () => {
-  const savedQuiz = localStorage.getItem('savedQuiz');
-  if (savedQuiz) {
-    try {
-      questions = JSON.parse(savedQuiz);
-      renderQuestionsList();
-    } catch {
-      questions = [];
-    }
-  } else {
-    questions = [
-      {
-        question: 'Welcome to Futuristic Quiz Helper! Start by editing this question.',
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correct: 'A',
-      },
-    ];
-    renderQuestionsList();
+// Canvas Click
+svg.addEventListener('click', (e) => {
+  if (CURRENT_MODE === 'addclick') {
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    addState(svgP.x, svgP.y);
   }
 });
-    // Student dashboard enhancements: show available quizzes dynamically (simulated)
-const studentQuizzes = []; // Will hold quizzes loaded by student
 
-// Simulate "dashboard" quizzes for student with localStorage or memory
-function addQuizToStudentDashboard(quizJSON) {
+// Modals
+document.getElementById('transCancel').addEventListener('click',
+  hideTransModal);
+document.getElementById('transSave').addEventListener('click', () => {
+  const from = document.getElementById('transFrom').value;
+  const to = document.getElementById('transTo').value;
+  let symbol = document.getElementById('transSymbol').value.trim();
+
+  if (symbol === '') symbol = 'ε';
+
+  // Mode-specific silent rule enforcement (no alert/popup for better UX)
+  if (MACHINE.type === 'DFA' && symbol === 'ε') {
+    validationLine.textContent = 'DFA rule: ε-transitions disallowed.';
+    validationLine.classList.add('error', 'show');
+    setTimeout(() => validationLine.classList.remove('show'), 4000);
+    return;
+  }
+  const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
+
+  if (MACHINE.type === 'DFA' && conflict) {
+    validationLine.textContent = `DFA rule: State ${from} is deterministic on '${symbol}'.`;
+    validationLine.classList.add('error', 'show');
+    setTimeout(() => validationLine.classList.remove('show'), 4000);
+    return;
+  }
+  pushUndo();
+  MACHINE.transitions.push({ from, to, symbol });
+  updateAlphabet();
+  renderAll();
+
+  hideTransModal();
+});
+document.getElementById('propCancel').addEventListener('click', () => document.getElementById('statePropsModal').style.display = 'none');
+document.getElementById('propSave').addEventListener('click', () => {
+  const modal = document.getElementById('statePropsModal');
+  const stateId = modal.dataset.stateId;
+  const s = MACHINE.states.find(st => st.id === stateId);
+  if (s) {
+    pushUndo();
+    const isInitial = document.getElementById('propInitial').checked;
+    if (isInitial && (MACHINE.type === 'DFA' || MACHINE.type.includes('DFA'))) {
+      MACHINE.states.forEach(x => x.initial = false);
+    }
+    s.initial = isInitial;
+    s.accepting = document.getElementById('propFinal').checked;
+    enforceInitialStateRule();
+    renderAll();
+  }
+  modal.style.display = 'none';
+});
+
+// Undo/Redo
+undoBtn.addEventListener('click', doUndo);
+redoBtn.addEventListener('click', doRedo);
+
+// Mode & Conversion
+modeSelect.addEventListener('change', () => {
+  const newMode = modeSelect.value;
+  let convertedMachine = null;
+  let successMsg = '';
+
   try {
-    const quiz = JSON.parse(quizJSON);
-    studentQuizzes.push(quiz);
-    renderStudentAvailableQuizzes();
-  } catch (e) {
-    console.error('Invalid quiz JSON for student dashboard:', e);
-  }
-}
-
-function renderStudentAvailableQuizzes() {
-  const container = document.getElementById('quizContainer');
-  container.innerHTML = '';
-
-  if (studentQuizzes.length === 0) {
-    container.innerHTML = '<p>No quizzes available. Paste a quiz JSON or link to start one.</p>';
-    submitQuizBtn.style.display = 'none';
-    return;
-  }
-
-  studentQuizzes.forEach((quiz, idx) => {
-    const quizCard = document.createElement('article');
-    quizCard.classList.add('question-card');
-    quizCard.style.cursor = 'pointer';
-
-    const qCount = quiz.length;
-
-    quizCard.innerHTML = `
-      <h3>Quiz #${idx + 1} - ${qCount} Questions</h3>
-      <button style="margin-top:10px; background:#4e54c8; color:#fff; border:none; padding:10px 20px; border-radius:14px; cursor:pointer;">Start</button>
-    `;
-
-    quizCard.querySelector('button').addEventListener('click', () => {
-      renderStudentQuiz(quiz);
-    });
-
-    container.appendChild(quizCard);
-  });
-
-  submitQuizBtn.style.display = 'block';
-  quizFeedback.textContent = '';
-}
-
-// Extend load quiz button to add quiz to dashboard
-loadQuizBtn.addEventListener('click', () => {
-  const rawText = quizLinkInput.value.trim();
-  if (!rawText) {
-    alert("Please paste quiz JSON or link");
-    return;
-  }
-  let parsedQuiz = null;
-
-  if (rawText.startsWith('http')) {
-    // Try to extract data from URL hash or query param
-    try {
-      const url = new URL(rawText);
-      let quizDataEncoded = url.hash.startsWith('#quiz=') ? url.hash.replace('#quiz=', '') : null;
-      if (!quizDataEncoded) quizDataEncoded = url.searchParams.get('quiz');
-      if (quizDataEncoded) {
-        parsedQuiz = JSON.parse(decodeURIComponent(quizDataEncoded));
-      }
-    } catch (e) {
-      alert("Failed to parse quiz data from URL");
-      return;
+    // Check initial machine validation status before conversion
+    if (!validateAutomaton().startsWith('Valid')) {
+      validationLine.textContent = 'Warning: Cannot convert invalid automaton.';
+      validationLine.classList.add('error', 'show');
+      setTimeout(() => validationLine.classList.remove('show'), 4000);
     }
+
+    if (newMode === 'ENFA_TO_NFA') {
+      convertedMachine = convertEnfaToNfa(MACHINE);
+      successMsg = 'Converted ε-NFA to NFA.';
+    }
+    else if (newMode === 'NFA_TO_DFA') {
+      convertedMachine = convertNfaToDfa(MACHINE);
+      successMsg = 'Converted NFA to DFA.';
+    }
+    else if (newMode === 'NFA_TO_MIN_DFA') {
+      convertedMachine = minimizeDfa(convertNfaToDfa(MACHINE));
+      successMsg = 'Converted NFA to Minimal DFA.';
+    }
+    else if (newMode === 'DFA_TO_MIN_DFA') {
+      convertedMachine = minimizeDfa(MACHINE);
+      successMsg = 'Minimized DFA.';
+    }
+  } catch (err) {
+    validationLine.textContent = 'Conversion failed: ' + err.message;
+    validationLine.classList.add('error', 'show');
+    setTimeout(() => validationLine.classList.remove('show'), 4000);
+    modeSelect.value = MACHINE.type; // Revert dropdown
+    return;
+  }
+  if (convertedMachine) {
+    pushUndo();
+    MACHINE = convertedMachine;
+
+    MACHINE.type = 'DFA'; // Most conversions result in DFA
+    if (newMode === 'ENFA_TO_NFA') MACHINE.type = 'NFA';
+
+    modeSelect.value = MACHINE.type;
+    layoutStatesLine(MACHINE.states);
+    validationLine.textContent = successMsg;
+    validationLine.classList.add('success', 'show');
+    setTimeout(() => validationLine.classList.remove('show'), 4000);
   } else {
-    try {
-      parsedQuiz = JSON.parse(rawText);
-    } catch (e) {
-      alert("Invalid quiz JSON data");
-      return;
-    }
-  }
-
-  if (!Array.isArray(parsedQuiz) || parsedQuiz.length === 0) {
-    alert("Quiz data is empty or invalid");
-    return;
-  }
-
-  addQuizToStudentDashboard(JSON.stringify(parsedQuiz));
-  quizLinkInput.value = '';
-});
-
-// Responsive & keyboard accessibility improvements
-document.addEventListener('keyup', e => {
-  if (e.key === 'Enter') {
-    if (document.activeElement === loginInput) {
-      loginButton.click();
-    }
-    if (document.activeElement === quizLinkInput) {
-      loadQuizBtn.click();
-    }
+    MACHINE.type = newMode;
+    renderAll();
   }
 });
 
-// Dark mode toggle (bonus feature)
-const darkModeToggle = document.createElement('button');
-darkModeToggle.textContent = 'Toggle Dark Mode';
-darkModeToggle.style.position = 'fixed';
-darkModeToggle.style.bottom = '30px';
-darkModeToggle.style.right = '30px';
-darkModeToggle.style.padding = '12px 20px';
-darkModeToggle.style.borderRadius = '18px';
-darkModeToggle.style.border = 'none';
-darkModeToggle.style.backgroundColor = '#4e54c8';
-darkModeToggle.style.color = '#fff';
-darkModeToggle.style.fontWeight = '600';
-darkModeToggle.style.boxShadow = '0 10px 20px rgba(78, 84, 200, 0.4)';
-darkModeToggle.style.cursor = 'pointer';
-darkModeToggle.style.zIndex = '9999';
-
-document.body.appendChild(darkModeToggle);
-
-darkModeToggle.onclick = () => {
-  document.body.classList.toggle('dark-mode');
-};
-
-const darkModeCSS = document.createElement('style');
-darkModeCSS.textContent = `
-  body.dark-mode {
-    background: #121212 !important;
-    color: #bbbbbb !important;
+// Smooth "Glider" Move Tool (JFLAP-style)
+(function setupSmoothMoveTool() {
+  let dragging = false; let currentCircle = null; let currentStateG = null;
+  let lastPos = { x: 0, y: 0 }; let raf = null;
+  function getPoint(evt) {
+    const pt = svg.createSVGPoint();
+    if (evt.touches && evt.touches[0]) { pt.x = evt.touches[0].clientX; pt.y = evt.touches[0].clientY; }
+    else { pt.x = evt.clientX; pt.y = evt.clientY; }
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
   }
-  body.dark-mode #app {
-    background: #222 !important;
-    color: #eee !important;
+  function animate() {
+    if (!dragging) return; raf = requestAnimationFrame(animate);
+    const sid =
+      currentStateG.getAttribute('data-id');
+    const sObj = MACHINE.states.find(x => x.id === sid); if (!sObj) return;
+    // Simple spring damping effect
+    sObj.x += (lastPos.x - sObj.x) * 0.22; sObj.y += (lastPos.y - sObj.y) * 0.22;
+    renderAll();
   }
-  body.dark-mode nav button {
-    background: #5555dd !important;
+  function startDrag(stateG, circle, evt) {
+    if (CURRENT_MODE !== 'move') return;
+    pushUndo(); dragging = true; currentCircle = circle; currentStateG = stateG;
+    circle.classList.add('state-selected');
+    const p = getPoint(evt); lastPos.x = p.x; lastPos.y = p.y;
+    animate(); evt.preventDefault(); evt.stopPropagation();
   }
-  body.dark-mode nav button.active, body.dark-mode nav button:hover {
-    background: #222299 !important;
+  function moveDrag(evt) {
+    if (!dragging) return;
+    const p = getPoint(evt); lastPos.x = p.x;
+    lastPos.y = p.y;
+    const vb = svg.viewBox.baseVal;
+    // Keep state within canvas bounds
+    lastPos.x = Math.min(Math.max(lastPos.x, vb.x + 40), vb.x + vb.width - 40);
+    lastPos.y = Math.min(Math.max(lastPos.y, vb.y + 40), vb.y + vb.height - 40);
   }
-  body.dark-mode .question-card {
-    background: #333 !important;
-    color: #eee !important;
-  }
-  body.dark-mode textarea, body.dark-mode input, body.dark-mode select {
-    background: #222 !important;
-    color: #eee !important;
-    border-color: #555 !important;
-  }
-`;
-document.head.appendChild(darkModeCSS);
-    // (continued from previous)
+  function endDrag() {
+    if (!dragging) return; dragging = false;
+    if (currentCircle) currentCircle.classList.remove('state-selected');
 
-// Additional utilities and helpers
-
-// Simple escape HTML utility for safety
-function escapeHtml(text) {
-  const p = document.createElement('p');
-  p.appendChild(document.createTextNode(text));
-  return p.innerHTML;
-}
-
-// Validate quiz format - question text length, unique options, non-empty, etc.
-function validateQuiz(quiz) {
-  if (!Array.isArray(quiz)) return false;
-  return quiz.every(q => {
-    if (typeof q.question !== 'string' || q.question.trim() === '') return false;
-    if (!Array.isArray(q.options) || q.options.length !== 4) return false;
-    if (!['A', 'B', 'C', 'D'].includes(q.correct)) return false;
-    // Options unique and non empty
-    const opts = new Set(q.options.map(o => o.trim()));
-    if (opts.size < 4) return false;
-    if (q.options.some(o => o.trim() === '')) return false;
-    return true;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    renderAll();
+  }
+  statesGroup.addEventListener('pointerdown', function (e) {
+    const stateG = e.target.closest('g[data-id]'); if (!stateG) return;
+    const circle = stateG.querySelector('circle.state-circle'); if (!circle) return;
+    startDrag(stateG, circle, e);
   });
-}
 
-// On teacher dashboards, bind inputs with debounced saves
-function bindInputsDebouncedSave() {
-  let debounceTimer;
-  questionsList.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      questions = extractQuizData();
-      saveToLocalStorage();
-      shareLinkWrapper.style.display = 'none';
-    }, 800);
-  });
-}
-bindInputsDebouncedSave();
+  svg.addEventListener('pointermove', moveDrag);
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+})();
 
-// Export quiz as compact compressed JSON string (optional)
-// For now skip compression for simplicity
+// --- OTHER CONTROLS ---
 
-// Prevent accidental page refresh or close without saving
-window.addEventListener('beforeunload', (e) => {
-  if (questions.length > 0) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+// Splash Screen
+const splashScreen = document.getElementById('splashScreen');
+const mainApp = document.getElementById('mainApp');
 
-// Responsive improvements
-window.addEventListener('resize', handleResponsiveAdjustments);
-function handleResponsiveAdjustments() {
-  const w = window.innerWidth;
-  if (w <= 600) {
-    questionsList.style.gridTemplateColumns = '1fr';
-  } else {
-    questionsList.style.gridTemplateColumns = '1fr 1fr';
-  }
-}
-handleResponsiveAdjustments();
+const hideSplash = () => {
+  splashScreen.style.opacity = '0';
 
-// Info tooltip helper
-function createTooltip(text) {
-  const tooltip = document.createElement('div');
-  tooltip.className = 'tooltip';
-  tooltip.textContent = text;
-  return tooltip;
-}
-
-// Attach tooltips to elements marked with data-tooltip
-document.querySelectorAll('[data-tooltip]').forEach(el => {
-  el.addEventListener('mouseenter', () => {
-    const tooltip = createTooltip(el.dataset.tooltip);
-    document.body.appendChild(tooltip);
-    const rect = el.getBoundingClientRect();
-    tooltip.style.top = `${rect.top - 30}px`;
-    tooltip.style.left = `${rect.left}px`;
-    el._tooltip = tooltip;
-  });
-  el.addEventListener('mouseleave', () => {
-    const tooltip = el._tooltip;
-    if (tooltip) tooltip.remove();
-  });
-});
-
-// Advanced animation on buttons hover using GSAP (optional, add library first)
-// For demo, simulate smooth color gradual change
-const animatedButtons = document.querySelectorAll('button');
-animatedButtons.forEach(btn => {
-  btn.addEventListener('mouseenter', () => {
-    btn.style.transition = 'background-color 0.35s ease';
-    btn.style.backgroundColor = '#3a3eb2';
-  });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.transition = 'background-color 0.35s ease';
-    btn.style.backgroundColor = '';
-  });
-});
-
-// Initialize everything after short delay for DOM readiness
-setTimeout(() => {
-  renderQuestionsList();
-  shareLinkWrapper.style.display = 'none';
-}, 200);
-    // Feature: Export quiz as printable PDF (basic implementation)
-function exportQuizAsPDF() {
-  const quizData = extractQuizData();
-  if (quizData.length === 0) {
-    alert('No questions to export.');
-    return;
-  }
-  let printContent = '<h1>Quiz Export</h1><ol>';
-  quizData.forEach(q => {
-    printContent += `<li><b>${escapeHtml(q.question)}</b><ul>`;
-    ['A', 'B', 'C', 'D'].forEach((opt, i) => {
-      printContent += `<li>${opt}: ${escapeHtml(q.options[i])} ${q.correct === opt ? '<b>(Correct)</b>' : ''}</li>`;
-    });
-    printContent += '</ul></li>';
-  });
-  printContent += '</ol>';
-
-  const printWindow = window.open('', '', 'height=600,width=800');
-  printWindow.document.write('<html><head><title>Quiz Export</title>');
-  printWindow.document.write('<style>body{font-family: Poppins,sans-serif; margin: 2rem;} h1 {color:#4e54c8;} ul {margin: 0 0 1.5rem 1.2rem;}</style>');
-  printWindow.document.write('</head><body>');
-  printWindow.document.write(printContent);
-  printWindow.document.write('</body></html>');
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-}
-
-// Add export to PDF button
-const exportPdfBtn = document.createElement('button');
-exportPdfBtn.textContent = 'Export Quiz as PDF';
-exportPdfBtn.style.marginTop = '16px';
-exportPdfBtn.style.alignSelf = 'flex-end';
-exportPdfBtn.style.backgroundColor = '#4e54c8';
-exportPdfBtn.style.boxShadow = '0 5px 15px rgba(78, 84, 200, 0.5)';
-exportPdfBtn.style.color = '#fff';
-exportPdfBtn.style.cursor = 'pointer';
-exportPdfBtn.style.borderRadius = '14px';
-exportPdfBtn.style.border = 'none';
-
-teacherDashboard.insertBefore(exportPdfBtn, shareLinkWrapper);
-
-exportPdfBtn.onclick = () => {
-  exportQuizAsPDF();
-};
-
-// Feature: Clear all quiz data from localStorage
-const clearStorageBtn = document.createElement('button');
-clearStorageBtn.textContent = 'Clear Saved Quiz';
-clearStorageBtn.style.marginTop = '10px';
-clearStorageBtn.style.alignSelf = 'flex-end';
-clearStorageBtn.style.backgroundColor = '#cc0033';
-clearStorageBtn.style.boxShadow = '0 5px 15px rgba(204, 0, 51, 0.6)';
-clearStorageBtn.style.color = '#fff';
-clearStorageBtn.style.cursor = 'pointer';
-clearStorageBtn.style.borderRadius = '14px';
-clearStorageBtn.style.border = 'none';
-
-teacherDashboard.insertBefore(clearStorageBtn, shareLinkWrapper);
-
-clearStorageBtn.onclick = () => {
-  if (confirm('Are you sure you want to clear all saved quiz data?')) {
-    questions = [];
-    questionsList.innerHTML = '';
-    localStorage.removeItem('savedQuiz');
-    shareLinkWrapper.style.display = 'none';
-    gradingResults.innerHTML = '';
-  }
-};
-
-// Feature: Support question duplication for teacher
-function duplicateQuestion(idx) {
-  if (questions.length <= idx) return;
-  const source = questions[idx];
-  const copy = {
-    question: source.question,
-    options: [...source.options],
-    correct: source.correct,
-  };
-  questions.splice(idx + 1, 0, copy);
-  renderQuestionsList();
-}
-
-// Add duplicate buttons to question cards dynamically
-function addDuplicateButtons() {
-  const cards = questionsList.querySelectorAll('.question-card');
-  cards.forEach((card, i) => {
-    let dupBtn = card.querySelector('.duplicate-question-btn');
-    if (!dupBtn) {
-      dupBtn = document.createElement('button');
-      dupBtn.className = 'duplicate-question-btn';
-      dupBtn.textContent = 'Duplicate';
-      dupBtn.style.position = 'absolute';
-      dupBtn.style.bottom = '12px';
-      dupBtn.style.right = '18px';
-      dupBtn.style.fontWeight = '600';
-      dupBtn.style.border = 'none';
-      dupBtn.style.borderRadius = '10px';
-      dupBtn.style.padding = '6px 14px';
-      dupBtn.style.cursor = 'pointer';
-      dupBtn.style.backgroundColor = '#5e78ff';
-      dupBtn.style.color = 'white';
-      dupBtn.style.boxShadow = '0 8px 18px rgba(94, 120, 255, 0.8)';
-      card.appendChild(dupBtn);
-
-      dupBtn.onclick = () => {
-        duplicateQuestion(i);
-      };
-    }
-  });
-}
-
-function renderQuestionsList() {
-  questionsList.innerHTML = '';
-  questions.forEach((q, i) => {
-    const card = createQuestionCard(i, q.question, q.options, ['A', 'B', 'C', 'D'].indexOf(q.correct).toString());
-    questionsList.appendChild(card);
-  });
-  addDuplicateButtons();
-  enableDragDrop();
-  bindInputsDebouncedSave();
-  shareLinkWrapper.style.display = 'none';
-}
-
-// Call renderQuestionsList() also after question duplication and other changes
-    // Finalizing event bindings and utility functions
-
-// Utility: Debounce function
-function debounce(func, wait, immediate) {
-  let timeout;
-  return function() {
-    const context = this, args = arguments;
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
-    }, wait);
-    if (immediate && !timeout) func.apply(context, args);
-  };
-}
-
-// Save to local storage with debounce to reduce frequent writes
-const debouncedSave = debounce(() => {
-  saveToLocalStorage();
-}, 1000);
-
-questionsList.addEventListener('input', () => {
-  debouncedSave();
-});
-
-// Override the default alert to show custom toast notifications
-function toast(message, duration = 2500) {
-  let toastDiv = document.getElementById('customToast');
-  if (!toastDiv) {
-    toastDiv = document.createElement('div');
-    toastDiv.id = 'customToast';
-    toastDiv.style.position = 'fixed';
-    toastDiv.style.bottom = '40px';
-    toastDiv.style.right = '40px';
-    toastDiv.style.padding = '16px 28px';
-    toastDiv.style.backgroundColor = '#4e54c8';
-    toastDiv.style.color = 'white';
-    toastDiv.style.fontWeight = '600';
-    toastDiv.style.borderRadius = '16px';
-    toastDiv.style.boxShadow = '0 4px 15px rgba(78, 84, 200, 0.8)';
-    toastDiv.style.zIndex = 100000;
-    toastDiv.style.opacity = 0;
-    toastDiv.style.transition = 'opacity 0.5s ease';
-    document.body.appendChild(toastDiv);
-  }
-  toastDiv.textContent = message;
-  toastDiv.style.opacity = 1;
   setTimeout(() => {
-    toastDiv.style.opacity = 0;
-  }, duration);
-}
-
-// Replace default alert with toast for user feedback
-window.alert = (message) => {
-  toast(message);
+    splashScreen.style.display = 'none';
+    mainApp.style.display = 'block';
+    lucide.createIcons();
+  }, 800);
 };
+document.querySelectorAll('.splash-nav-btn[data-target="Automata"]').forEach(btn => btn.addEventListener('click', hideSplash));
 
-// Prevent form submission by Enter key inside textareas and inputs to avoid accidental submits
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA') {
-    e.preventDefault();
+setTimeout(hideSplash, 1500);
+
+// Testing panel
+runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
+genRandBtn.addEventListener('click', () => {
+  updateAlphabet();
+  const alphabet = MACHINE.alphabet.length ? MACHINE.alphabet : ['0', '1'];
+  const len = Math.floor(Math.random() * 8) + 3;
+  testInput.value = Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+});
+stepNextBtn.addEventListener('click', () => showStep(++simIndex));
+stepPrevBtn.addEventListener('click', () => showStep(--simIndex));
+stepResetBtn.addEventListener('click', () => { simIndex = 0; simSteps = []; clearTimeout(simTimer); document.getElementById('stepLog').innerHTML = ''; testOutput.textContent = 'Ready'; renderAll(); });
+
+// Practice
+// panel
+genPracticeBtn.addEventListener('click', () => {
+  const mode = MACHINE.type; const level = document.getElementById('practiceMode').value;
+  const bank = PRACTICE_BANK[mode]?.[level];
+
+  if (!bank || bank.length === 0) { practiceBox.textContent = "No questions available for this mode/level."; return; }
+  CURRENT_PRACTICE = bank[Math.floor(Math.random() * bank.length)];
+
+  practiceBox.innerHTML = `<strong>${mode} | ${level}</strong><div style="margin-top:8px">${CURRENT_PRACTICE.q}</div>`;
+});
+showSolBtn.addEventListener('click', () => {
+  if (!CURRENT_PRACTICE) { validationLine.textContent = 'No practice generated yet.'; validationLine.classList.add('error', 'show'); return; }
+  if (CURRENT_PRACTICE.machine) { pushUndo(); MACHINE = CURRENT_PRACTICE.machine; layoutStatesLine(MACHINE.states); }
+  practiceBox.innerHTML = `<strong>Problem:</strong> ${CURRENT_PRACTICE.q}<br><strong>Solution:</strong><div style="white-space:pre-wrap;">${CURRENT_PRACTICE.sol}</div>`;
+});
+resetPractice.addEventListener('click', () => { CURRENT_PRACTICE = null; practiceBox.textContent = 'No practice generated yet.'; });
+checkAnswerBtn.addEventListener('click', () => {
+  if (!CURRENT_PRACTICE) { validationLine.textContent = 'No practice generated yet.'; validationLine.classList.add('error', 'show'); return; }
+  const result = validateAutomaton();
+  if (result.startsWith('Valid')) {
+    validationLine.textContent = `You did it! ${result}`;
+    validationLine.classList.add('success', 'show');
+  } else {
+    validationLine.textContent = `Not fully valid. ${result}`;
+    validationLine.classList.add('error', 'show');
   }
+  setTimeout(() => validationLine.classList.remove('show'), 6000);
 });
 
-// Sanitize paste in textareas to plain text only (avoid rich content)
-document.querySelectorAll('textarea').forEach(ta => {
-  ta.addEventListener('paste', e => {
-    e.preventDefault();
-    let plainText = (e.clipboardData || window.clipboardData).getData('text/plain');
-    document.execCommand('insertText', false, plainText);
+validateBtn.addEventListener('click', () => {
+  const result = validateAutomaton();
+  const line = document.getElementById('validationLine');
+  line.textContent = result;
+  line.classList.remove('success', 'error', 'show');
+  line.classList.add(result.startsWith('Valid') ?
+    'success' : 'error');
+  line.classList.add('show');
+  setTimeout(() => line.classList.remove('show'), 6000);
+});
+
+// File I/O & Export
+saveMachineBtn.addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(MACHINE, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "machine.json"; a.click(); URL.revokeObjectURL(a.href);
+});
+loadMachineBtn.addEventListener('click', () => loadFileInput.click());
+loadFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.states && data.transitions) {
+        pushUndo(); MACHINE =
+          data; if (!MACHINE.type) MACHINE.type = 'DFA'; renderAll();
+      } else {
+        validationLine.textContent = "Invalid machine file format.";
+        validationLine.classList.add('error', 'show');
+      }
+    } catch (err) {
+      validationLine.textContent = "Invalid JSON file: " + err.message;
+      validationLine.classList.add('error', 'show');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Enhanced PNG Export: Forces black/white/red/gold for clean, non-gradient export
+exportBtn.addEventListener('click', () => {
+  const svgEl = document.getElementById("dfaSVG");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  // Create temporary SVG with fixed styles for clean export
+  const tempSvgEl = svgEl.cloneNode(true);
+  tempSvgEl.querySelector('defs #arrowhead polygon').setAttribute('fill', '#000000'); // Black Arrow
+  tempSvgEl.querySelectorAll('.state-circle').forEach(c => {
+    c.setAttribute('stroke', '#000000'); // Black State Border
+    c.setAttribute('stroke-width', '3');
+    c.setAttribute('fill', '#FFFFFF'); // White fill
+    c.classList.remove('initial-pulse'); // Remove animation class
   });
+  tempSvgEl.querySelectorAll('.transition-path').forEach(p => {
+    p.setAttribute('stroke', '#000000'); // Black Transition Path
+    p.setAttribute('marker-end', 'url(#arrowhead-export)'); // Use clean black marker
+  });
+  tempSvgEl.querySelectorAll('.transition-label, .state-label').forEach(t => t.setAttribute('fill', '#000000')); // Black text
+  tempSvgEl.querySelectorAll('.final-ring').forEach(r => {
+    r.setAttribute('stroke', '#ff9800'); // Gold/Orange for final ring
+    r.setAttribute('stroke-width', '4');
+    r.classList.remove('anim-final-ring'); // Remove animation
+  });
+  tempSvgEl.querySelectorAll('.initial-arrow').forEach(a => {
+    a.setAttribute('stroke', '#000000'); // Black initial arrow
+    a.classList.remove('anim-initial-arrow'); // Remove animation
+  });
+
+  const svgData = new XMLSerializer().serializeToString(tempSvgEl);
+  const img = new Image();
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = () => {
+    canvas.width = svgEl.viewBox.baseVal.width; canvas.height = svgEl.viewBox.baseVal.height;
+    ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    const a = document.createElement("a");
+    a.download = "automaton.png";
+    a.href = canvas.toDataURL("image/png"); a.click();
+  };
+  img.src = url;
 });
 
-// Accessibility: Focus outlines only on keyboard navigation
-document.body.addEventListener('mousedown', () => {
-  document.body.classList.add('using-mouse');
-});
-document.body.addEventListener('keydown', e => {
-  if (e.key === 'Tab') {
-    document.body.classList.remove('using-mouse');
-  }
-});
+// Zoom
+const setZoom = (pct) => {
+  const wrapper = document.getElementById('svgWrapper');
 
-// All done, init render
-window.onload = () => {
-  loadFromLocalStorage();
-  renderQuestionsList();
-  shareLinkWrapper.style.display = 'none';
-  switchDashboard('student');
-  darkModeToggle.textContent = 'Toggle Dark Mode';
-  // If previously dark mode setting saved
-  if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-  }
+  wrapper.style.transform = `scale(${pct / 100})`;
+  wrapper.style.transformOrigin = 'top left';
+  zoomSlider.value = pct;
 };
+zoomSlider.addEventListener('input', e => setZoom(e.target.value));
+zoomInBtn.addEventListener('click', () => setZoom(Math.min(200, Number(zoomSlider.value) + 10)));
+zoomOutBtn.addEventListener('click', () => setZoom(Math.max(50, Number(zoomSlider.value) - 10)));
+zoomResetBtn.addEventListener('click', () => setZoom(100));
+
+// --- INITIALIZATION ---
+document.querySelector('[data-mode="addclick"]').classList.add('active');
+renderAll();
+updateUndoRedoButtons();
+setZoom(100);
+});
 </script>
 </body>
 </html>
