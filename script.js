@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", () => {
 // MAIN APPLICATION SCRIPT
 const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
@@ -1751,3 +1752,4 @@ window.addEventListener('load', () => {
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
 })();
+});
