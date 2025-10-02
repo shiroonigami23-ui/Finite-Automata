@@ -1238,17 +1238,30 @@ const splashScreen = document.getElementById('splashScreen');
 const mainApp = document.getElementById('mainApp');
 
 const hideSplash = () => {
+  // 1. Disable the button immediately to prevent double-click issues
+  document.querySelectorAll('.splash-nav-btn[data-target="Automata"]').forEach(btn => btn.disabled = true);
+  
+  // 2. Start fade-out effect
   splashScreen.style.opacity = '0';
 
+  // 3. Hide the splash screen and show the main app after the CSS transition
   setTimeout(() => {
     splashScreen.style.display = 'none';
     mainApp.style.display = 'block';
+    // This function initializes all the lucide icons needed for the app
     lucide.createIcons();
   }, 800);
 };
-document.querySelectorAll('.splash-nav-btn[data-target="Automata"]').forEach(btn => btn.addEventListener('click', hideSplash));
 
-setTimeout(hideSplash, 1500);
+// ATTACH CLICK HANDLER
+document.querySelectorAll('.splash-nav-btn[data-target="Automata"]').forEach(btn => {
+    // Only attach the handler to the "Finite Automata" button
+    if (btn.getAttribute('data-target') === 'Automata') {
+        btn.addEventListener('click', hideSplash);
+    }
+});
+
+// REMOVED: No automatic timeout! The user must click the button.
 
 // Testing panel
 runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
