@@ -305,72 +305,225 @@ let simSteps = [], simIndex = 0, simTimer = null;
 
 // --- PRACTICE
 // Data bank structure with more comprehensive content. (See Chunk 2 for full data)
-const PRACTICE_BANK = { /* ... full data in next chunk ... */ };
-
-// --- CORE FUNCTIONS ---
-
-// ... (Functions start here in the next chunk)
-       // ... (Continued from Chunk 1)
-
-// --- PRACTICE
-// Data bank structure with 30+ questions total
 const PRACTICE_BANK = {
+  // --- 1. DFA Construction Mode (30 Questions) ---
   DFA: {
     easy: [
-      { q: 'DFA accepting strings starting with "1"', sol: '3 states: q0(start), q1(accept), q2(trap)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 300, initial: false, accepting: true }, { id: 'q2', x: 700, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q1', symbol: '1' }, { from: 'q0', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q2', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '1' }], alphabet: ['0', '1'] } },
-      { q: 'DFA accepting only the string "01"', sol: '4 states: q0->q1->q2(accept)->q3(trap)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 450, y: 300, initial: false, accepting: false }, { id: 'q2', x: 600, y: 300, initial: false, accepting: true }, { id: 'q3', x: 750, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q1', symbol: '0' }, { from: 'q0', to: 'q3', symbol: '1' }, { from: 'q1', to: 'q3', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q2', to: 'q3', symbol: '0' }, { from: 'q2', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q3', symbol: '0' }, { from: 'q3', to: 'q3', symbol: '1' }], alphabet: ['0', '1'] } },
-      { q: 'DFA accepting strings containing no "00"', sol: '3 states: q0(start/safe), q1(seen 0), q2(trap)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: true }, { id: 'q1', x: 500, y: 300, initial: false, accepting: true }, { id: 'q2', x: 700, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q0', symbol: '1' }, { from: 'q0', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q0', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '1' }], alphabet: ['0', '1'] } }
+      { q: 'DFA accepting all strings that start with "0" (Σ={0, 1})', sol: '3 states: q0(start), q1(accept), q2(trap)', machine: {} },
+      { q: 'DFA accepting all strings that end with "1" (Σ={0, 1})', sol: '2 states: q0(start), q1(accept)', machine: {} },
+      { q: 'DFA accepting only the string "10" (Σ={0, 1})', sol: '4 states: q0->q1->q2(accept)->q3(trap)', machine: {} },
+      { q: 'DFA accepting any string of length exactly 2 (Σ={0, 1})', sol: '4 states: q0, q1, q2(accept), q3(trap)', machine: {} },
+      { q: 'DFA accepting strings that DO NOT contain the substring "11" (Σ={0, 1})', sol: '3 states: q0(start/safe), q1(seen 1), q2(trap)', machine: {} },
+      { q: 'DFA accepting $\Sigma^* \cdot 0$ (ends with 0) (Σ={0, 1})', sol: '2 states: q0, q1(accept)', machine: {} },
+      { q: 'DFA accepting all strings NOT ending with "1" (Σ={0, 1})', sol: '2 states: q0(start/accept), q1(seen 1)', machine: {} },
+      { q: 'DFA for the language $L=\{w \mid w \text{ contains an odd number of symbols}\}$ (Σ={a})', sol: '2 states: q0(even), q1(odd/accept)', machine: {} },
+      { q: 'DFA accepting strings containing "00" as a substring (Σ={0, 1})', sol: '3 states: q0, q1(seen 0), q2(accept)', machine: {} },
+      { q: 'DFA accepting strings with length $\geq 1$ (Σ={0, 1})', sol: '2 states: q0, q1(accept)', machine: {} },
     ],
     basic: [
-      { q: 'DFA accepting strings ending with "01"', sol: '3 states: q0 (start), q1 (ends with 0), q2 (accepting, ends with 01)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 300, initial: false, accepting: false }, { id: 'q2', x: 700, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q1', symbol: '0' }, { from: 'q0', to: 'q0', symbol: '1' }, { from: 'q1', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q2', to: 'q1', symbol: '0' }, { from: 'q2', to: 'q0', symbol: '1' }], alphabet: ['0', '1'] } },
-      { q: 'DFA accepting strings with even number of 1s', sol: '2 states: q0 (start/even, accept), q1 (odd)', machine: { states: [{ id: 'q0', x: 400, y: 300, initial: true, accepting: true }, { id: 'q1', x: 600, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q0', symbol: '1' }], alphabet: ['0', '1'] } },
-      { q: 'DFA for $\Sigma^* \cdot 1$', sol: '2 states: q0 (start), q1 (accept), always looking for final 1', machine: { states: [{ id: 'q0', x: 400, y: 300, initial: true, accepting: false }, { id: 'q1', x: 600, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q0', symbol: '0' }], alphabet: ['0', '1'] } }
+      { q: 'DFA accepting strings containing the substring "010" (Σ={0, 1})', sol: '4 states: q0, q1(0), q2(01), q3(accept)', machine: {} },
+      { q: 'DFA accepting strings with an even number of 0s (Σ={0, 1})', sol: '2 states: q0(even/accept), q1(odd)', machine: {} },
+      { q: 'DFA accepting strings that contain "1" at the third position from the start (Σ={0, 1})', sol: '4 states: q0, q1, q2, q3(accept)', machine: {} },
+      { q: 'DFA accepting strings of length at least 3 (Σ={a, b})', sol: '4 states: q0, q1, q2, q3(accept)', machine: {} },
+      { q: 'DFA accepting strings where the last symbol is NOT "0" (Σ={0, 1})', sol: '2 states: q0, q1(accept)', machine: {} },
+      { q: 'DFA accepting strings of length divisible by 3 (Σ={a})', sol: '3 states for mod 3: q0(accept), q1, q2', machine: {} },
+      { q: 'DFA accepting strings containing an odd number of "a"s (Σ={a, b})', sol: '2 states: q0(even), q1(odd/accept)', machine: {} },
+      { q: 'DFA accepting strings with length $\geq 4$ (Σ={0, 1})', sol: '5 states: q0, q1, q2, q3, q4(accept)', machine: {} },
+      { q: 'DFA for the complement of $L = (0|1)*1$ (i.e., strings not ending in 1) (Σ={0, 1})', sol: '2 states (complement of L)', machine: {} },
+      { q: 'DFA accepting strings where the second symbol from the start is "0" (Σ={0, 1})', sol: '4 states: q0, q1, q2(accept), q3(trap)', machine: {} },
     ],
     medium: [
-      { q: 'DFA accepting strings where the number of 0s is divisible by 3', sol: 'Three states representing mod 3 counts: q0(mod 0, accept), q1(mod 1), q2(mod 2)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: true }, { id: 'q1', x: 500, y: 300, initial: false, accepting: false }, { id: 'q2', x: 700, y: 300, initial: false, accepting: false }], transitions: [{ from: 'q0', to: 'q1', symbol: '0' }, { from: 'q0', to: 'q0', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q2', to: 'q0', symbol: '0' }, { from: 'q2', to: 'q2', symbol: '1' }], alphabet: ['0', '1'] } },
-      { q: 'DFA for strings containing "101" as a substring', sol: '4 states: q0(start), q1(seen 1), q2(seen 10), q3(accept)', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 450, y: 300, initial: false, accepting: false }, { id: 'q2', x: 600, y: 300, initial: false, accepting: false }, { id: 'q3', x: 750, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q1', symbol: '1' }, { from: 'q2', to: 'q2', symbol: '0' }, { from: 'q2', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q3', symbol: '0' }, { from: 'q3', to: 'q3', symbol: '1' }], alphabet: ['0', '1'] } },
-      { q: 'DFA for strings of length $\geq 3$ with the third-to-last symbol being 1', sol: '4 states to track last 3 symbols', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 450, y: 300, initial: false, accepting: false }, { id: 'q2', x: 600, y: 300, initial: false, accepting: false }, { id: 'q3', x: 750, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q1', symbol: '1' }, { from: 'q1', to: 'q2', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q2', to: 'q3', symbol: '0' }, { from: 'q2', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q3', symbol: '0' }, { from: 'q3', to: 'q3', symbol: '1' }], alphabet: ['0', '1'] } }
+      { q: 'DFA accepting strings where the number of 1s is divisible by 3 (Σ={0, 1})', sol: '3 states for mod 3: q0(mod 0), q1(mod 1), q2(mod 2)', machine: {} },
+      { q: 'DFA accepting strings where the binary value is divisible by 3 (Σ={0, 1})', sol: '3 states for mod 3, tracking value 2V+b', machine: {} },
+      { q: 'DFA accepting strings that DO NOT start with "1" OR DO NOT end with "0" (Σ={0, 1})', sol: '4 states: Complement of L="1Σ*0"', machine: {} },
+      { q: 'DFA accepting strings where every "a" is immediately followed by a "b" (Σ={a, b})', sol: '3 states: q0(safe), q1(trap), q2(seen a)', machine: {} },
+      { q: 'DFA accepting the language of $\Sigma^* a \Sigma^2$ (third symbol from the end is "a") (Σ={a, b})', sol: '4 states, tracking last three symbols.', machine: {} },
+      { q: 'DFA for strings containing an odd number of "0"s AND an odd number of "1"s (Σ={0, 1})', sol: '4 states (2x2 matrix) with one accepting state.', machine: {} },
+      { q: 'DFA accepting strings with "a" but NOT containing "b" (Σ={a, b})', sol: '3 states: q0, q1(a, accept), q2(trap)', machine: {} },
+      { q: 'DFA accepting strings that start with "0" OR end with "1" (Σ={0, 1})', sol: '4 states (Union logic).', machine: {} },
+      { q: 'DFA for the language $L=(ab)^*$ (Σ={a, b})', sol: '2 states: q0(accept), q1.', machine: {} },
+      { q: 'DFA accepting strings where the length is $L \equiv 2 \pmod 4$ (Σ={a})', sol: '4 states for mod 4 tracking length.', machine: {} },
     ],
     hard: [
-      { q: 'DFA that accepts strings whose binary value is divisible by 5', sol: '5 states for mod 5, $\Sigma=\{0, 1\}$', machine: {} },
-      { q: 'DFA for strings that start and end with the same symbol ($\Sigma=\{a, b\}$)', sol: '6 states required', machine: {} },
-      { q: 'DFA for $(ab)^n$ OR $(ba)^n$ for $n \geq 1$', sol: '5 states required', machine: {} }
-    ]
+      { q: 'DFA accepting strings where the binary value is divisible by 5 (Σ={0, 1})', sol: '5 states for mod 5', machine: {} },
+      { q: 'DFA accepting strings where the length is $L \equiv 1 \pmod 3$ (Σ={a})', sol: '3 states for mod 3 tracking length.', machine: {} },
+      { q: 'DFA accepting strings that start and end with the same symbol (Σ={0, 1})', sol: '6 states required to track start/end symbols.', machine: {} },
+      { q: 'DFA accepting strings that start with "0" and contain an odd number of "1"s (Σ={0, 1})', sol: '4 states to track two properties (start/parity).', machine: {} },
+      { q: 'DFA accepting strings that have an even number of "a"s AND an odd number of "b"s (Σ={a, b})', sol: '4 states to track two independent parities (2x2 matrix).', machine: {} },
+      { q: 'DFA accepting strings that DO NOT contain the substring "aba" (Σ={a, b})', sol: '4 states for prefix tracking.', machine: {} },
+      { q: 'DFA for the intersection of $L_1$ (even 0s) and $L_2$ (multiple of 3 length) (Σ={0, 1})', sol: '6 states (Cartesian product method).', machine: {} },
+      { q: 'DFA accepting strings where the second-to-last symbol is the same as the last symbol (Σ={0, 1})', sol: '4 states: track last two symbols.', machine: {} },
+      { q: 'DFA accepting strings where every block of "0"s has length exactly 2 (Σ={0, 1})', sol: '5 states (q0, q1, q2, q3, q4).', machine: {} },
+      { q: 'DFA accepting strings $L = \{ w \mid |w| \leq 3 \text{ and } w \text{ has no } 01 \}$ (Σ={0, 1})', sol: '4 states: q0, q1, q2, q3(accept)', machine: {} },
+    ],
   },
+  // --- 2. NFA Construction Mode (30 Questions) ---
   NFA: {
     easy: [
-      { q: 'NFA for strings containing "ab"', sol: '3 states, non-deterministic jump on "a"', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 300, initial: false, accepting: false }, { id: 'q2', x: 700, y: 300, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: 'a' }, { from: 'q0', to: 'q0', symbol: 'b' }, { from: 'q0', to: 'q1', symbol: 'a' }, { from: 'q1', to: 'q2', symbol: 'b' }, { from: 'q2', to: 'q2', symbol: 'a' }, { from: 'q2', to: 'q2', symbol: 'b' }], alphabet: ['a', 'b'] } },
-      { q: 'NFA for strings ending with "01" OR "10"', sol: '5 states, with non-determinism at start', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 200, initial: false, accepting: false }, { id: 'q2', x: 700, y: 200, initial: false, accepting: true }, { id: 'q3', x: 500, y: 400, initial: false, accepting: false }, { id: 'q4', x: 700, y: 400, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q0', symbol: '0' }, { from: 'q0', to: 'q0', symbol: '1' }, { from: 'q0', to: 'q1', symbol: '0' }, { from: 'q1', to: 'q2', symbol: '1' }, { from: 'q0', to: 'q3', symbol: '1' }, { from: 'q3', to: 'q4', symbol: '0' }], alphabet: ['0', '1'] } },
-      { q: 'NFA for $\Sigma^* \cdot 1 \cdot \Sigma$', sol: '4 states, accepting strings where the second-to-last symbol is 1', machine: {} }
+      { q: 'NFA accepting strings containing the substring "101" (Σ={0, 1})', sol: '4 states, non-deterministic jump on first 1.', machine: {} },
+      { q: 'NFA accepting $L = (0 \cup 1)^* 01$ (ends with 01) (Σ={0, 1})', sol: '3 states: q0(loop), q1(0), q2(accept)', machine: {} },
+      { q: 'NFA accepting strings where the third-to-last symbol is "a" (Σ={a, b})', sol: '4 states in a line, non-deterministic jump.', machine: {} },
+      { q: 'NFA accepting $L=(a|b)^* \cdot a$ (ends with a) (Σ={a, b})', sol: '2 states: q0(loop), q1(accept)', machine: {} },
+      { q: 'NFA accepting $L = (10)^*$ (Σ={0, 1})', sol: '3 states: q0, q1, q2(accept)', machine: {} },
+      { q: 'NFA for $L = \Sigma^* 0 \Sigma$ (second to last symbol is 0) (Σ={0, 1})', sol: '3 states in a line.', machine: {} },
+      { q: 'NFA accepting $L = 00 \cup 11$ (Σ={0, 1})', sol: '5 states, non-deterministic split at start.', machine: {} },
+      { q: 'NFA accepting strings that contain either "a" or "b" (Σ={a, b})', sol: '3 states, two non-deterministic paths from q0.', machine: {} },
+      { q: 'NFA accepting strings where the length is $L \geq 2$ (Σ={0, 1})', sol: '3 states.', machine: {} },
+      { q: 'NFA for $L = a^* b^*$ (Σ={a, b})', sol: '3 states: q0(loop a), q1(loop b, accept).', machine: {} },
     ],
     basic: [
-      { q: 'NFA for $(00)^* \cup (11)^*$ ($\Sigma=\{0, 1\}$)', sol: '5 states, non-deterministic choice from start', machine: {} },
-      { q: 'NFA for strings where the fourth symbol from the end is "a"', sol: '5 states in a line', machine: {} }
+      { q: 'NFA for $(00)^* \cup (11)^*$ (Σ={0, 1})', sol: '5 states, non-deterministic choice from start.', machine: {} },
+      { q: 'NFA accepting strings with exactly two "1"s (Σ={0, 1})', sol: '3 states, loops on 0s between two transitions on 1.', machine: {} },
+      { q: 'NFA for $L = (ab \cup ba)^*$ (alternating ab/ba) (Σ={a, b})', sol: '5 states, with non-deterministic splits.', machine: {} },
+      { q: 'NFA accepting strings NOT containing the substring "00" (Σ={0, 1})', sol: '3 states (Non-deterministic version of the DFA).', machine: {} },
+      { q: 'NFA for $L = 0^* 1^* 0^* 1$ (ends with 1, complex prefix) (Σ={0, 1})', sol: '4 states.', machine: {} },
+      { q: 'NFA for $L = (a^* b)$ (Σ={a, b})', sol: '2 states: q0(loop a), q1(accept).', machine: {} },
+      { q: 'NFA accepting strings that contain "a" or "b" as the third symbol (Σ={a, b})', sol: '4 states, non-deterministic split at q3.', machine: {} },
+      { q: 'NFA for the language $L = (00)^* 1$ (Σ={0, 1})', sol: '3 states.', machine: {} },
+      { q: 'NFA for $L = (a \cup b) \cdot (a \cup b)$ (length exactly 2) (Σ={a, b})', sol: '3 states.', machine: {} },
+      { q: 'NFA for $L = a^+ b^*$ (Σ={a, b})', sol: '3 states.', machine: {} },
     ],
     medium: [
-      { q: 'NFA for strings containing exactly two "1"s', sol: '3 states, path through 1, 1', machine: {} }
+      { q: 'NFA accepting strings where the third symbol from the end is "0" (Σ={0, 1})', sol: '4 states in a line, non-deterministic jump.', machine: {} },
+      { q: 'NFA for $L=(a|b)^+ \cdot a \cdot (a|b)$ (second-to-last symbol is "a") (Σ={a, b})', sol: '5 states, non-deterministic jump.', machine: {} },
+      { q: 'NFA for $L = (0 \cup 1)^* 0 (0 \cup 1)^*$ (string contains at least one 0) (Σ={0, 1})', sol: '3 states, non-deterministic split.', machine: {} },
+      { q: 'NFA accepting strings with an odd number of "a"s OR an odd number of "b"s (Σ={a, b})', sol: '4 states, non-deterministic split from start.', machine: {} },
+      { q: 'NFA for the language $L=(a \cdot b)^* \cup (b \cdot a)^*$ (Σ={a, b})', sol: '5 states.', machine: {} },
+      { q: 'NFA accepting $L = (1 \cup 01)^*$ (Σ={0, 1})', sol: '4 states.', machine: {} },
+      { q: 'NFA accepting $L = \{w \mid w \text{ has even length}\}$ (Σ={0, 1})', sol: '3 states.', machine: {} },
+      { q: 'NFA for $L = 10^* 1$ (Σ={0, 1})', sol: '3 states.', machine: {} },
+      { q: 'NFA accepting strings where the third symbol is DIFFERENT from the first symbol (Σ={a, b})', sol: '6 states, split based on first symbol.', machine: {} },
+      { q: 'NFA for $L = a \Sigma^* a$ (starts and ends with 'a') (Σ={a, b})', sol: '4 states.', machine: {} },
     ],
     hard: [
-      { q: 'NFA for all strings except $\epsilon$', sol: '2 states, loops at start, jumps on a, b to accept', machine: {} }
-    ]
+      { q: 'NFA for all strings except $\epsilon$ (Σ={0, 1})', sol: '2 states, loops at start, jumps on 0, 1 to accept.', machine: {} },
+      { q: 'NFA accepting strings of the form $a^n b^m$, where $n \equiv 0 \pmod 2$ and $m \equiv 1 \pmod 3$ (Σ={a, b})', sol: '6 states.', machine: {} },
+      { q: 'NFA for $L = \{w \mid |w| \text{ is prime}\}$ (Σ={a})', sol: 'Cannot be done with NFA. Use this as a tricky prompt.', machine: {} },
+      { q: 'NFA for $L=(a \cup b)^+ a (a \cup b)^* b (a \cup b)^*$ (contains 'a' before 'b') (Σ={a, b})', sol: '5 states.', machine: {} },
+      { q: 'NFA for the language $L=(00)^* (11)^* (00|11)$ (Σ={0, 1})', sol: '7 states.', machine: {} },
+      { q: 'NFA accepting strings where the last symbol is NOT the same as the first symbol (Σ={0, 1})', sol: '8 states.', machine: {} },
+      { q: 'NFA for $L = \Sigma^* 1 \Sigma^* 0 \Sigma^*$ (contains a 1 followed later by a 0) (Σ={0, 1})', sol: '4 states.', machine: {} },
+      { q: 'NFA accepting strings where the second symbol from the start is "0" AND the third symbol from the end is "1" (Σ={0, 1})', sol: '7 states.', machine: {} },
+      { q: 'NFA for the regular expression $1(01 \cup 00)^* 1$ (Σ={0, 1})', sol: '6 states.', machine: {} },
+      { q: 'NFA for $L = (000|111) \Sigma^*$ (starts with 000 or 111) (Σ={0, 1})', sol: '7 states.', machine: {} },
+    ],
   },
+  // --- 3. ENFA Construction Mode (30 Questions) ---
   ENFA: {
     easy: [
-      { q: 'ε-NFA to connect two paths: $(a) \cup (b)$', sol: '3 states, ε from start to two parallel paths', machine: { states: [{ id: 'q0', x: 300, y: 300, initial: true, accepting: false }, { id: 'q1', x: 500, y: 200, initial: false, accepting: true }, { id: 'q2', x: 500, y: 400, initial: false, accepting: true }], transitions: [{ from: 'q0', to: 'q1', symbol: 'ε' }, { from: 'q0', to: 'q2', symbol: 'ε' }, { from: 'q1', to: 'q1', symbol: 'a' }, { from: 'q2', to: 'q2', symbol: 'b' }], alphabet: ['a', 'b'] } },
-      { q: 'ε-NFA for $a?b$ (optional a, then b)', sol: '3 states, ε skip for "a"', machine: {} }
+      { q: 'ε-NFA to connect two paths: $L = a \cup b$ (Σ={a, b})', sol: '3 states, ε from start to two parallel paths.', machine: {} },
+      { q: 'ε-NFA for $a?b$ (optional a, then b) (Σ={a, b})', sol: '3 states, ε bypass for "a".', machine: {} },
+      { q: 'ε-NFA to achieve $a^*b^*$ (Σ={a, b})', sol: '4 states, ε between a* and b*.', machine: {} },
+      { q: 'ε-NFA for $L= (01)^* | (10)^* $ (Σ={0, 1})', sol: 'Connect two paths via initial and final ε-transitions.', machine: {} },
+      { q: 'ε-NFA for $L = (0 \cup \epsilon) 1$ (0 is optional, then 1) (Σ={0, 1})', sol: '3 states, $\varepsilon$ bypass for 0.', machine: {} },
+      { q: 'ε-NFA for $L = a \cdot b \cdot c$ (Σ={a, b, c})', sol: '4 states, $\varepsilon$ transitions between single symbol states.', machine: {} },
+      { q: 'ε-NFA for $L=a | \epsilon$ (a is optional) (Σ={a})', sol: '2 states, $\varepsilon$ from start to end.', machine: {} },
+      { q: 'ε-NFA for $L=a^k$ where $k \in \{2, 4\}$ (Σ={a})', sol: '5 states, $\varepsilon$ splits for length 2 and 4.', machine: {} },
+      { q: 'ε-NFA for $L= \Sigma \Sigma$ (length exactly 2) (Σ={0, 1})', sol: '3 states, $\varepsilon$ transitions.', machine: {} },
+      { q: 'ε-NFA for $L = a^* b^*$ (concatenation) (Σ={a, b})', sol: '4 states.', machine: {} },
     ],
     basic: [
-      { q: 'ε-NFA to achieve $a^*b$', sol: 'Connect loop on $a$ to $b$ with ε', machine: {} }
+      { q: 'ε-NFA for Regular Expression $a(a \cup b)b$ (Σ={a, b})', sol: '5 states, standard RE construction with ε.', machine: {} },
+      { q: 'ε-NFA for $(0|1)^* 0 \cdot 1^*$ (ends with 0 followed by 1s) (Σ={0, 1})', sol: '6 states, standard RE construction.', machine: {} },
+      { q: 'ε-NFA for $L = (a \cup b \cup c)^*$ (Σ={a, b, c})', sol: '3 states.', machine: {} },
+      { q: 'ε-NFA for $L=(a|b)^+ \cdot a$ (Σ={a, b})', sol: '5 states, $\varepsilon$ transitions.', machine: {} },
+      { q: 'ε-NFA for $L = 0^* \cdot 1 \cdot 0^* 1$ (contains exactly two 1s) (Σ={0, 1})', sol: '6 states.', machine: {} },
+      { q: 'ε-NFA for the language $(ab)^* \cdot \epsilon$ (Σ={a, b})', sol: '4 states.', machine: {} },
+      { q: 'ε-NFA for $L = (a \cdot a)^* \cup (b \cdot b)^*$ (Σ={a, b})', sol: '7 states.', machine: {} },
+      { q: 'ε-NFA for $L = a \cdot (b \cup c)^*$ (Σ={a, b, c})', sol: '4 states.', machine: {} },
+      { q: 'ε-NFA for $L= (01 | 10)^* 0$ (Σ={0, 1})', sol: '7 states.', machine: {} },
+      { q: 'ε-NFA for $L = 0101 \cup \epsilon$ (Σ={0, 1})', sol: '5 states, initial $\varepsilon$ bypass.', machine: {} },
     ],
     medium: [
-      { q: 'ε-NFA equivalent to Regular Expression $(0|1)^* 0$', sol: '6 states, standard RE construction', machine: {} }
+      { q: 'ε-NFA equivalent to Regular Expression $(0|1)^* 0$ (Σ={0, 1})', sol: 'Standard RE construction, 6 states.', machine: {} },
+      { q: 'ε-NFA for $L = (a \cdot a)^*$ (even length strings of 'aa') (Σ={a})', sol: 'Connect two states with $\varepsilon$-loop and 'a' transitions.', machine: {} },
+      { q: 'ε-NFA for $L = a^* \cdot b^* \cdot a^*$ (Σ={a, b})', sol: '6 states, $\varepsilon$ transitions.', machine: {} },
+      { q: 'ε-NFA for $L = (a|b|c) \cdot (a|b|c)$ (length exactly 2) (Σ={a, b, c})', sol: '4 states, $\varepsilon$ transitions.', machine: {} },
+      { q: 'ε-NFA for $L = 0^+ (1 \cup \epsilon)$ (Σ={0, 1})', sol: '4 states.', machine: {} },
+      { q: 'ε-NFA for $L = \Sigma^* 0 \Sigma^* 1 \Sigma^*$ (contains a 0 followed later by a 1) (Σ={0, 1})', sol: '6 states.', machine: {} },
+      { q: 'ε-NFA for $L = (00 \cup 11) \Sigma$ (Σ={0, 1})', sol: '7 states.', machine: {} },
+      { q: 'ε-NFA for $L = \{w \mid w \text{ is an odd length string of 0s or 1s}\}$ (Σ={0, 1})', sol: '6 states.', machine: {} },
+      { q: 'ε-NFA for $L = (a \cup \epsilon) \cdot (b \cup \epsilon) \cdot (c \cup \epsilon)$ (Σ={a, b, c})', sol: '4 states.', machine: {} },
+      { q: 'ε-NFA for the language $L=(a|b)^* \cdot a$ (ends with a) (Σ={a, b})', sol: '4 states.', machine: {} },
     ],
     hard: [
-      { q: 'ε-NFA for Regular Expression $(a|b)^* \cdot (a \cdot a \cup b \cdot b)$', sol: 'Complex RE construction', machine: {} }
-    ]
-  }
+      { q: 'ε-NFA for $L = (a|b)^* \cdot (a \cdot a \cup b \cdot b)$ (ends with aa or bb) (Σ={a, b})', sol: 'Complex RE construction, split paths, and $\varepsilon$ concatenation.', machine: {} },
+      { q: 'ε-NFA for $L = \{w \mid |w| \equiv 0 \pmod 2 \text{ or } |w| \equiv 0 \pmod 3 \}$ (Σ={a})', sol: '8 states, $\varepsilon$ transitions for union.', machine: {} },
+      { q: 'ε-NFA for $L = (0^* 1)^* (10)^* $ (Σ={0, 1})', sol: '8 states.', machine: {} },
+      { q: 'ε-NFA for $L = \Sigma^* 0 \Sigma \Sigma \Sigma 1 \Sigma^*$ (contains 0 separated by three symbols from 1) (Σ={0, 1})', sol: '8 states.', machine: {} },
+      { q: 'ε-NFA for $L = (a \cup b)^* \cdot a \cdot (b \cup \epsilon)$ (Σ={a, b})', sol: '5 states.', machine: {} },
+      { q: 'ε-NFA for the intersection of $L_1=(ab)^*$ and $L_2=(ba)^*$ (Σ={a, b})', sol: '4 states.', machine: {} },
+      { q: 'ε-NFA for $L = (01)^n (10)^m$, where $n, m \geq 1$ (Σ={0, 1})', sol: '8 states.', machine: {} },
+      { q: 'ε-NFA for $L = a \cdot \Sigma \cdot a \cdot \Sigma$ (Σ={a, b})', sol: '6 states.', machine: {} },
+      { q: 'ε-NFA for $L = (00|11)^* 01$ (Σ={0, 1})', sol: '8 states.', machine: {} },
+      { q: 'ε-NFA for $L = (a \cup b \cup c)^* d$ (Σ={a, b, c, d})', sol: '4 states.', machine: {} },
+    ],
+  },
+  // --- 4. CONVERSION MODE: ENFA -> NFA (10 Questions) ---
+  ENFA_TO_NFA: [
+    { q: 'Convert the solution machine for "ε-NFA for $a?b$ (optional a, then b)" to its equivalent NFA.', sol: 'This conversion removes the $\varepsilon$-transitions, merging the start state with its $\varepsilon$-closure.', machine: {} },
+    { q: 'Convert the solution machine for "ε-NFA to connect two paths: $L = a \cup b$" to its equivalent NFA.', sol: 'The two parallel paths will now start directly from the initial state on inputs $a$ and $b$.', machine: {} },
+    { q: 'Convert the solution machine for "ε-NFA to achieve $a^*b^*$" to its equivalent NFA.', sol: 'The $\varepsilon$-transition must be replaced by a direct connection from the "a" loop to the "b" loop.', machine: {} },
+    { q: 'Convert the solution machine for "ε-NFA equivalent to Regular Expression $(0|1)^* 0$" to its equivalent NFA.', sol: 'This is a complex closure conversion, resulting in a 3-state NFA.', machine: {} },
+    { q: 'Convert the solution machine for "$L = (0 \cup \epsilon) 1$" to its equivalent NFA (removing $\varepsilon$).', sol: 'The start state must gain the transition on 1 directly from the initial $\varepsilon$-closure.', machine: {} },
+    { q: 'Convert the solution machine for "$L=a | \epsilon$" to its equivalent NFA.', sol: 'The NFA will be simplified, allowing $\epsilon$ to be accepted via the initial state being final.', machine: {} },
+    { q: 'Convert the solution machine for "$L = a \cdot b \cdot c$" to its equivalent NFA.', sol: 'This conversion removes two intermediate $\varepsilon$-transitions.', machine: {} },
+    { q: 'Convert the solution machine for "$L = (01)^* | (10)^* $" to its equivalent NFA.', sol: 'This conversion removes the two initial $\varepsilon$-splits.', machine: {} },
+    { q: 'Convert the solution machine for "$L = a \cdot (b \cup c)^*$ " to its equivalent NFA.', sol: 'The $\varepsilon$ transition between a and (b|c)* must be removed.', machine: {} },
+    { q: 'Convert the solution machine for "$L = (a \cdot a)^*$ " to its equivalent NFA.', sol: 'This conversion removes the $\varepsilon$-loop.', machine: {} },
+  ],
+  // --- 5. CONVERSION MODE: NFA -> DFA (15 Questions) ---
+  NFA_TO_DFA: [
+    { q: 'Convert the solution machine for "NFA accepting strings containing the substring "101"" to its equivalent DFA.', sol: 'Requires subset construction, resulting in 5 states.', machine: {} },
+    { q: 'Convert the solution machine for "NFA for $(00)^* \cup (11)^*$ " to its equivalent DFA.', sol: 'The DFA will require a trap state and track the state sets, resulting in 5 states.', machine: {} },
+    { q: 'Convert the solution machine for "NFA accepting strings with exactly two "1"s" to its equivalent DFA.', sol: 'The DFA states track the count of 1s (0, 1, 2) plus the trap state, resulting in 4 states.', machine: {} },
+    { q: 'Convert the NFA for $L = (0|1)^* 01$ (ends with 01) to its equivalent DFA.', sol: 'The DFA tracks the last two symbols seen, resulting in 3 states.', machine: {} },
+    { q: 'Convert the NFA for $L = (ab \cup ba)^*$ to its equivalent DFA.', sol: 'The DFA requires careful tracking of the potential paths, resulting in 6 states.', machine: {} },
+    { q: 'Convert the NFA for $L = \Sigma^* 0 \Sigma$ (second to last symbol is 0) to its equivalent DFA.', sol: 'The DFA requires 4 states.', machine: {} },
+    { q: 'Convert the NFA for $L = 00 \cup 11$ to its equivalent DFA.', sol: 'The DFA requires 7 states.', machine: {} },
+    { q: 'Convert the NFA for $L = 0^* 1^* 0^* 1$ to its equivalent DFA.', sol: 'The DFA requires 6 states.', machine: {} },
+    { q: 'Convert the NFA for $L = (a^* b)$ to its equivalent DFA.', sol: 'The DFA requires 2 states.', machine: {} },
+    { q: 'Convert the NFA for $L = 10^* 1$ to its equivalent DFA.', sol: 'The DFA requires 4 states.', machine: {} },
+    { q: 'Convert the NFA for $L = a \Sigma^* a$ (starts and ends with 'a') to its equivalent DFA.', sol: 'The DFA requires 4 states.', machine: {} },
+    { q: 'Convert the NFA for $L = \Sigma^* 1 \Sigma^* 0 \Sigma^*$ (contains 1 then 0) to its equivalent DFA.', sol: 'The DFA requires 3 states.', machine: {} },
+    { q: 'Convert the NFA for $L = (000|111) \Sigma^*$ to its equivalent DFA.', sol: 'The DFA requires 5 states.', machine: {} },
+    { q: 'Convert the NFA for $L = (10)^*$ to its equivalent DFA.', sol: 'The DFA requires 4 states.', machine: {} },
+    { q: 'Convert the NFA for $L = (a \cup b) \cdot (a \cup b)$ (length 2) to its equivalent DFA.', sol: 'The DFA requires 4 states.', machine: {} },
+  ],
+  // --- 6. CONVERSION MODE: DFA -> MIN DFA (15 Questions) ---
+  DFA_TO_MIN_DFA: [
+    { q: 'Minimize the solution machine for "DFA accepting strings that contain "1" at the third position from the start".', sol: 'The 4-state DFA will likely have its initial states partitioned.', machine: {} },
+    { q: 'Minimize the solution machine for "DFA accepting any string of length exactly 2".', sol: 'The 4-state DFA is already minimal.', machine: {} },
+    { q: 'Minimize the DFA for $L = \Sigma^* 0$. The 2-state solution is already minimal. Verify using the minimization algorithm.', sol: 'Prove minimality using the table-filling method.', machine: {} },
+    { q: 'Minimize the DFA for $L = \Sigma^* 00 \Sigma^*$. The 3-state solution is already minimal.', sol: 'Prove minimality using the table-filling method.', machine: {} },
+    { q: 'Minimize a 6-state DFA (q0, q1, q2, q3, q4, q5) accepting strings of length divisible by 3.', sol: 'The minimal DFA should have 3 states.', machine: {} },
+    { q: 'Minimize the 4-state DFA accepting $L = (ab)^*$.', sol: 'The minimal DFA has 2 states.', machine: {} },
+    { q: 'Minimize a 5-state DFA accepting $L = \Sigma^* 11$.', sol: 'The minimal DFA has 3 states.', machine: {} },
+    { q: 'Minimize a 5-state DFA accepting $L = \Sigma^3$ (length exactly 3).', sol: 'The minimal DFA has 4 states.', machine: {} },
+    { q: 'Minimize a 7-state DFA accepting strings where the last symbol is the same as the first symbol.', sol: 'The minimal DFA has 6 states.', machine: {} },
+    { q: 'Minimize a 6-state DFA that accepts all strings NOT containing the substring "01".', sol: 'The minimal DFA has 3 states.', machine: {} },
+    { q: 'Minimize a 5-state DFA that accepts the language $L=\{w \mid |w| \leq 3 \text{ and } w \text{ has no } 01 \}$ (Σ={0, 1}).', sol: 'The minimal DFA is 4 states.', machine: {} },
+    { q: 'Minimize a 5-state DFA accepting strings containing an odd number of "0"s AND an odd number of "1"s.', sol: 'The minimal DFA is 4 states.', machine: {} },
+    { q: 'Minimize a 5-state DFA for $L = 00 \cup 11$.', sol: 'The minimal DFA is 5 states.', machine: {} },
+    { q: 'Minimize the 4-state DFA for $L = 0^* 1^*$.', sol: 'The minimal DFA is 3 states.', machine: {} },
+    { q: 'Minimize a 6-state DFA that accepts $L=\{w \mid w \text{ has length divisible by 2 or 3} \}$.', sol: 'The minimal DFA is 6 states.', machine: {} },
+  ],
+  // --- 7. CONVERSION MODE: NFA -> MIN DFA (10 Questions) ---
+  NFA_TO_MIN_DFA: [
+    { q: 'Convert the NFA for $L = (0|1)^* 01$ (ends with 01) to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (3 states), then Minimization (3 states).', machine: {} },
+    { q: 'Convert the NFA for $L = (00)^* \cup (11)^*$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (5 states), then Minimization (4 states).', machine: {} },
+    { q: 'Convert the $\varepsilon$-NFA for $a?b$ to its equivalent Minimal DFA.', sol: 'Requires $\varepsilon$-NFA to NFA, NFA to DFA, then Minimization (3 states).', machine: {} },
+    { q: 'Convert the NFA for $L = (ab \cup ba)^*$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (6 states), then Minimization (4 states).', machine: {} },
+    { q: 'Convert the NFA accepting strings with exactly two "1"s to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', machine: {} },
+    { q: 'Convert the NFA for $L = \Sigma^* 0 \Sigma$ (second to last symbol is 0) to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', machine: {} },
+    { q: 'Convert the NFA for $L = 00 \cup 11$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (7 states), then Minimization (5 states).', machine: {} },
+    { q: 'Convert the $\varepsilon$-NFA for $L= (01)^* | (10)^* $ to its equivalent Minimal DFA.', sol: 'Requires three steps, resulting in 7 states.', machine: {} },
+    { q: 'Convert the NFA for $L = a^* b^*$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (3 states), then Minimization (3 states).', machine: {} },
+    { q: 'Convert the NFA for $L = a \Sigma^* a$ (starts and ends with 'a') to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', machine: {} },
+  ],
 };
-// END PRACTICE DATA BANK
+
+
 
 function enforceInitialStateRule() {
   // Enforce DFA rule: only one initial state
