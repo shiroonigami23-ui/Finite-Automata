@@ -152,7 +152,7 @@ id="testSpeed" style="margin-left:6px;padding:6px;border-radius:6px;border:1px s
                       <option value="2000" selected>Slow</option>
                     </select>
                   </label>
-                  <div id="manualButtons" style="display:none;margin-top:8px;display:flex;gap:6px;">
+                  <div id="manualButtons" style="display:none;margin-top:8px;gap:6px;">
                     <button id="stepPrev" class="icon-btn">◀ Prev</button>
                     <button id="stepNext" class="icon-btn">Next ▶</button>
                     <button id="stepReset" class="icon-btn">⟲ Reset</button>
@@ -287,7 +287,14 @@ const saveMachineBtn = document.getElementById("saveMachineBtn");
 const loadMachineBtn = document.getElementById("loadMachineBtn");
 const loadFileInput = document.getElementById("loadFileInput");
 const validationLine = document.getElementById('validationLine');
-
+document.querySelectorAll('.splash-nav-btn').forEach(btn => {
+  btn.addEventListener('click',() => {
+    if (!btn.disabled) {
+      document.getElementById('splashScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+    }
+  });
+});
 // --- APPLICATION STATE ---
 let MACHINE = {
   type: 'DFA',
@@ -4474,6 +4481,7 @@ renderAll();
 updateUndoRedoButtons();
 setZoom(100);
 });
+  lucide.createIcons();
 </script>
 </body>
 </html>
