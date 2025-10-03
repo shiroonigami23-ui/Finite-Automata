@@ -257,6 +257,13 @@ class="zoom-controls">
 <script>
   // === MAIN APPLICATION SCRIPT ===
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('.splash-nav-btn').forEach(btn => {
+  btn.addEventListener('click',() => {
+    if (!btn.disabled) {
+      document.getElementById('splashScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+  });
+});
 // --- ELEMENT REFERENCES ---
 const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
@@ -267,8 +274,7 @@ const practiceBox = document.getElementById('practiceBox');
 const genPracticeBtn = document.getElementById('genPracticeBtn');
 const showSolBtn = document.getElementById('showSolBtn');
 const resetPractice = document.getElementById('resetPractice');
-const checkAnswerBtn =
-document.getElementById('checkAnswerBtn');
+const checkAnswerBtn =document.getElementById('checkAnswerBtn');
 const runTestBtn = document.getElementById('runTestBtn');
 const validateBtn = document.getElementById('validateBtn');
 const exportBtn = document.getElementById('exportPngBtn');
@@ -287,14 +293,7 @@ const saveMachineBtn = document.getElementById("saveMachineBtn");
 const loadMachineBtn = document.getElementById("loadMachineBtn");
 const loadFileInput = document.getElementById("loadFileInput");
 const validationLine = document.getElementById('validationLine');
-document.querySelectorAll('.splash-nav-btn').forEach(btn => {
-  btn.addEventListener('click',() => {
-    if (!btn.disabled) {
-      document.getElementById('splashScreen').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
-    }
-  });
-});
+
 // --- APPLICATION STATE ---
 let MACHINE = {
   type: 'DFA',
