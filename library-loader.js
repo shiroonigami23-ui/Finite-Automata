@@ -116,10 +116,6 @@ function renderLibraryItems(data) {
     listEl.appendChild(el);
   });
 }
-// load external auto-renderer if present
-const s = document.createElement('script');
-s.src = './auto-renderer.js';
-document.body.appendChild(s);
 
 document.addEventListener('DOMContentLoaded', () => {
   const refreshBtn = document.getElementById('libRefresh');
@@ -135,3 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(()=>refreshLibrary(), 300);
 });
+// load external auto-renderer if present
+const s = document.createElement('script');
+s.src = './auto-renderer.js';
+document.body.appendChild(s);
