@@ -116,6 +116,10 @@ function renderLibraryItems(data) {
     listEl.appendChild(el);
   });
 }
+// load external auto-renderer if present
+const s = document.createElement('script');
+s.src = './auto-renderer.js';
+document.body.appendChild(s);
 
 document.addEventListener('DOMContentLoaded', () => {
   const refreshBtn = document.getElementById('libRefresh');
