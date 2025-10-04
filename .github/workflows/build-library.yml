@@ -1,0 +1,45 @@
+name: Build Automata Library
+
+on:
+  push:
+    paths:
+      - "automata/*.json"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Merge JSON files into library.json
+        run: |
+          import json, pathlib
+          auto_dir = pathlib.Path("automata")
+          out = []
+          for file in auto_dir.glob("*.json"):
+              try:
+                  data = json.loads(file.read_text(encoding="utf-8"))
+                  if isinstance(data, dict):
+                      out.append(data)
+                  elif isinstance(data, list):
+                      out.extend(data)
+              except Exception as e:
+                  print("Skipping", file, ":", e)
+          pathlib.Path("library.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+          print("Generated library.json with", len(out), "entries")
+        shell: python
+
+      - name: Commit and push library.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add library.json
+          git commit -m "Auto-build library.json from automata folder" || echo "No changes to commit"
+          git push
+          
