@@ -1,5 +1,3 @@
-
-// library-loader.js
 const LIB_URL = './library.json';
 
 async function fetchLibrary() {
@@ -131,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(()=>refreshLibrary(), 300);
 });
-// load external auto-renderer if present
 const s = document.createElement('script');
 s.src = './auto-renderer.js';
 document.body.appendChild(s);
