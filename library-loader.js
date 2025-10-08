@@ -37,11 +37,11 @@ function renderEntry(entry) {
   openBtn.textContent = 'Open';
   openBtn.onclick = () => {
     if (entry.machine) {
-      window.MACHINE = { ...entry.machine, type: entry.type || 'DFA' };
       if (typeof window.loadMachineFromObject === 'function') {
-        window.loadMachineFromObject(window.MACHINE);
+        const machineToLoad = { ...entry.machine, type: entry.type || 'DFA', title: entry.title || entry.id };
+        window.loadMachineFromObject(machineToLoad);
       } else {
-        alert('Machine loaded into window.MACHINE. Implement loadMachineFromObject to auto-render.');
+        alert('Error: The loadMachineFromObject function is missing. Make sure library_helper.js is loaded.');
       }
     } else {
       alert('No machine data in this entry.');
@@ -69,6 +69,20 @@ function renderEntry(entry) {
   desc.style.fontSize = '0.95em';
   desc.textContent = entry.description || entry.sol || '';
   container.appendChild(desc);
+
+  // This block checks for an imageUrl and displays the image if it exists.
+  if (entry.imageUrl) {
+    const imgWrapper = document.createElement('div');
+    imgWrapper.style.marginTop = '8px';
+    const img = document.createElement('img');
+    img.src = entry.imageUrl;
+    img.style.maxWidth = '100%';
+    img.style.borderRadius = '6px';
+    img.style.border = '1px solid #eef2ff';
+    img.alt = entry.title || 'Automaton Image';
+    imgWrapper.appendChild(img);
+    container.appendChild(imgWrapper);
+  }
 
   if (entry.tags && entry.tags.length) {
     const tagRow = document.createElement('div');
@@ -129,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(()=>refreshLibrary(), 300);
 });
+
 const s = document.createElement('script');
 s.src = './auto-renderer.js';
 document.body.appendChild(s);
