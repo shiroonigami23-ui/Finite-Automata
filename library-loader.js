@@ -144,6 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(()=>refreshLibrary(), 300);
 });
 
-const s = document.createElement('script');
+/*const s = document.createElement('script');
 s.src = './auto-renderer.js';
-document.body.appendChild(s);
+document.body.appendChild(s);*/
