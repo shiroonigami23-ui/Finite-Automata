@@ -1,16 +1,11 @@
-// auto-renderer.js
 (function() {
-  // Wait until page fully loads
   document.addEventListener("DOMContentLoaded", () => {
     console.log("Auto Renderer Ready ✅");
 
-    // Hook into library loader
-    const originalOpenHandler = window.loadMachineFromObject;
+   const originalOpenHandler = window.loadMachineFromObject;
 
-    // Replace or define it dynamically
-    window.loadMachineFromObject = function(machine) {
-      // If your HTML already defines a renderer, call it first
-      if (typeof originalOpenHandler === "function") {
+       window.loadMachineFromObject = function(machine) {
+       if (typeof originalOpenHandler === "function") {
         try { originalOpenHandler(machine); } catch (e) { console.warn("Original handler failed", e); }
       }
 
@@ -23,13 +18,11 @@
         return;
       }
 
-      // Clear existing
       svg.innerHTML = "";
 
       const create = (tag) => document.createElementNS("http://www.w3.org/2000/svg", tag);
 
-      // Draw transitions
-      if (machine.transitions) {
+    if (machine.transitions) {
         for (const t of machine.transitions) {
           const from = machine.states.find(s => s.id === t.from);
           const to = machine.states.find(s => s.id === t.to);
@@ -56,7 +49,6 @@
         }
       }
 
-      // Draw states
       for (const s of machine.states || []) {
         const circle = create("circle");
         circle.setAttribute("cx", s.x);
@@ -75,7 +67,6 @@
         text.setAttribute("font-size", "13");
         svg.appendChild(text);
 
-        // Initial arrow
         if (s.initial) {
           const arrow = create("line");
           arrow.setAttribute("x1", s.x - 50);
