@@ -1,4 +1,5 @@
-// A helper function to load a machine from the library onto the canvas
+// The entire content of library_helper.js
+
 function loadMachineFromObject(machineObject) {
   // Check if the provided object is a valid machine
   if (!machineObject || !machineObject.states) {
@@ -17,13 +18,17 @@ function loadMachineFromObject(machineObject) {
   // Find the mode dropdown in the HTML
   const modeSelect = document.getElementById('modeSelect');
   if (modeSelect && window.MACHINE.type) {
-    // This makes sure the dropdown UI matches the type of the loaded machine
     const baseType = window.MACHINE.type.split('_TO_')[0];
     if (['DFA', 'NFA', 'ENFA'].includes(baseType)) {
       modeSelect.value = baseType;
     }
   }
   
+  // Call the layout function to assign X/Y positions to the states
+  if (typeof layoutStatesLine === 'function') {
+    layoutStatesLine(window.MACHINE.states);
+  }
+
   // Use the renderAll function from script.js to draw the new machine
   if (typeof renderAll === 'function') {
     renderAll();
@@ -35,7 +40,6 @@ function loadMachineFromObject(machineObject) {
     const title = machineObject.title || machineObject.id || 'machine';
     validationLine.textContent = `Loaded "${title}" from library.`;
     validationLine.className = 'validation-box show success';
-    // Hide the message after 4 seconds
     setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
   }
 }
