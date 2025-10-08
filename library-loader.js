@@ -1,4 +1,4 @@
-const LIB_URL = './automata/.json';
+const LIB_URL = './library.json';
 
 async function fetchLibrary() {
   try {
