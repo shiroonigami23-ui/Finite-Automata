@@ -1,5 +1,4 @@
 
-#!/usr/bin/env python3
 import sys, json, pathlib
 LIB = pathlib.Path(__file__).parent / "library.json"
 def load_lib():
