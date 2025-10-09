@@ -3763,7 +3763,10 @@ document.getElementById('confirmClearConfirm').addEventListener('click', () => {
     renderAll();
     document.getElementById('confirmClearModal').style.display = 'none';
 });
-    
+    const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+if (clearCanvasBtn) {
+    clearCanvasBtn.addEventListener('click', clearCanvas);
+}
       function openPropsModal(stateId) {
         const modal = document.getElementById('statePropsModal');
         modal.dataset.stateId = stateId;
