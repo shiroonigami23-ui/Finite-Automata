@@ -4771,42 +4771,50 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Export SVG as PNG exact replica (preserve styles and markers) ---
   function exportSvgAsPng(svgEl, filename = 'automaton.png') {
   try {
-    // Clone SVG to safely manipulate it
     const clone = svgEl.cloneNode(true);
 
-    // ✅ Inline all computed styles for accurate color export
-    const allElements = clone.querySelectorAll('*');
-    allElements.forEach(el => {
+    // ✅ Inline essential computed styles as SVG attributes
+    const importantProps = [
+      'fill', 'stroke', 'stroke-width', 'font-family', 'font-size',
+      'font-weight', 'text-anchor', 'opacity', 'color'
+    ];
+
+    clone.querySelectorAll('*').forEach(el => {
       const style = window.getComputedStyle(el);
-      const cssText = Array.from(style)
-        .map(name => `${name}:${style.getPropertyValue(name)};`)
-        .join('');
-      el.setAttribute('style', cssText);
+      importantProps.forEach(prop => {
+        const val = style.getPropertyValue(prop);
+        if (val && val !== 'none' && val.trim() !== '') {
+          el.setAttribute(prop, val);
+        }
+      });
     });
 
-    // Ensure required namespaces
+    // Add SVG namespaces
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 
-    // Determine export dimensions
+    // Size for export
     const bbox = svgEl.getBoundingClientRect();
-    clone.setAttribute('width', Math.ceil(bbox.width));
-    clone.setAttribute('height', Math.ceil(bbox.height));
+    const width = Math.ceil(bbox.width);
+    const height = Math.ceil(bbox.height);
+    clone.setAttribute('width', width);
+    clone.setAttribute('height', height);
 
-    // Serialize SVG → Blob → ObjectURL
+    // Serialize SVG
     const serializer = new XMLSerializer();
     const svgStr = serializer.serializeToString(clone);
-    const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
 
-    // Render on canvas
     const img = new Image();
     img.onload = function () {
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = Math.ceil(bbox.width);
-        canvas.height = Math.ceil(bbox.height);
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
+
+        // Preserve transparency
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
 
@@ -4818,7 +4826,7 @@ document.addEventListener("DOMContentLoaded", () => {
         a.click();
         a.remove();
       } catch (e) {
-        console.error('Export failed (canvas draw)', e);
+        console.error('Export draw error', e);
         URL.revokeObjectURL(url);
         alert('Export failed: ' + e.message);
       }
@@ -4847,6 +4855,7 @@ if (exportBtn) {
     exportSvgAsPng(svg, 'automaton.png');
   });
 }
+    
   // Small consumer-friendly log so autosave gets called from UI actions that already exist.
   // Try to attach to some known action elements: add state on canvas, genPractice, validate, saveMachineBtn, loadMachineBtn.
   const svgWrapper = document.getElementById('svgWrapper');
