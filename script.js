@@ -4430,7 +4430,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Animate the newly drawn state
           const stateG = document.querySelector(`[data-id="${state.id}"]`);
           if (stateG) stateG.querySelector('circle')?.classList.add('state-drawing');
-          await sleep(400);
+          await sleep(2000);
           stateG.querySelector('circle')?.classList.remove('state-drawing');
         }
 
@@ -4457,7 +4457,7 @@ document.addEventListener("DOMContentLoaded", () => {
             pathEl.classList.add('transition-drawing');
           }
           renderedTransitions.add(arcKey);
-          await sleep(500);
+          await sleep(2000);
         }
 
         // Final clean-up and update global machine state
