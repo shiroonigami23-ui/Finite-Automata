@@ -1,3 +1,6 @@
+// === ENHANCEMENTS FILE (CONSOLIDATED & CORRECTED) ===
+
+// --- Original 5-Tuple Display (Preserved from your file) ---
 function display5Tuple() {
     const tupleContainer = document.getElementById('tupleDisplay');
     if (!tupleContainer || !window.MACHINE) return;
@@ -34,22 +37,20 @@ function display5Tuple() {
 }
 
 
+// --- Core Bug Fix for Library Loading (Moved from library_helper.js) ---
 function loadMachineFromObject(machineObject) {
   if (!machineObject || !machineObject.states) {
     console.error("Invalid machine object provided to load.");
     return;
   }
 
-  // Use functions from script.js if they exist
   if (typeof pushUndo === 'function') {
     pushUndo();
   }
 
-  // Set the global MACHINE variable
   window.MACHINE = machineObject;
 
   // --- Self-Contained Layout Logic ---
-  // This part guarantees that all states have x/y coordinates before drawing.
   const states = window.MACHINE.states;
   const needsLayout = states.some(s => s.x === undefined || s.y === undefined);
 
@@ -67,13 +68,13 @@ function loadMachineFromObject(machineObject) {
       s.y = 150 + row * 150;
     });
   }
+
   if (typeof renderAll === 'function') {
     renderAll();
   } else {
     console.error("The main renderAll() function was not found!");
   }
 
-  // Update the mode dropdown
   const modeSelect = document.getElementById('modeSelect');
   if (modeSelect && window.MACHINE.type) {
     const baseType = window.MACHINE.type.split('_TO_')[0];
@@ -82,7 +83,6 @@ function loadMachineFromObject(machineObject) {
     }
   }
 
-  // Show a confirmation message
   const validationLine = document.getElementById('validationLine');
   if (validationLine) {
     const title = machineObject.title || machineObject.id || 'machine';
