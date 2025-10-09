@@ -4313,34 +4313,42 @@ function convertNfaToDfa(nfa) {
       document.getElementById('transCancel').addEventListener('click',
         hideTransModal);
       document.getElementById('transSave').addEventListener('click', () => {
-        const from = document.getElementById('transFrom').value;
-        const to = document.getElementById('transTo').value;
-        let symbol = document.getElementById('transSymbol').value.trim();
+    const from = document.getElementById('transFrom').value;
+    const to = document.getElementById('transTo').value;
+    let symbol = document.getElementById('transSymbol').value.trim();
 
-        if (symbol === '') symbol = 'ε';
+    // NEW LOGIC: If user enters more than one character, silently take the first one.
+    if (symbol.length > 1) {
+        symbol = symbol.charAt(0);
+    }
 
-        // Mode-specific silent rule enforcement (no alert/popup for better UX)
-        if (MACHINE.type === 'DFA' && symbol === 'ε') {
-          validationLine.textContent = 'DFA rule: ε-transitions disallowed.';
-          validationLine.classList.add('error', 'show');
-          setTimeout(() => validationLine.classList.remove('show'), 4000);
-          return;
-        }
-        const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
-        const currentMode = document.getElementById('modeSelect').value;
-        if (currentMode=== 'DFA' && conflict) {
-          validationLine.textContent = `DFA rule: State ${from} is deterministic on '${symbol}'.`;
-          validationLine.classList.add('error', 'show');
-          setTimeout(() => validationLine.classList.remove('show'), 4000);
-          return;
-        }
-        pushUndo();
-        MACHINE.transitions.push({ from, to, symbol });
-        updateAlphabet();
-        renderAll();
+    if (symbol === '') {
+        symbol = 'ε';
+    }
 
-        hideTransModal();
-      });
+    if (MACHINE.type === 'DFA' && symbol === 'ε') {
+        validationLine.textContent = 'DFA rule: ε-transitions disallowed.';
+        validationLine.classList.add('error', 'show');
+        setTimeout(() => validationLine.classList.remove('show'), 4000);
+        return;
+    }
+
+    const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
+    if (MACHINE.type === 'DFA' && conflict) {
+        validationLine.textContent = `DFA rule: State ${from} is already deterministic on '${symbol}'.`;
+        validationLine.classList.add('error', 'show');
+        setTimeout(() => validationLine.classList.remove('show'), 4000);
+        return;
+    }
+
+    pushUndo();
+    MACHINE.transitions.push({ from, to, symbol });
+    updateAlphabet();
+    renderAll();
+
+    hideTransModal();
+});
+      
       document.getElementById('propCancel').addEventListener('click', () => document.getElementById('statePropsModal').style.display = 'none');
       document.getElementById('propSave').addEventListener('click', () => {
         const modal = document.getElementById('statePropsModal');
