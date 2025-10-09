@@ -4688,37 +4688,64 @@ function convertNfaToDfa(nfa) {
         reader.readAsText(file);
       });
 
-      // Enhanced PNG Export: CAPTURES LIVE STYLES AND COLORS
-      exportBtn.addEventListener('click', () => {
-        const svgEl = document.getElementById("dfaSVG");
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+      // PNG Export:
+exportBtn.addEventListener('click', () => {
+    const svgEl = document.getElementById("dfaSVG");
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-        // Create a Blob from the LIVE SVG element, which includes all current styles (fill, stroke, colors)
-        const svgData = new XMLSerializer().serializeToString(svgEl);
-        const img = new Image();
-        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
+    // --- NEW: Logic to embed all CSS styles ---
+    const cssStyles = `
+        .state-circle { fill: #fff; stroke: #667eea; stroke-width: 3; }
+        .state-label { font-weight: 700; fill: #0b1220; text-anchor: middle; dominant-baseline: central; font-size: 14px; }
+        .transition-path { fill: none; stroke: #667eea; stroke-width: 2; marker-end: url(#arrowhead-export); }
+        .transition-label { font-weight: 700; fill: #0b1220; text-anchor: middle; font-size: 13px; }
+        .initial-arrow { stroke: black !important; stroke-width: 3 !important; marker-end: url(#arrowhead-export); }
+        .final-ring { fill: none; stroke: #ff9800; stroke-width: 4; }
+    `;
 
-        img.onload = () => {
-          // Use the SVG's current dimensions for the canvas
-          canvas.width = svgEl.viewBox.baseVal.width;
-          canvas.height = svgEl.viewBox.baseVal.height;
+    // Create a clone of the SVG to avoid modifying the live one
+    const svgClone = svgEl.cloneNode(true);
+    
+    // Create a style element and add the CSS rules to it
+    const styleEl = document.createElement('style');
+    styleEl.textContent = cssStyles;
+    
+    // Add the style element to the SVG's definitions
+    svgClone.querySelector('defs').appendChild(styleEl);
 
-          ctx.fillStyle = 'white'; // Ensure a clean white background
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+    svgClone.querySelector('#arrowhead').setAttribute('fill', '#667eea');
+    svgClone.querySelector('#arrowhead-export').setAttribute('fill', '#667eea');
 
-          ctx.drawImage(img, 0, 0);
-          URL.revokeObjectURL(url);
 
-          const a = document.createElement("a");
-          a.download = "automaton.png";
-          a.href = canvas.toDataURL("image/png");
-          a.click();
-        };
-        img.src = url;
-      });
+    const svgData = new XMLSerializer().serializeToString(svgClone); // Serialize the MODIFIED clone
+    const img = new Image();
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
 
+    img.onload = () => {
+        canvas.width = svgEl.viewBox.baseVal.width;
+        canvas.height = svgEl.viewBox.baseVal.height;
+
+        ctx.fillStyle = 'white'; // Set a white background
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        const a = document.createElement("a");
+        a.download = "automaton.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+    };
+
+    img.onerror = () => {
+        console.error("Image loading failed. The SVG might be tainted.");
+        URL.revokeObjectURL(url);
+    };
+
+    img.src = url;
+});
 
       // Zoom
       const setZoom = (pct) => {
