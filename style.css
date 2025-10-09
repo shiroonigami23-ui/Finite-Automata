@@ -44,7 +44,7 @@
 
     .main-content {
       display: grid;
-      grid-template-columns: minmax(200px, 260px) 1fr;
+      grid-template-columns: minmax(200px, 240px) 1fr;
       gap: 20px;
       align-items: start
     }
