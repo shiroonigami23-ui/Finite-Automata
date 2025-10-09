@@ -3688,47 +3688,81 @@ document.addEventListener("DOMContentLoaded", () => {
     }
       }
 
-      function renameState(oldId) {
-        const newId = prompt('Enter new state name:', oldId);
-        if (!newId || newId === oldId) return;
-        if (MACHINE.states.find(s => s.id === newId)) {
-          alert('State name already exists');
-          return;
-        }
-        pushUndo();
-        const st = MACHINE.states.find(s => s.id === oldId);
-        if (st) st.id = newId;
+      // Replace your existing renameState function
+function renameState(oldId) {
+    const modal = document.getElementById('renameModal');
+    const input = document.getElementById('renameInput');
+    input.value = oldId;
 
-        MACHINE.transitions.forEach(t => {
-          if (t.from === oldId) t.from = newId;
-          if (t.to === oldId) t.to = newId;
-        });
+    // Temporarily store the old ID on the modal
+    modal.dataset.oldId = oldId;
+    
+    modal.style.display = 'flex';
+    input.focus();
+    input.select();
+}
 
-        renderAll();
-      }
+// Add these new event listeners for the rename modal
+document.getElementById('renameCancel').addEventListener('click', () => {
+    document.getElementById('renameModal').style.display = 'none';
+});
 
-      function deleteState(id) {
+document.getElementById('renameSave').addEventListener('click', () => {
+    const modal = document.getElementById('renameModal');
+    const oldId = modal.dataset.oldId;
+    const newId = document.getElementById('renameInput').value.trim();
+
+    if (!newId || newId === oldId) {
+        modal.style.display = 'none';
+        return;
+    }
+    if (MACHINE.states.find(s => s.id === newId)) {
+        alert('State name already exists'); // Keeping alert here for critical user error
+        return;
+    }
+
+    pushUndo();
+    const st = MACHINE.states.find(s => s.id === oldId);
+    if (st) st.id = newId;
+
+    MACHINE.transitions.forEach(t => {
+        if (t.from === oldId) t.from = newId;
+        if (t.to === oldId) t.to = newId;
+    });
+
+    renderAll();
+    modal.style.display = 'none';
+});
+function deleteState(id) {
         pushUndo();
         MACHINE.states = MACHINE.states.filter(s => s.id !== id);
         MACHINE.transitions = MACHINE.transitions.filter(t => t.from !== id && t.to !== id);
         enforceInitialStateRule();
         renderAll();
-      }
-function clearCanvas() {
-    if (confirm("Are you sure you want to clear the entire canvas?")) {
-        pushUndo(); // Allow this action to be undone
-        MACHINE = {
-            type: modeSelect.value, // Keep the current mode
-            states: [],
-            transitions: [],
-            alphabet: []
-        };
-        renderAll();
-    }
 }
 
-document.getElementById('clearCanvasBtn').addEventListener('click', clearCanvas);
-    
+// Replace your existing clearCanvas function
+function clearCanvas() {
+    // Just show the confirmation modal
+    document.getElementById('confirmClearModal').style.display = 'flex';
+}
+
+// Add these new event listeners for the confirm clear modal
+document.getElementById('confirmClearCancel').addEventListener('click', () => {
+    document.getElementById('confirmClearModal').style.display = 'none';
+});
+
+document.getElementById('confirmClearConfirm').addEventListener('click', () => {
+    pushUndo(); // Allow this action to be undone
+    MACHINE = {
+        type: modeSelect.value, // Keep the current mode
+        states: [],
+        transitions: [],
+        alphabet: []
+    };
+    renderAll();
+    document.getElementById('confirmClearModal').style.display = 'none';
+});
     
       function openPropsModal(stateId) {
         const modal = document.getElementById('statePropsModal');
