@@ -4769,79 +4769,84 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- Export SVG as PNG exact replica (preserve styles and markers) ---
-  function exportSvgAsPng(svgEl, filename='automaton.png') {
-    try {
-      const serializer = new XMLSerializer();
-      // Clone the SVG node so we can modify safely
-      const clone = svgEl.cloneNode(true);
-      // Inline computed styles: simple approach - grab the document <style> content and inject
-      let styleText = '';
-      const docStyles = document.querySelectorAll('head style, head link[rel="stylesheet"]');
-      docStyles.forEach(node => {
-        if(node.tagName.toLowerCase() === 'style') styleText += node.innerHTML + '\n';
-      });
-      // Also grab our page-level styles from the big style tag if present
-      if(styleText.trim()){
-        const styleElem = document.createElementNS("http://www.w3.org/2000/svg",'style');
-        styleElem.textContent = styleText;
-        clone.insertBefore(styleElem, clone.firstChild);
-      }
-      // Ensure namespaces
-      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-      // Set width/height attributes from bounding box or viewBox
-      const bbox = svgEl.getBoundingClientRect();
-      clone.setAttribute('width', Math.ceil(bbox.width));
-      clone.setAttribute('height', Math.ceil(bbox.height));
-      // Serialize
-      const svgStr = serializer.serializeToString(clone);
-      const svgBlob = new Blob([svgStr], {type: 'image/svg+xml;charset=utf-8'});
-      const url = URL.createObjectURL(svgBlob);
-      const img = new Image();
-      // allow CORS-free usage
-      img.onload = function(){
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.ceil(bbox.width);
-          canvas.height = Math.ceil(bbox.height);
-          const ctx = canvas.getContext('2d');
-          // White background? The user requested exact replica (including transparent background if any).
-          // We'll preserve transparency by default (do not fill background).
-          ctx.drawImage(img, 0, 0);
-          URL.revokeObjectURL(url);
-          // Trigger download
-          const a = document.createElement('a');
-          a.href = canvas.toDataURL('image/png');
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        } catch(e){
-          console.error('Export failed (canvas draw)', e);
-          URL.revokeObjectURL(url);
-          alert('Export failed: ' + e.message);
-        }
-      };
-      img.onerror = function(ev){
-        URL.revokeObjectURL(url);
-        console.error('Image load error', ev);
-        alert('Failed to convert SVG to PNG.');
-      };
-      img.src = url;
-    } catch(e){
-      console.error('exportSvgAsPng error', e);
-      alert('Export failed: ' + e.message);
-    }
-  }
+  function exportSvgAsPng(svgEl, filename = 'automaton.png') {
+  try {
+    // Clone SVG to safely manipulate it
+    const clone = svgEl.cloneNode(true);
 
-  if(exportBtn){
-    exportBtn.addEventListener('click', ()=> {
-      const svg = document.getElementById('dfaSVG');
-      if(!svg){ alert('SVG canvas not found'); return; }
-      exportSvgAsPng(svg, 'automaton.png');
+    // ✅ Inline all computed styles for accurate color export
+    const allElements = clone.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      const cssText = Array.from(style)
+        .map(name => `${name}:${style.getPropertyValue(name)};`)
+        .join('');
+      el.setAttribute('style', cssText);
     });
-  }
 
+    // Ensure required namespaces
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+    // Determine export dimensions
+    const bbox = svgEl.getBoundingClientRect();
+    clone.setAttribute('width', Math.ceil(bbox.width));
+    clone.setAttribute('height', Math.ceil(bbox.height));
+
+    // Serialize SVG → Blob → ObjectURL
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(clone);
+    const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    // Render on canvas
+    const img = new Image();
+    img.onload = function () {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(bbox.width);
+        canvas.height = Math.ceil(bbox.height);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (e) {
+        console.error('Export failed (canvas draw)', e);
+        URL.revokeObjectURL(url);
+        alert('Export failed: ' + e.message);
+      }
+    };
+
+    img.onerror = function (ev) {
+      URL.revokeObjectURL(url);
+      console.error('Image load error', ev);
+      alert('Failed to convert SVG to PNG.');
+    };
+
+    img.src = url;
+  } catch (e) {
+    console.error('exportSvgAsPng error', e);
+    alert('Export failed: ' + e.message);
+  }
+}
+
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    const svg = document.getElementById('dfaSVG');
+    if (!svg) {
+      alert('SVG canvas not found');
+      return;
+    }
+    exportSvgAsPng(svg, 'automaton.png');
+  });
+}
   // Small consumer-friendly log so autosave gets called from UI actions that already exist.
   // Try to attach to some known action elements: add state on canvas, genPractice, validate, saveMachineBtn, loadMachineBtn.
   const svgWrapper = document.getElementById('svgWrapper');
