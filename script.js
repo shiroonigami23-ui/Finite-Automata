@@ -3714,7 +3714,22 @@ document.addEventListener("DOMContentLoaded", () => {
         enforceInitialStateRule();
         renderAll();
       }
+function clearCanvas() {
+    if (confirm("Are you sure you want to clear the entire canvas?")) {
+        pushUndo(); // Allow this action to be undone
+        MACHINE = {
+            type: modeSelect.value, // Keep the current mode
+            states: [],
+            transitions: [],
+            alphabet: []
+        };
+        renderAll();
+    }
+}
 
+document.getElementById('clearCanvasBtn').addEventListener('click', clearCanvas);
+    
+    
       function openPropsModal(stateId) {
         const modal = document.getElementById('statePropsModal');
         modal.dataset.stateId = stateId;
