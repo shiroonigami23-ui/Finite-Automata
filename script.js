@@ -1,6 +1,5 @@
-// === MAIN APPLICATION SCRIPT ===
-    document.addEventListener("DOMContentLoaded", () => {
-      // --- ELEMENT REFERENCES ---
+document.addEventListener("DOMContentLoaded", () => {
+    
       const svg = document.getElementById('dfaSVG');
       const statesGroup = document.getElementById('states');
       const edgesGroup = document.getElementById('edges');
@@ -31,7 +30,6 @@
       const loadFileInput = document.getElementById("loadFileInput");
       const validationLine = document.getElementById('validationLine');
 
-      // --- APPLICATION STATE ---
       let MACHINE = {
         type: 'DFA',
         states: [],
@@ -46,10 +44,7 @@
       let CURRENT_PRACTICE = null;
       let simSteps = [], simIndex = 0, simTimer = null;
 
-      // --- PRACTICE
-      // Data bank structure with more comprehensive content. (See Chunk 2 for full data)
-      const PRACTICE_BANK = {
-        // --- 1. DFA Construction Mode (30 Questions) ---
+           const PRACTICE_BANK = {
         DFA: {
           easy: [
             {
