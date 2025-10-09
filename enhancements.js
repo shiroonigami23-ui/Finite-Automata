@@ -1,27 +1,23 @@
-// ENHANCEMENTS FOR FINITE AUTOMATA STUDIO
-// This script adds 5-tuple display and fixes animation delays
-
-// Add 5-tuple display function
 function display5Tuple() {
     const tupleContainer = document.getElementById('tupleDisplay');
-    if (!tupleContainer) return;
+    if (!tupleContainer || !window.MACHINE) return;
 
     const states = MACHINE.states.map(s => s.id).join(', ');
-    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s !== '' && s !== 'ε'))].join(', ');
+    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s && s !== 'ε'))].join(', ');
     const initialStates = MACHINE.states.filter(s => s.initial).map(s => s.id).join(', ');
     const finalStates = MACHINE.states.filter(s => s.accepting).map(s => s.id).join(', ');
     
     let transitionStr = '';
     const grouped = {};
     MACHINE.transitions.forEach(t => {
-        const key = `${t.from},${t.symbol}`;
+        const key = `${t.from},${t.symbol || 'ε'}`;
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(t.to);
     });
     
     Object.entries(grouped).forEach(([key, tos]) => {
         const [from, symbol] = key.split(',');
-        transitionStr += `<div class="tuple-item"><span class="tuple-label">δ</span><span class="tuple-value">(${from}, ${symbol || 'ε'}) = {${tos.join(', ')}}</span></div>`;
+        transitionStr += `<div class="tuple-item"><span class="tuple-label">δ</span><span class="tuple-value">(${from}, ${symbol}) = {${tos.join(', ')}}</span></div>`;
     });
 
     tupleContainer.innerHTML = `
@@ -37,11 +33,69 @@ function display5Tuple() {
     `;
 }
 
-// Update delays to use 2-second default
-const SOLUTION_STEP_DELAY = 2000; // 2 seconds for cinematic view
 
-// Export for use
+function loadMachineFromObject(machineObject) {
+  if (!machineObject || !machineObject.states) {
+    console.error("Invalid machine object provided to load.");
+    return;
+  }
+
+  // Use functions from script.js if they exist
+  if (typeof pushUndo === 'function') {
+    pushUndo();
+  }
+
+  // Set the global MACHINE variable
+  window.MACHINE = machineObject;
+
+  // --- Self-Contained Layout Logic ---
+  // This part guarantees that all states have x/y coordinates before drawing.
+  const states = window.MACHINE.states;
+  const needsLayout = states.some(s => s.x === undefined || s.y === undefined);
+
+  if (needsLayout) {
+    console.log("Machine states need layout. Calculating positions...");
+    const canvasWidth = 1400;
+    const marginX = 150;
+    const spacingX = 180;
+    const perRow = Math.floor((canvasWidth - marginX * 2) / spacingX);
+
+    states.forEach((s, i) => {
+      const row = Math.floor(i / perRow);
+      const col = i % perRow;
+      s.x = marginX + col * spacingX;
+      s.y = 150 + row * 150;
+    });
+  }
+  if (typeof renderAll === 'function') {
+    renderAll();
+  } else {
+    console.error("The main renderAll() function was not found!");
+  }
+
+  // Update the mode dropdown
+  const modeSelect = document.getElementById('modeSelect');
+  if (modeSelect && window.MACHINE.type) {
+    const baseType = window.MACHINE.type.split('_TO_')[0];
+    if (['DFA', 'NFA', 'ENFA'].includes(baseType)) {
+      modeSelect.value = baseType;
+    }
+  }
+
+  // Show a confirmation message
+  const validationLine = document.getElementById('validationLine');
+  if (validationLine) {
+    const title = machineObject.title || machineObject.id || 'machine';
+    validationLine.textContent = `Loaded "${title}" from library.`;
+    validationLine.className = 'validation-box show success';
+    setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
+  }
+}
+
+
+// --- Make All Enhancement Functions Globally Available ---
 if (typeof window !== 'undefined') {
     window.display5Tuple = display5Tuple;
-    window.SOLUTION_STEP_DELAY = SOLUTION_STEP_DELAY;
+    window.loadMachineFromObject = loadMachineFromObject;
+    console.log("✓ Enhancements loaded. All helper functions are ready.");
 }
