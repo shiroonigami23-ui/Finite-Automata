@@ -4802,11 +4802,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Serialize SVG
     const serializer = new XMLSerializer();
-    const svgStr = serializer.serializeToString(clone);
-    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+const svgStr = serializer.serializeToString(clone);
 
-    const img = new Image();
+const base64 = btoa(unescape(encodeURIComponent(svgStr)));
+const img = new Image();
+img.src = 'data:image/svg+xml;base64,' + base64;
+      
     img.onload = function () {
       try {
         const canvas = document.createElement('canvas');
