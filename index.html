@@ -270,6 +270,28 @@ font-weight:600; color:#374151; background:linear-gradient(90deg,#fff,#f7fafc); 
       </div>
     </div>
   </div>
+      <div id="renameModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3>Rename State</h3>
+        <p style="margin: 4px 0 8px 0; font-size: 0.9em; color: #555;">Enter the new name for the state.</p>
+        <input id="renameInput" class="modal-input" placeholder="New state name" />
+        <div class="modal-actions">
+          <button id="renameCancel">Cancel</button>
+          <button id="renameSave">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirmClearModal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <h3>Clear Canvas</h3>
+            <p style="margin: 4px 0 12px 0; font-size: 0.9em; color: #555;">Are you sure you want to clear the entire canvas? This action can be undone.</p>
+            <div class="modal-actions">
+                <button id="confirmClearCancel">Cancel</button>
+                <button id="confirmClearConfirm" style="background: #e53e3e;">Clear Canvas</button>
+            </div>
+        </div>
+    </div>
   
 
   <script src="animation-fix.js"></script>
