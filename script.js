@@ -3994,97 +3994,107 @@ document.addEventListener("DOMContentLoaded", () => {
 function convertNfaToDfa(nfa) {
     const nfaMachine = nfa.type === 'ENFA' ? convertEnfaToNfa(nfa) : nfa;
     const alphabet = Array.from(new Set(nfaMachine.transitions.map(t => t.symbol).filter(s => s && s !== 'ε')));
-    
-    // FIX: Define a name for our trap state
-    const trapStateKey = '{}';
-    let trapStateCreated = false;
 
-    // Use epsilonClosure for the initial state, even from NFA, to be safe.
+    const trapStateKey = '{}'; // A unique ID for the trap state
+
+    const mapKey = (arr) => arr.sort().join(',') || trapStateKey;
+
     const initialNFAStates = nfaMachine.states.filter(s => s.initial).map(s => s.id);
-    const initialDFAStateSet = computeEpsilonClosure(initialNFAStates.length > 0 ? initialNFAStates[0] : '', nfaMachine.transitions);
-
-    const mapKey = (arr) => arr.sort().join(',') || trapStateKey; // Handle empty set case
+    const initialDFAStateSet = computeEpsilonClosure(initialNFAStates, nfaMachine.transitions); // Epsilon close the whole set
     const initialKey = mapKey(initialDFAStateSet);
 
-    const dfaStates = new Map();
+    const dfaStatesData = new Map();
     const queue = [initialDFAStateSet];
-    dfaStates.set(initialKey, { id: initialKey, transitions: {}, states: initialDFAStateSet });
 
+    dfaStatesData.set(initialKey, {
+        id: initialKey,
+        isAccepting: initialDFAStateSet.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting),
+        transitions: new Map()
+    });
+
+    // --- Step 1: Discover all DFA states and their transitions ---
+    let needsTrapState = false;
     while (queue.length > 0) {
         const currentSet = queue.shift();
         const currentKey = mapKey(currentSet);
+        const currentStateData = dfaStatesData.get(currentKey);
 
         for (const symbol of alphabet) {
-            const nextStates = new Set();
+            const nextNfaStates = new Set();
             for (const stateId of currentSet) {
                 nfaMachine.transitions
                     .filter(t => t.from === stateId && t.symbol === symbol)
-                    .forEach(t => nextStates.add(t.to));
+                    .forEach(t => nextNfaStates.add(t.to));
             }
-            
-            // For ε-NFA compatibility during direct conversion
-            const nextSetClosure = computeEpsilonClosure(Array.from(nextStates), nfaMachine.transitions);
-            const nextKey = mapKey(nextSetClosure);
-            
-            // FIX: Always create a transition. If nextKey is empty, it goes to the trap state.
-            dfaStates.get(currentKey).transitions[symbol] = nextKey;
 
-            if (!dfaStates.has(nextKey)) {
-                dfaStates.set(nextKey, { id: nextKey, transitions: {}, states: nextSetClosure });
+            const nextSetClosure = computeEpsilonClosure(Array.from(nextNfaStates), nfaMachine.transitions);
+            const nextKey = mapKey(nextSetClosure);
+            currentStateData.transitions.set(symbol, nextKey);
+
+            if (nextKey === trapStateKey) {
+                needsTrapState = true;
+            }
+
+            if (!dfaStatesData.has(nextKey)) {
+                dfaStatesData.set(nextKey, {
+                    id: nextKey,
+                    isAccepting: nextSetClosure.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting),
+                    transitions: new Map()
+                });
                 queue.push(nextSetClosure);
             }
         }
     }
+    
+    // --- Step 2: Build the new machine object, creating states first ---
+    const newMachine = {
+        type: 'DFA',
+        states: [],
+        transitions: [],
+        alphabet
+    };
 
-    // FIX: If any transition leads to the trap state, we must formally create it.
-    for (const dfaState of dfaStates.values()) {
-        for (const symbol of alphabet) {
-            if (!dfaState.transitions[symbol]) {
-                 dfaState.transitions[symbol] = trapStateKey;
-            }
-            if (dfaState.transitions[symbol] === trapStateKey) {
-                 trapStateCreated = true;
-            }
-        }
+    // Add the trap state to the map if it's needed
+    if (needsTrapState && !dfaStatesData.has(trapStateKey)) {
+        dfaStatesData.set(trapStateKey, {
+            id: trapStateKey,
+            isAccepting: false,
+            transitions: new Map()
+        });
     }
 
-    const newMachine = { type: 'DFA', states: [], transitions: [], alphabet };
+    // Now, create all state objects
     let i = 0;
-
-    for (const [key, dfaState] of dfaStates.entries()) {
-        const isInitial = key === initialKey;
-        const isAccepting = dfaState.states.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting);
-
+    for (const [key, data] of dfaStatesData.entries()) {
         newMachine.states.push({
             id: key,
-            initial: isInitial,
-            accepting: isAccepting,
+            initial: key === initialKey,
+            accepting: data.isAccepting,
             x: 200 + (i % 5) * 180,
             y: 150 + Math.floor(i / 5) * 150
         });
-
-        for (const symbol in dfaState.transitions) {
-            newMachine.transitions.push({ from: key, to: dfaState.transitions[symbol], symbol });
-        }
         i++;
     }
 
-    // FIX: Add the trap state and its transitions if it was needed
-    if (trapStateCreated) {
-        newMachine.states.push({
-            id: trapStateKey,
-            initial: false,
-            accepting: false,
-            x: 200 + (i % 5) * 180,
-            y: 150 + Math.floor(i / 5) * 150
-        });
+    // --- Step 3: Create all transition objects ---
+    for (const [key, data] of dfaStatesData.entries()) {
         for (const symbol of alphabet) {
-            newMachine.transitions.push({ from: trapStateKey, to: trapStateKey, symbol });
+            let toState = data.transitions.get(symbol);
+            // If a transition is missing, it must go to the trap state
+            if (!toState) {
+                toState = trapStateKey;
+            }
+            newMachine.transitions.push({
+                from: key,
+                to: toState,
+                symbol: symbol
+            });
         }
     }
-    
+
     return newMachine;
 }
+    
     
       function minimizeDfa(dfa) {
         const states = dfa.states.map(s => s.id);
