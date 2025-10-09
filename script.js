@@ -4099,57 +4099,122 @@ function convertNfaToDfa(nfa) {
     return newMachine;
 }
     
+    function removeUnreachableStates(dfa) {
+    const reachable = new Set();
+    const initialState = dfa.states.find(s => s.initial);
+    if (!initialState) {
+        // If no initial state, all states are considered unreachable
+        return { ...dfa, states: [], transitions: [] };
+    }
+
+    const stack = [initialState.id];
+    reachable.add(initialState.id);
+
+    while (stack.length > 0) {
+        const currentId = stack.pop();
+        dfa.transitions
+            .filter(t => t.from === currentId)
+            .forEach(t => {
+                if (!reachable.has(t.to)) {
+                    reachable.add(t.to);
+                    stack.push(t.to);
+                }
+            });
+    }
+
+    const reachableStates = dfa.states.filter(s => reachable.has(s.id));
+    const reachableTransitions = dfa.transitions.filter(t => reachable.has(t.from));
     
-      function minimizeDfa(dfa) {
-        const states = dfa.states.map(s => s.id);
-        const alph = dfa.alphabet;
-        let P = [
-          dfa.states.filter(s => s.accepting).map(s => s.id),
-          dfa.states.filter(s => !s.accepting).map(s => s.id)
-        ].filter(g => g.length > 0);
+    return { ...dfa, states: reachableStates, transitions: reachableTransitions };
+    }
+    function minimizeDfa(dfa) {
+    // ROBUSTNESS: First, remove any states that can't be reached from the start state.
+    const reachableDfa = removeUnreachableStates(dfa);
+    
+    // If no states are reachable, return an empty machine.
+    if (reachableDfa.states.length === 0) {
+        return reachableDfa;
+    }
 
-        let changed = true;
-        while (changed) {
-          changed = false;
+    const alph = reachableDfa.alphabet;
+    // Initial partition: accepting and non-accepting states.
+    let P = [
+        reachableDfa.states.filter(s => s.accepting).map(s => s.id),
+        reachableDfa.states.filter(s => !s.accepting).map(s => s.id)
+    ].filter(g => g.length > 0);
 
-          for (const symbol of alph) {
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const symbol of alph) {
             const newP = [];
-
             for (const group of P) {
-              const subgroups = {};
-
-              for (const state of group) {
-                const t = dfa.transitions.find(tr => tr.from === state && tr.symbol === symbol);
-
-                const destGroupIdx = t ? P.findIndex(g => g.includes(t.to)) : -1;
-                if (!subgroups[destGroupIdx]) subgroups[destGroupIdx] = [];
-                subgroups[destGroupIdx].push(state);
-              }
-              const splitGroups = Object.values(subgroups);
-              if (splitGroups.length > 1) changed = true;
-              newP.push(...splitGroups);
+                // No need to split groups of 1
+                if (group.length <= 1) {
+                    newP.push(group);
+                    continue;
+                }
+                // Sub-partition based on where transitions go
+                const subgroups = {};
+                for (const state of group) {
+                    const t = reachableDfa.transitions.find(tr => tr.from === state && tr.symbol === symbol);
+                    const destGroupIdx = t ? P.findIndex(g => g.includes(t.to)) : -1;
+                    
+                    if (!subgroups[destGroupIdx]) {
+                        subgroups[destGroupIdx] = [];
+                    }
+                    subgroups[destGroupIdx].push(state);
+                }
+                
+                const splitGroups = Object.values(subgroups);
+                if (splitGroups.length > 1) {
+                    changed = true;
+                }
+                newP.push(...splitGroups);
             }
             P = newP;
-          }
+            if (changed) break; // Optimization: If a split happened, restart refinement with the new partitions
         }
-        const repMap = {};
+    }
 
-        P.forEach(group => { const rep = group[0]; group.forEach(s => repMap[s] = rep); });
-
+    // Create the final minimized machine from the partitions
+    const repMap = {}; // Maps old state IDs to their new representative ID
+    P.forEach(group => {
+        const rep = group.sort()[0]; // Pick a consistent representative ID
+        group.forEach(s => repMap[s] = rep);
+    });
+    
+    const finalStates = P.map((group, i) => {
+        const rep = group.sort()[0];
+        const oldState = reachableDfa.states.find(s => s.id === rep);
+        // The new state is initial if the original initial state is in its group
+        const isInitial = reachableDfa.states.some(s => s.initial && group.includes(s.id));
+        
         return {
-          type: 'DFA',
-          alphabet: alph,
-          states: P.map((group, i) => {
-            const rep = group[0];
-            const oldState = dfa.states.find(s => s.id === rep);
-            return { id: rep, initial: oldState.initial, accepting: oldState.accepting, x: 200 + (i % 5) * 180, y: 150 + Math.floor(i / 5) * 150 };
-          }),
-          transitions: dfa.transitions
-            .map(t => ({ from: repMap[t.from], to: repMap[t.to], symbol: t.symbol }))
-            .filter((t, i, self) => i === self.findIndex(o => o.from === t.from && o.to === t.to && o.symbol === t.symbol))
+            id: rep,
+            initial: isInitial,
+            accepting: oldState.accepting,
+            x: 200 + (i % 5) * 180,
+            y: 150 + Math.floor(i / 5) * 150
         };
-      }
+    });
 
+    const finalTransitions = reachableDfa.transitions
+        .map(t => ({
+            from: repMap[t.from],
+            to: repMap[t.to],
+            symbol: t.symbol
+        }))
+        .filter((t, i, self) => i === self.findIndex(o => o.from === t.from && o.to === t.to && o.symbol === t.symbol));
+
+    return {
+        type: 'DFA',
+        alphabet: alph,
+        states: finalStates,
+        transitions: finalTransitions
+    };
+    }
+      
       // --- UTILITY & HELPER FUNCTIONS ---
 
       function sleep(ms) {
