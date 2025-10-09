@@ -4187,8 +4187,8 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
-
-        if (MACHINE.type === 'DFA' && conflict) {
+        const currentMode = document.getElementById('modeSelect').value;
+        if (currentMode=== 'DFA' && conflict) {
           validationLine.textContent = `DFA rule: State ${from} is deterministic on '${symbol}'.`;
           validationLine.classList.add('error', 'show');
           setTimeout(() => validationLine.classList.remove('show'), 4000);
