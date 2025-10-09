@@ -3697,19 +3697,32 @@ document.addEventListener("DOMContentLoaded", () => {
       // --- STATE & TRANSITION MODIFICATION ---
 
       function addState(x, y) {
-        const id = 'q' + MACHINE.states.length;
-        const isFirst = MACHINE.states.length === 0;
-        pushUndo();
-        MACHINE.states.push({ id, x, y, initial: isFirst, accepting: false });
-        renderAll();
-        const stateG = document.querySelector(`[data-id="${id}"]`);
-        if (stateG) {
-          const circle = stateG.querySelector('circle');
-          if (circle) {
+    // FIX: Find the highest existing state number to prevent duplicate IDs
+    let maxId = -1;
+    MACHINE.states.forEach(state => {
+        if (state.id.startsWith('q')) {
+            const num = parseInt(state.id.substring(1));
+            if (!isNaN(num) && num > maxId) {
+                maxId = num;
+            }
+        }
+    });
+    const newId = 'q' + (maxId + 1);
+
+    const isFirst = MACHINE.states.length === 0;
+    pushUndo();
+    MACHINE.states.push({ id: newId, x, y, initial: isFirst, accepting: false });
+    renderAll();
+    
+    // Animate the new state
+    const stateG = document.querySelector(`g[data-id="${newId}"]`);
+    if (stateG) {
+        const circle = stateG.querySelector('circle');
+        if (circle) {
             circle.classList.add('state-drawing');
             setTimeout(() => circle.classList.remove('state-drawing'), 600);
-          }
         }
+    }
       }
 
       function renameState(oldId) {
