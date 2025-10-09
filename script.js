@@ -5279,8 +5279,9 @@ function autoLogFiveTupleToStepLog() {
         </div>
     `;
 
+
     log.insertBefore(el, log.firstChild);
-    if (window.lucide?.createIcons) window.lucide.createIcons();
+    if (window.lucide?.createIcons) window.lucide.createIcons({ nodes: [el] });
 }
 
 // === Enhanced mode management ===
