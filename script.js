@@ -3937,23 +3937,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // --- CONVERSION ALGORITHMS ---
 
-      function computeEpsilonClosure(stateId, transitions) {
-        const stack = [stateId];
-        const closure = new Set([stateId]);
-        while (stack.length) {
-          const s = stack.pop();
+      function computeEpsilonClosure(states, transitions) {
+    // FIX: Handle both a single state ID (string) and a set of states (array)
+    const stateSet = new Set(Array.isArray(states) ? states : [states]);
+    const stack = Array.isArray(states) ? [...states] : [states];
 
-          for (const t of transitions) {
+    while (stack.length > 0) {
+        const s = stack.pop();
+        if (!s) continue; // Skip if null or undefined
+
+        for (const t of transitions) {
             if (t.from === s && (t.symbol === '' || t.symbol === 'ε')) {
-              if (!closure.has(t.to)) {
-                closure.add(t.to);
-                stack.push(t.to);
-              }
+                if (!stateSet.has(t.to)) {
+                    stateSet.add(t.to);
+                    stack.push(t.to);
+                }
             }
-          }
         }
-        return Array.from(closure);
-      }
+    }
+    return Array.from(stateSet);
+}
+
 
       function convertEnfaToNfa(machine) {
         const m = JSON.parse(JSON.stringify(machine));
