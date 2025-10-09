@@ -4142,7 +4142,7 @@ function convertNfaToDfa(nfa) {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
 
-      function validateAutomaton() {
+     function validateAutomaton() {
     const mode = modeSelect.value;
     const states = MACHINE.states;
     const transitions = MACHINE.transitions;
@@ -4154,7 +4154,6 @@ function convertNfaToDfa(nfa) {
 
     const initialCount = states.filter(s => s.initial).length;
 
-    // FIXED: All automaton types must have exactly 1 initial state
     if (initialCount === 0) {
         errors.push('Must have exactly 1 initial state (found 0).');
     } else if (initialCount > 1) {
@@ -4176,11 +4175,27 @@ function convertNfaToDfa(nfa) {
             for (const t of transitions.filter(tt => tt.from === st.id)) {
                 if (symbols.has(t.symbol)) {
                     errors.push(`State ${st.id} is non-deterministic on symbol '${t.symbol}'.`);
-                    break;
+                    break; 
                 }
                 symbols.add(t.symbol);
             }
         }
+        
+        // NEW CODE: Check for DFA completeness
+        const alphabet = MACHINE.alphabet;
+        for (const st of states) {
+            const definedSymbols = new Set(transitions.filter(t => t.from === st.id).map(t => t.symbol));
+            // Don't check for completeness if the alphabet isn't defined yet.
+            if (alphabet && alphabet.length > 0) {
+                 for (const symbol of alphabet) {
+                    if (!definedSymbols.has(symbol)) {
+                        // Use a warning for incompleteness, as it's not a fatal error for drawing.
+                        errors.push(`Warning: State ${st.id} is missing a transition for symbol '${symbol}'.`);
+                    }
+                }
+            }
+        }
+
     } else if (mode.includes('NFA')) {
         if (mode === 'NFA' && transitions.some(t => t.symbol === 'ε' || !t.symbol)) {
             errors.push('NFA cannot have ε-transitions (use ε-NFA mode).');
@@ -4188,7 +4203,7 @@ function convertNfaToDfa(nfa) {
     }
 
     return errors.length === 0 ? 'Valid' : `Invalid: ${errors.join(' ')}`;
-}
+     }
 
       // ... (Event listeners and initialization continue in Chunk 4)
       // ... (Continued from Chunk 3)
