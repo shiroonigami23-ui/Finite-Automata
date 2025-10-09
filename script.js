@@ -4768,97 +4768,70 @@ document.addEventListener("DOMContentLoaded", () => {
     if(window.MACHINE) saveMachineToLocal(window.MACHINE);
   };
 
-  // --- Export SVG as PNG exact replica (preserve styles and markers) ---
-  function exportSvgAsPng(svgEl, filename = 'automaton.png') {
-  try {
-    const clone = svgEl.cloneNode(true);
 
-    // ✅ Inline essential computed styles as SVG attributes
-    const importantProps = [
-      'fill', 'stroke', 'stroke-width', 'font-family', 'font-size',
-      'font-weight', 'text-anchor', 'opacity', 'color'
-    ];
-
-    clone.querySelectorAll('*').forEach(el => {
-      const style = window.getComputedStyle(el);
-      importantProps.forEach(prop => {
-        const val = style.getPropertyValue(prop);
-        if (val && val !== 'none' && val.trim() !== '') {
-          el.setAttribute(prop, val);
-        }
+  function exportSvgAsPng(svgEl, filename='automaton.png') {
+    try {
+      const serializer = new XMLSerializer();
+      const clone = svgEl.cloneNode(true);
+      let styleText = '';
+      const docStyles = document.querySelectorAll('head style, head link[rel="stylesheet"]');
+      docStyles.forEach(node => {
+        if(node.tagName.toLowerCase() === 'style') styleText += node.innerHTML + '\n';
       });
-    });
-
-    // Add SVG namespaces
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-
-    // Size for export
-    const bbox = svgEl.getBoundingClientRect();
-    const width = Math.ceil(bbox.width);
-    const height = Math.ceil(bbox.height);
-    clone.setAttribute('width', width);
-    clone.setAttribute('height', height);
-
-    // Serialize SVG
-    const serializer = new XMLSerializer();
-const svgStr = serializer.serializeToString(clone);
-
-const base64 = btoa(unescape(encodeURIComponent(svgStr)));
-const img = new Image();
-img.src = 'data:image/svg+xml;base64,' + base64;
-      
-    img.onload = function () {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-
-        // Preserve transparency
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-
-        // Trigger download
-        const a = document.createElement('a');
-        a.href = canvas.toDataURL('image/png');
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } catch (e) {
-        console.error('Export draw error', e);
-        URL.revokeObjectURL(url);
-        alert('Export failed: ' + e.message);
+      if(styleText.trim()){
+        const styleElem = document.createElementNS("http://www.w3.org/2000/svg",'style');
+        styleElem.textContent = styleText;
+        clone.insertBefore(styleElem, clone.firstChild);
       }
-    };
-
-    img.onerror = function (ev) {
-      URL.revokeObjectURL(url);
-      console.error('Image load error', ev);
-      alert('Failed to convert SVG to PNG.');
-    };
-
-    img.src = url;
-  } catch (e) {
-    console.error('exportSvgAsPng error', e);
-    alert('Export failed: ' + e.message);
-  }
-}
-
-if (exportBtn) {
-  exportBtn.addEventListener('click', () => {
-    const svg = document.getElementById('dfaSVG');
-    if (!svg) {
-      alert('SVG canvas not found');
-      return;
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+      const bbox = svgEl.getBoundingClientRect();
+      clone.setAttribute('width', Math.ceil(bbox.width));
+      clone.setAttribute('height', Math.ceil(bbox.height));
+      const svgStr = serializer.serializeToString(clone);
+      const svgBlob = new Blob([svgStr], {type: 'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = function(){
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.ceil(bbox.width);
+          canvas.height = Math.ceil(bbox.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+          const a = document.createElement('a');
+          a.href = canvas.toDataURL('image/png');
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } catch(e){
+          console.error('Export failed (canvas draw)', e);
+          URL.revokeObjectURL(url);
+          alert('Export failed: ' + e.message);
+        }
+      };
+      img.onerror = function(ev){
+        URL.revokeObjectURL(url);
+        console.error('Image load error', ev);
+        alert('Failed to convert SVG to PNG.');
+      };
+      img.src = url;
+    } catch(e){
+      console.error('exportSvgAsPng error', e);
+      alert('Export failed: ' + e.message);
     }
-    exportSvgAsPng(svg, 'automaton.png');
-  });
-}
-    
-  // Small consumer-friendly log so autosave gets called from UI actions that already exist.
-  // Try to attach to some known action elements: add state on canvas, genPractice, validate, saveMachineBtn, loadMachineBtn.
+  }
+
+  if(exportBtn){
+    exportBtn.addEventListener('click', ()=> {
+      const svg = document.getElementById('dfaSVG');
+      if(!svg){ alert('SVG canvas not found'); return; }
+      exportSvgAsPng(svg, 'automaton.png');
+    });
+  }
+
   const svgWrapper = document.getElementById('svgWrapper');
   if(svgWrapper){
     svgWrapper.addEventListener('click', function(e){
@@ -5635,7 +5608,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         initializeBulkTesting();
 
-        // Override the practice answer validation
         const checkAnswerBtn = document.getElementById('checkAnswerBtn');
         if (checkAnswerBtn) {
             // Remove existing listeners and add new one
@@ -5657,5 +5629,3 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Enhanced FA Studio initialized');
     }, 100);
 });
-
-// === END ENHANCEMENTS ===
