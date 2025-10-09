@@ -4405,56 +4405,84 @@ function convertNfaToDfa(nfa) {
 
       // Smooth "Glider" Move Tool (JFLAP-style)
       (function setupSmoothMoveTool() {
-        let dragging = false; let currentCircle = null; let currentStateG = null;
-        let lastPos = { x: 0, y: 0 }; let raf = null;
-        function getPoint(evt) {
-          const pt = svg.createSVGPoint();
-          if (evt.touches && evt.touches[0]) { pt.x = evt.touches[0].clientX; pt.y = evt.touches[0].clientY; }
-          else { pt.x = evt.clientX; pt.y = evt.clientY; }
-          return pt.matrixTransform(svg.getScreenCTM().inverse());
-        }
-        function animate() {
-          if (!dragging) return; raf = requestAnimationFrame(animate);
-          const sid =
-            currentStateG.getAttribute('data-id');
-          const sObj = MACHINE.states.find(x => x.id === sid); if (!sObj) return;
-          // Simple spring damping effect
-          sObj.x += (lastPos.x - sObj.x) * 0.22; sObj.y += (lastPos.y - sObj.y) * 0.22;
-          renderAll();
-        }
-        function startDrag(stateG, circle, evt) {
-          if (CURRENT_MODE !== 'move') return;
-          pushUndo(); dragging = true; currentCircle = circle; currentStateG = stateG;
-          circle.classList.add('state-selected');
-          const p = getPoint(evt); lastPos.x = p.x; lastPos.y = p.y;
-          animate(); evt.preventDefault(); evt.stopPropagation();
-        }
-        function moveDrag(evt) {
-          if (!dragging) return;
-          const p = getPoint(evt); lastPos.x = p.x;
-          lastPos.y = p.y;
-          const vb = svg.viewBox.baseVal;
-          // Keep state within canvas bounds
-          lastPos.x = Math.min(Math.max(lastPos.x, vb.x + 40), vb.x + vb.width - 40);
-          lastPos.y = Math.min(Math.max(lastPos.y, vb.y + 40), vb.y + vb.height - 40);
-        }
-        function endDrag() {
-          if (!dragging) return; dragging = false;
-          if (currentCircle) currentCircle.classList.remove('state-selected');
+    let dragging = false;
+    let currentStateG = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
 
-          if (raf) { cancelAnimationFrame(raf); raf = null; }
-          renderAll();
+    function getPoint(evt) {
+        const pt = svg.createSVGPoint();
+        if (evt.touches && evt.touches[0]) {
+            pt.x = evt.touches[0].clientX;
+            pt.y = evt.touches[0].clientY;
+        } else {
+            pt.x = evt.clientX;
+            pt.y = evt.clientY;
         }
-        statesGroup.addEventListener('pointerdown', function (e) {
-          const stateG = e.target.closest('g[data-id]'); if (!stateG) return;
-          const circle = stateG.querySelector('circle.state-circle'); if (!circle) return;
-          startDrag(stateG, circle, e);
-        });
+        return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
 
-        svg.addEventListener('pointermove', moveDrag);
-        svg.addEventListener('pointerup', endDrag);
-        svg.addEventListener('pointercancel', endDrag);
-      })();
+    function startDrag(stateG, circle, evt) {
+        if (CURRENT_MODE !== 'move' || dragging) return;
+        
+        const sid = stateG.getAttribute('data-id');
+        const sObj = MACHINE.states.find(x => x.id === sid);
+        if (!sObj) return;
+
+        pushUndo();
+        dragging = true;
+        currentStateG = stateG;
+        
+        const p = getPoint(evt);
+        // Calculate the offset from the state's center to the click point
+        dragOffsetX = p.x - sObj.x;
+        dragOffsetY = p.y - sObj.y;
+        
+        circle.classList.add('state-selected');
+        evt.preventDefault();
+        evt.stopPropagation();
+    }
+
+    function moveDrag(evt) {
+        if (!dragging) return;
+        
+        const sid = currentStateG.getAttribute('data-id');
+        const sObj = MACHINE.states.find(x => x.id === sid);
+        if (!sObj) return;
+
+        const p = getPoint(evt);
+        
+        // INSTANT UPDATE: Set state position directly to the mouse/finger position, accounting for the initial offset.
+        const vb = svg.viewBox.baseVal;
+        sObj.x = Math.max(vb.x + 40, Math.min(p.x - dragOffsetX, vb.x + vb.width - 40));
+        sObj.y = Math.max(vb.y + 40, Math.min(p.y - dragOffsetY, vb.y + vb.height - 40));
+        
+        renderAll();
+    }
+
+    function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        
+        const circle = currentStateG.querySelector('circle.state-circle');
+        if (circle) circle.classList.remove('state-selected');
+        
+        currentStateG = null;
+    }
+
+    statesGroup.addEventListener('pointerdown', function (e) {
+        const stateG = e.target.closest('g[data-id]');
+        if (!stateG) return;
+        const circle = stateG.querySelector('circle.state-circle');
+        if (!circle) return;
+        startDrag(stateG, circle, e);
+    });
+
+    svg.addEventListener('pointermove', moveDrag);
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointerleave', endDrag); // Also end drag if mouse leaves canvas
+    svg.addEventListener('pointercancel', endDrag);
+})();
 
       // --- OTHER CONTROLS ---
 
