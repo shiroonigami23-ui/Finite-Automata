@@ -938,3 +938,7 @@
     background-color: #fce7f3;
     color: #be185d;
 }
+/* Make control panel narrower and canvas wider */
+.main-content {
+  grid-template-columns: minmax(280px, 320px) 1fr;
+}
