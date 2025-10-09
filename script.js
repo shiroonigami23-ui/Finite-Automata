@@ -4758,9 +4758,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.loadMachineFromLocal = loadMachineFromLocal;
 
   // Try loading immediately
-  setTimeout(()=> {
-    try { loadMachineFromLocal(); } catch(e) { /*ignore*/ }
-  }, 300);
+  //setTimeout(()=> {
+   // try { loadMachineFromLocal(); } catch(e) { /*ignore*/ }
+ // }, 300);
 
   // If there is a save button and it calls download, keep it; but autosave will still run.
   // Expose a small helper used by other UI to call autosave after modifications
@@ -4870,9 +4870,6 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 
-
-
-/* --- BEGIN: Enforce exactly ONE initial state across all modes --- */
 function ensureSingleInitial() {
     try {
         if (!window.MACHINE || !Array.isArray(window.MACHINE.states)) return;
@@ -4888,7 +4885,6 @@ function ensureSingleInitial() {
                 showValidationMessage('No initial state found - auto-setting first state as initial.', 'success');
             }
         } else if (initialIdxs.length > 1) {
-            // Keep the first and unset the rest
             const keepIdx = initialIdxs[0];
             states.forEach((s, idx) => {
                 s.initial = (idx === keepIdx);
