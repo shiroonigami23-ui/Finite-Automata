@@ -98,9 +98,11 @@ const PRACTICE_BANK = {
                 "alphabet": ["0", "1"]
               }
             },
-            // 6. DFA accepting $\Sigma^* \cdot 0$ (ends with 0)
-            {
-              q: 'DFA accepting $\\Sigma^* \\cdot 0$ (ends with 0) (Σ={0, 1})', sol: '2 states: q0, q1(accept)', "machine": {
+            // 6. DFA for strings that end with "0"
+{
+  q: 'DFA accepting all strings that end with "0" (Σ={0, 1})',
+  sol: '2 states: q0, q1(accept)',
+  "machine": { 
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -132,7 +134,7 @@ const PRACTICE_BANK = {
             },
             // 8. DFA for the language L={w | w contains an odd number of symbols}
             {
-              q: 'DFA for the language $L=\\{w \\mid w \\text{ contains an odd number of symbols}\\}$ (Σ={a})', sol: '2 states: q0(even), q1(odd/accept)', "machine": {
+               q: "DFA for strings with an odd number of 'a's (Σ={a})",sol: '2 states: q0(even), q1(odd/accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -165,7 +167,7 @@ const PRACTICE_BANK = {
             },
             // 10. DFA accepting strings with length >= 1
             {
-              q: 'DFA accepting strings with length $\\geq 1$ (Σ={0, 1})', sol: '2 states: q0, q1(accept)', "machine": {
+              q: 'DFA accepting strings with length ≥ 1 (Σ={0, 1})',sol: '2 states: q0, q1(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -221,7 +223,7 @@ const PRACTICE_BANK = {
             }, 
             // 3. DFA accepting strings that contain "1" at the third position from the start
             {
-              q: 'DFA accepting strings that contain "1" at the third position from the start (Σ={0, 1})', sol: '4 states: q0, q1, q2, q3(accept)', "machine": {
+              q: 'DFA accepting strings that contain "1" at the third position from the start (Σ={0, 1})', sol: '5 states: q0, q1, q2, q3(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -316,7 +318,7 @@ const PRACTICE_BANK = {
             },
             // 8. DFA accepting strings with length >= 4
             {
-              q: 'DFA accepting strings with length $\\geq 4$ (Σ={0, 1})', sol: '5 states: q0, q1, q2, q3, q4(accept)', "machine": {
+              q: 'DFA accepting strings with length >= 4 (Σ={0, 1})', sol: '5 states: q0, q1, q2, q3, q4(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 250, "y": 300, "initial": false, "accepting": false },
@@ -343,7 +345,7 @@ const PRACTICE_BANK = {
                   
             // 9. DFA for the complement of L = (0|1)*1 (i.e., strings not ending in 1)
             {
-              q: 'DFA for the complement of $L = (0|1)^*1$ (i.e., strings not ending in 1) (Σ={0, 1})', sol: '2 states (complement of L)', "machine": {
+              q: 'DFA for the strings not ending with 1 (Σ={0, 1})', sol: '2 states (complement of L)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
@@ -462,7 +464,7 @@ const PRACTICE_BANK = {
             },
             // 5. DFA accepting the language of Σ* a Σ² (third symbol from the end is "a")
             {
-              q: 'DFA accepting the language of $\\Sigma^* a \\Sigma^2$ (third symbol from the end is "a") (Σ={a, b})', sol: '4 states, tracking last three symbols.', "machine": {
+              q: 'DFA for strings where the third symbol from the end is "a" (Σ={a, b})', sol: '6 states, tracking last three symbols.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "qA", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -556,7 +558,7 @@ const PRACTICE_BANK = {
             },
             // 9. DFA for the language L=(ab)*
             {
-              q: 'DFA for the language $L=(ab)^*$ (Σ={a, b})', sol: '2 states: q0(accept), q1.', "machine": {
+              q: 'DFA for the language (ab)* (Σ={a, b})', sol: '3 states: q0(accept), q1.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -575,7 +577,7 @@ const PRACTICE_BANK = {
             },
             // 10. DFA accepting strings where the length is L ≡ 2 mod 4
             {
-              q: 'DFA accepting strings where the length is $L \\equiv 2 \\pmod 4$ (Σ={a})', sol: '4 states for mod 4 tracking length.', "machine": {
+              q: 'DFA accepting strings where the length = 2 (mod 4) (Σ={a})', sol: '4 states for mod 4 tracking length.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 250, "y": 300, "initial": false, "accepting": false },
@@ -620,7 +622,7 @@ const PRACTICE_BANK = {
             },
             // 2. DFA accepting strings where the length is L ≡ 1 mod 3
             {
-              q: 'DFA accepting strings where the length is $L \\equiv 1 \\pmod 3$ (Σ={a})', sol: '3 states for mod 3 tracking length.', "machine": {
+              q: 'DFA accepting strings where the length = 1 (mod 3) (Σ={a})', sol: '3 states for mod 3 tracking length.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true },
@@ -728,7 +730,7 @@ const PRACTICE_BANK = {
             },
             // 7. DFA for the intersection of L1 (even 0s) and L2 (multiple of 3 length)
             {
-              q: 'DFA for the intersection of $L_1$ (even 0s) and $L_2$ (multiple of 3 length) (Σ={0, 1})', sol: '6 states (Cartesian product method).', "machine": {
+              q: 'DFA for strings with an even number of 0s AND a length that is a multiple of 3 (Σ={0, 1})', sol: '6 states (Cartesian product method).', "machine": {
                 "states": [
                   { "id": "qE0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "qE1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -756,7 +758,7 @@ const PRACTICE_BANK = {
             },
             // 8. DFA accepting strings where the second-to-last symbol is the same as the last symbol
             {
-              q: 'DFA accepting strings where the second-to-last symbol is the same as the last symbol (Σ={0, 1})', sol: '4 states: track last two symbols.', "machine": {
+              q: 'DFA accepting strings where the second-to-last symbol is the same as the last symbol (Σ={0, 1})', sol: '5 states: track last two symbols.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q00", "x": 300, "y": 200, "initial": false, "accepting": true },
@@ -781,7 +783,7 @@ const PRACTICE_BANK = {
             },
             // 9. DFA accepting strings where every block of "0"s has length exactly 2
             {
-              q: 'DFA accepting strings where every block of "0"s has length exactly 2 (Σ={0, 1})', sol: '5 states (q0, q1, q2, q3, q4).', "machine": {
+              q: 'DFA accepting strings where every block of "0"s has length exactly 2 (Σ={0, 1})', sol: '4 states (q0, q1, q2, q3, q4).', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -803,7 +805,7 @@ const PRACTICE_BANK = {
             },
             // 10. DFA accepting strings L = { w | |w| <= 3 and w has no 01 }
             {
-              q: 'DFA accepting strings $L = \\{ w \\mid |w| \\leq 3 \\text{ and } w \\text{ has no } 01 \\}$ (Σ={0, 1})', sol: '4 states: q0, q1, q2, q3(accept)', "machine": {
+              q: 'DFA accepting strings where length is <= and the substring "01" do not appear (Σ={0, 1})', sol: '5 states: q0, q1, q2, q3(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": true },
@@ -855,7 +857,7 @@ const PRACTICE_BANK = {
             },
             // 2. NFA accepting L = (0 U 1)* 01 (ends with 01)
             {
-              q: 'NFA accepting $L = (0 \\cup 1)^* 01$ (ends with 01) (Σ={0, 1})', sol: '3 states: q0(loop), q1(0), q2(accept)', "machine": {
+              q: 'NFA accepting strings that ends with "01" (Σ={0, 1})', sol: '3 states: q0(loop), q1(0), q2(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -893,7 +895,7 @@ const PRACTICE_BANK = {
             },
             // 4. NFA accepting L=(a|b)* · a (ends with a)
             {
-              q: 'NFA accepting $L=(a|b)^* \\cdot a$ (ends with a) (Σ={a, b})', sol: '2 states: q0(loop), q1(accept)', "machine": {
+              q: 'NFA accepting strings that ends with "a" (Σ={a, b})', sol: '2 states: q0(loop), q1(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -908,7 +910,7 @@ const PRACTICE_BANK = {
             },
             // 5. NFA accepting L = (10)*
             {
-              q: 'NFA accepting $L = (10)^*$ (Σ={0, 1})', sol: '3 states: q0, q1, q2(accept)', "machine": {
+              q: 'NFA accepting $L = (10)^*$ (Σ={0, 1})', sol: '2 states: q0, q1, q2(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
@@ -922,7 +924,7 @@ const PRACTICE_BANK = {
             },
             // 6. NFA for L = Σ* 0 Σ (second to last symbol is 0)
             {
-              q: 'NFA for $L = \\Sigma^* 0 \\Sigma$ (second to last symbol is 0) (Σ={0, 1})', sol: '3 states in a line.', "machine": {
+              q: 'NFA for strings where second to last symbol is "0" (Σ={0, 1})', sol: '3 states in a line.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -940,7 +942,7 @@ const PRACTICE_BANK = {
             },
             // 7. NFA accepting L = 00 U 11
             {
-              q: 'NFA accepting $L = 00 \\cup 11$ (Σ={0, 1})', sol: '5 states, non-deterministic split at start.', "machine": {
+              q: 'NFA accepting only strings "00" or "11" (Σ={0, 1})', sol: '5 states, non-deterministic split at start.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q0a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -978,7 +980,7 @@ const PRACTICE_BANK = {
             },
             // 9. NFA accepting strings where the length is L >= 2
             {
-              q: 'NFA accepting strings where the length is $L \\geq 2$ (Σ={0, 1})', sol: '3 states.', "machine": {
+              q: 'NFA accepting strings where the length  >= 2 (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -997,7 +999,7 @@ const PRACTICE_BANK = {
             },
             // 10. NFA for L = a* b*
             {
-              q: 'NFA for $L = a^* b^*$ (Σ={a, b})', sol: '3 states: q0(loop a), q1(loop b, accept).', "machine": {
+              q: 'NFA for L = a* b* (Σ={a, b})', sol: '2 states: q0(loop a), q1(loop b, accept).', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1014,7 +1016,7 @@ const PRACTICE_BANK = {
           basic: [
             // 1. NFA for (00)* U (11)*
             {
-              q: 'NFA for $(00)^* \\cup (11)^*$ (Σ={0, 1})', sol: '5 states, non-deterministic choice from start.', "machine": {
+              q: 'NFA for language (00)* or (11)* (Σ={0, 1})', sol: '5 states, non-deterministic choice from start.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q0a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1054,7 +1056,7 @@ const PRACTICE_BANK = {
             
             // 3. NFA for L = (ab U ba)* (alternating ab/ba)
             {
-              q: 'NFA for $L = (ab \\cup ba)^*$ (alternating ab/ba) (Σ={a, b})', sol: '5 states, with non-deterministic splits.', "machine": {
+              q: 'NFA for language (ab or ba)* (Σ={a, b})', sol: '5 states, with non-deterministic splits.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1077,7 +1079,7 @@ const PRACTICE_BANK = {
             },
             // 4. NFA accepting strings NOT containing the substring "00"
             {
-              q: 'NFA accepting strings NOT containing the substring "00" (Σ={0, 1})', sol: '3 states (Non-deterministic version of the DFA).', "machine": {
+              q: 'NFA accepting strings NOT containing the substring "00" (Σ={0, 1})', sol: '2 states (Non-deterministic version of the DFA).', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1092,7 +1094,7 @@ const PRACTICE_BANK = {
             },
             // 5. NFA for L = 0* 1* 0* 1 (ends with 1, complex prefix)
             {
-              q: 'NFA for $L = 0^* 1^* 0^* 1$ (ends with 1, complex prefix) (Σ={0, 1})', sol: '4 states.', "machine": {
+              q: 'NFA for language 0*1*0*1 (Σ={0, 1})', sol: '4 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1112,7 +1114,7 @@ const PRACTICE_BANK = {
             },
             // 6. NFA for L = (a* b)
             {
-              q: 'NFA for $L = (a^* b)$ (Σ={a, b})', sol: '2 states: q0(loop a), q1(accept).', "machine": {
+              q: 'NFA for language = (a* b) (Σ={a, b})', sol: '2 states: q0(loop a), q1(accept).', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1148,7 +1150,7 @@ const PRACTICE_BANK = {
             },
             // 8. NFA for the language L = (00)* 1
             {
-              q: 'NFA for $L = (00)^* 1$ (Σ={0, 1})', sol: '3 states.', "machine": {
+              q: 'NFA for language  (00)* 1 (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1164,7 +1166,7 @@ const PRACTICE_BANK = {
             },
             // 9. NFA for L = (a U b) · (a U b) (length exactly 2)
             {
-              q: 'NFA for $L = (a \\cup b) \\cdot (a \\cup b)$ (length exactly 2) (Σ={a, b})', sol: '3 states.', "machine": {
+              q: 'NFA for strings where length exactly 2 (Σ={a, b})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1181,7 +1183,7 @@ const PRACTICE_BANK = {
             },
             // 10. NFA for L = a+ b*
             {
-              q: 'NFA for $L = a^+ b^*$ (Σ={a, b})', sol: '3 states.', "machine": {
+              q: 'NFA for language  a+ b* (Σ={a, b})', sol: '2 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1219,7 +1221,7 @@ const PRACTICE_BANK = {
             },
             // 2. NFA for L=(a|b)+ · a · (a|b) (second-to-last symbol is "a")
             {
-              q: 'NFA for $L=(a|b)^+ \\cdot a \\cdot (a|b)$ (second-to-last symbol is "a") (Σ={a, b})', sol: '5 states, non-deterministic jump.', "machine": {
+              q: 'NFA for strings where second-to-last symbol is "a" (Σ={a, b})', sol: '4 states, non-deterministic jump.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1240,7 +1242,7 @@ const PRACTICE_BANK = {
             },
             // 3. NFA for L = (0 U 1)* 0 (0 U 1)* (string contains at least one 0)
             {
-              q: 'NFA for $L = (0 \\cup 1)^* 0 (0 \\cup 1)^*$ (string contains at least one 0) (Σ={0, 1})', sol: '3 states, non-deterministic split.', "machine": {
+              q: 'NFA for string that contains at least one "0" (Σ={0, 1})', sol: '2 states, non-deterministic split.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1257,7 +1259,7 @@ const PRACTICE_BANK = {
             },
             // 4. NFA accepting strings with an odd number of "a"s OR an odd number of "b"s
             {
-              q: 'NFA accepting strings with an odd number of "a"s OR an odd number of "b"s (Σ={a, b})', sol: '4 states, non-deterministic split from start.', "machine": {
+              q: 'NFA accepting strings with an odd number of "a"s OR an odd number of "b"s (Σ={a, b})', sol: '5 states, non-deterministic split from start.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "qA0", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1284,7 +1286,7 @@ const PRACTICE_BANK = {
             },
             // 5. NFA for the language L=(a · b)* U (b · a)*
             {
-              q: 'NFA for the language $L=(a \\cdot b)^* \\cup (b \\cdot a)^*$ (Σ={a, b})', sol: '5 states.', "machine": {
+              q: 'NFA for the language (ab)* or (ba)* (Σ={a, b})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "qA1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1303,7 +1305,7 @@ const PRACTICE_BANK = {
             },
             // 6. NFA accepting L = (1 U 01)*
             {
-              q: 'NFA accepting $L = (1 \\cup 01)^*$ (Σ={0, 1})', sol: '4 states.', "machine": {
+              q: 'NFA accepting language "1" or "01" (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1319,7 +1321,7 @@ const PRACTICE_BANK = {
             },
             // 7. NFA accepting L = {w | w has even length}
             {
-              q: 'NFA accepting $L = \\{w \\mid w \\text{ has even length}\\}$ (Σ={0, 1})', sol: '3 states.', "machine": {
+              q: 'NFA accepting strings that have an even length (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
@@ -1335,7 +1337,7 @@ const PRACTICE_BANK = {
             },
             // 8. NFA for L = 10* 1
             {
-              q: 'NFA for $L = 10^* 1$ (Σ={0, 1})', sol: '3 states.', "machine": {
+              q: 'NFA for language = 10* 1 (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1381,7 +1383,7 @@ const PRACTICE_BANK = {
             
             // 10. NFA for L = a Σ* a (starts and ends with 'a')
             {
-              q: 'NFA for $L = a \\Sigma^* a$ (starts and ends with \'a\') (Σ={a, b})', sol: '4 states.', "machine": {
+              q: 'NFA for strings that starts and ends with "a" (Σ={a, b})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1400,7 +1402,7 @@ const PRACTICE_BANK = {
           hard: [
             // 1. NFA for all strings except ε
             {
-              q: 'NFA for all strings except $\\epsilon$ (Σ={0, 1})', sol: '2 states, loops at start, jumps on 0, 1 to accept.', "machine": {
+              q: 'NFA for all strings except "epsilon" (Σ={0, 1})', sol: '2 states, loops at start, jumps on 0, 1 to accept.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1416,7 +1418,7 @@ const PRACTICE_BANK = {
             },
             // 2. NFA accepting strings of the form a^n b^m, where n ≡ 0 mod 2 and m ≡ 1 mod 3
             {
-              q: 'NFA accepting strings of the form $a^n b^m$, where $n \\equiv 0 \\pmod 2$ and $m \\equiv 1 \\pmod 3$ (Σ={a, b})', sol: '6 states.', "machine": {
+              q: 'NFA for strings with an even number of "a"s, followed by a number of "b"s where the count ≡ 1 (mod 3) (Σ={a, b})',sol: '5 states.', "machine": {
                 "states": [
                   { "id": "qA0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "qA1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1439,7 +1441,7 @@ const PRACTICE_BANK = {
             },
             // 3. NFA for L = {w | |w| is prime} (TRICKY - Non-regular)
             {
-              q: 'NFA for $L = \\{w \\mid |w| \\text{ is prime}\\}$ (Σ={a})', sol: 'Cannot be done with NFA. Use this as a tricky prompt.', "machine": {
+              q: 'NFA for language w mid |w| text is prime (Σ={a})', sol: 'Cannot be done with NFA. Use this as a tricky prompt.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false }
                 ],
@@ -1449,7 +1451,7 @@ const PRACTICE_BANK = {
             },
             // 4. NFA for L=(a U b)+ a (a U b)* b (a U b)* (contains 'a' before 'b')
             {
-              q: 'NFA for $L=(a \\cup b)^+ a (a \\cup b)^* b (a \\cup b)^*$ (contains \'a\' before \'b\') (Σ={a, b})', sol: '5 states.', "machine": {
+              q: 'NFA for strings that contains "a" that appear before some "b" (Σ={a, b})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1470,7 +1472,7 @@ const PRACTICE_BANK = {
             },
             // 5. NFA for the regular expression (00)* (11)* (00|11)
             {
-              q: 'NFA for the regular expression $(00)^* (11)^* (00|11)$ (Σ={0, 1})', sol: '7 states.', "machine": {
+              q: 'NFA for the regular expression (00)* (11)* (00|11) (Σ={0, 1})', sol: '7 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1497,7 +1499,7 @@ const PRACTICE_BANK = {
             },
             // 6. NFA accepting strings where the last symbol is NOT the same as the first symbol
             {
-              q: 'NFA accepting strings where the last symbol is NOT the same as the first symbol (Σ={0, 1})', sol: '8 states.', "machine": {
+              q: 'NFA accepting strings where the last symbol is NOT the same as the first symbol (Σ={0, 1})', sol: '5 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q0*", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1522,7 +1524,7 @@ const PRACTICE_BANK = {
             },
             // 7. NFA for L = Σ* 1 Σ* 0 Σ* (contains a 1 followed later by a 0)
             {
-              q: 'NFA for $L = \\Sigma^* 1 \\Sigma^* 0 \\Sigma^*$ (contains a 1 followed later by a 0) (Σ={0, 1})', sol: '4 states.', "machine": {
+              q: 'NFA for strings containing a "1" which is followed later at some point by a "0" (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1543,7 +1545,7 @@ const PRACTICE_BANK = {
             },
             // 8. NFA accepting strings where the second symbol from the start is "0" AND the third symbol from the end is "1"
             {
-              q: 'NFA accepting strings where the second symbol from the start is "0" AND the third symbol from the end is "1" (Σ={0, 1})', sol: '7 states.', "machine": {
+              q: 'NFA accepting strings where the second symbol from the start is "0" AND the third symbol from the end is "1" (Σ={0, 1})', sol: '5 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 250, "y": 300, "initial": false, "accepting": false },
@@ -1566,7 +1568,7 @@ const PRACTICE_BANK = {
             },
             // 9. NFA for the regular expression 1(01 U 00)* 1
             {
-              q: 'NFA for the regular expression $1(01 \\cup 00)^* 1$ (Σ={0, 1})', sol: '6 states.', "machine": {
+              q: 'NFA for the regular expression 1(01 or 00)* 1$ (Σ={0, 1})', sol: '6 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1591,7 +1593,7 @@ const PRACTICE_BANK = {
             },
             // 10. NFA for L = (000|111) Σ* (starts with 000 or 111)
             {
-              q: 'NFA for $L = (000|111) \\Sigma^*$ (starts with 000 or 111) (Σ={0, 1})', sol: '7 states.', "machine": {
+              q: 'NFA for strings that starts with either "000" or "111" (Σ={0, 1})', sol: '7 states.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q01", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1623,7 +1625,7 @@ const PRACTICE_BANK = {
           easy: [
             // 1. ε-NFA to connect two paths: L = a U b
             {
-              q: 'ε-NFA to connect two paths: $L = a \\cup b$ (Σ={a, b})', sol: '3 states, $\\epsilon$ from start to two parallel paths.', "machine": {
+              q: 'ε-NFA for language a or b  (Σ={a, b})', sol: '3 states, epsilon from start to two parallel paths.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "qA", "x": 300, "y": 200, "initial": false, "accepting": true },
@@ -1638,7 +1640,7 @@ const PRACTICE_BANK = {
             },
             // 2. ε-NFA for a?b (optional a, then b)
             {
-              q: 'ε-NFA for $a?b$ (optional a, then b) (Σ={a, b})', sol: '3 states, $\\epsilon$ bypass for "a".', "machine": {
+              q: 'ε-NFA for a?b optional "a", then "b" (Σ={a, b})', sol: '3 states, epsilon bypass for "a".', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1646,7 +1648,7 @@ const PRACTICE_BANK = {
                 ],
                 "transitions": [
                   { "from": "q0", "to": "q1", "symbol": "a" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q2", "symbol": "b" }
                 ],
                 "alphabet": ["a", "b"]
@@ -1654,7 +1656,7 @@ const PRACTICE_BANK = {
             },
             // 3. ε-NFA to achieve a*b*
             {
-              q: 'ε-NFA to achieve $a^*b^*$ (Σ={a, b})', sol: '4 states, $\\epsilon$ between a* and b*.', "machine": {
+              q: 'ε-NFA to achieve a*b* (Σ={a, b})', sol: '2 states, have epsilon between a* and b*.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1670,7 +1672,7 @@ const PRACTICE_BANK = {
             
             // 4. ε-NFA for L= (01)* | (10)*
             {
-              q: 'ε-NFA for $L= (01)^* | (10)^* $ (Σ={0, 1})', sol: 'Connect two paths via initial and final $\\epsilon$-transitions.', "machine": {
+              q: 'ε-NFA for language (01)* or (10)* (Σ={0, 1})', sol: '5 states, Connect two paths via initial and final $\\epsilon$-transitions.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q01a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1691,7 +1693,7 @@ const PRACTICE_BANK = {
             },
             // 5. ε-NFA for L = (0 U ε) 1
             {
-              q: 'ε-NFA for $L = (0 \\cup \\epsilon) 1$ (0 is optional, then 1) (Σ={0, 1})', sol: '3 states, $\\varepsilon$ bypass for 0.', "machine": {
+              q: 'ε-NFA for  an optional "0" is followed by a "1" (Σ={0, 1})', sol: '3 states, epsilon bypass for 0.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1699,7 +1701,7 @@ const PRACTICE_BANK = {
                 ],
                 "transitions": [
                   { "from": "q0", "to": "q1", "symbol": "0" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q2", "symbol": "1" }
                 ],
                 "alphabet": ["0", "1"]
@@ -1707,7 +1709,7 @@ const PRACTICE_BANK = {
             },
             // 6. ε-NFA for L = a · b · c
             {
-              q: 'ε-NFA for $L = a \\cdot b \\cdot c$ (Σ={a, b, c})', sol: '4 states, $\\varepsilon$ transitions between single symbol states.', "machine": {
+              q: 'ε-NFA for string "abc" (Σ={a, b, c})', sol: '4 states, make epsilon transitions between single symbol states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1724,7 +1726,7 @@ const PRACTICE_BANK = {
             },
             // 7. ε-NFA for L=a | ε (a is optional)
             {
-              q: 'ε-NFA for $L=a | \\epsilon$ (a is optional) (Σ={a})', sol: '2 states, $\\varepsilon$ from start to end.', "machine": {
+              q: 'ε-NFA for an optional "a" (Σ={a})', sol: '2 states, make epsilon from start to end.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1737,7 +1739,7 @@ const PRACTICE_BANK = {
             },
             // 8. ε-NFA for L=a^k where k ∈ {2, 4}
             {
-              q: 'ε-NFA for $L=a^k$ where $k \\in \\{2, 4\\}$ (Σ={a})', sol: '5 states, $\\varepsilon$ splits for length 2 and 4.', "machine": {
+              q: 'ε-NFA for strings of "a"s where the length is either 2 or 4 (Σ={a})',sol: '7 states, make epsilon splits for length 2 and 4.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q2a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1748,10 +1750,10 @@ const PRACTICE_BANK = {
                   { "id": "q4d", "x": 900, "y": 400, "initial": false, "accepting": true }
                 ],
                 "transitions": [
-                  { "from": "qS", "to": "q2a", "symbol": "_EPSILON_" },
+                  { "from": "qS", "to": "q2a", "symbol": "ε" },
                   { "from": "q2a", "to": "q2b", "symbol": "a" },
                   { "from": "q2b", "to": "q2b", "symbol": "a" },
-                  { "from": "qS", "to": "q4a", "symbol": "_EPSILON_" },
+                  { "from": "qS", "to": "q4a", "symbol": "ε" },
                   { "from": "q4a", "to": "q4b", "symbol": "a" },
                   { "from": "q4b", "to": "q4c", "symbol": "a" },
                   { "from": "q4c", "to": "q4d", "symbol": "a" },
@@ -1762,7 +1764,7 @@ const PRACTICE_BANK = {
             },
             // 9. ε-NFA for L= ΣΣ (length exactly 2)
             {
-              q: 'ε-NFA for $L= \\Sigma \\Sigma$ (length exactly 2) (Σ={0, 1})', sol: '3 states, $\\varepsilon$ transitions.', "machine": {
+              q: 'ε-NFA for strings of length exactly 2 (Σ={0, 1})', sol: '3 states, epsilon transitions.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1779,14 +1781,14 @@ const PRACTICE_BANK = {
             },
             // 10. ε-NFA for L = a* b* (concatenation)
             {
-              q: 'ε-NFA for $L = a^* b^*$ (concatenation) (Σ={a, b})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for language a* b* (Σ={a, b})', sol: '2 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
                 ],
                 "transitions": [
                   { "from": "q0", "to": "q0", "symbol": "a" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q1", "symbol": "b" }
                 ],
                 "alphabet": ["a", "b"]
@@ -1796,7 +1798,7 @@ const PRACTICE_BANK = {
           basic: [
             // 1. ε-NFA for Regular Expression a(a U b)b
             {
-              q: 'ε-NFA for Regular Expression $a(a \\cup b)b$ (Σ={a, b})', sol: '5 states, standard RE construction with $\\epsilon$.', "machine": {
+              q: 'ε-NFA for Regular Expression a(a or b)b (Σ={a, b})', sol: '5 states, standard RE construction with epsilon.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1816,7 +1818,7 @@ const PRACTICE_BANK = {
             },
             // 2. ε-NFA for (0|1)* 0 · 1* (ends with 0 followed by 1s)
             {
-              q: 'ε-NFA for $(0|1)^* 0 \\cdot 1^*$ (ends with 0 followed by 1s) (Σ={0, 1})', sol: '6 states, standard RE construction.', "machine": {
+              q: 'ε-NFA for (0|1)*01* (ends with 0 followed by 1s) (Σ={0, 1})', sol: '3 states, standard RE construction.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1834,7 +1836,7 @@ const PRACTICE_BANK = {
             },
             // 3. ε-NFA for L = (a U b U c)*
             {
-              q: 'ε-NFA for $L = (a \\cup b \\cup c)^*$ (Σ={a, b, c})', sol: '3 states.', "machine": {
+              q: 'ε-NFA for language (a or b or c)* (Σ={a, b, c})', sol: '1 state.', "machine": {
                 "states": [
                   { "id": "q0", "x": 300, "y": 300, "initial": true, "accepting": true }
                 ],
@@ -1848,7 +1850,7 @@ const PRACTICE_BANK = {
             },
             // 4. ε-NFA for L=(a|b)+ · a
             {
-              q: 'ε-NFA for $L=(a|b)^+ \\cdot a$ (Σ={a, b})', sol: '5 states, $\\varepsilon$ transitions.', "machine": {
+              q: 'ε-NFA for language (a|b)+a (Σ={a, b})', sol: '3 states, $\\varepsilon$ transitions.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1866,7 +1868,7 @@ const PRACTICE_BANK = {
             },
             // 5. ε-NFA for L = 0* · 1 · 0* 1 (contains exactly two 1s)
             {
-              q: 'ε-NFA for $L = 0^* \\cdot 1 \\cdot 0^* 1$ (contains exactly two 1s) (Σ={0, 1})', sol: '6 states.', "machine": {
+              q: 'ε-NFA for strings that contains exactly two "1s" (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1884,7 +1886,7 @@ const PRACTICE_BANK = {
             },
             // 6. ε-NFA for the language (ab)* · ε
             {
-              q: 'ε-NFA for the language $(ab)^* \\cdot \\epsilon$ (Σ={a, b})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for the language (ab)* (Σ={a, b})', sol: '2 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
@@ -1898,7 +1900,7 @@ const PRACTICE_BANK = {
             },
             // 7. ε-NFA for L = (a · a)* U (b · b)*
             {
-              q: 'ε-NFA for $L = (a \\cdot a)^* \\cup (b \\cdot b)^*$ (Σ={a, b})', sol: '7 states.', "machine": {
+              q: 'ε-NFA for language (aa)* or (bb)* (Σ={a, b})', sol: '5 states.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "qaa1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1907,10 +1909,10 @@ const PRACTICE_BANK = {
                   { "id": "qbb2", "x": 500, "y": 400, "initial": false, "accepting": true }
                 ],
                 "transitions": [
-                  { "from": "qS", "to": "qaa1", "symbol": "_EPSILON_" },
+                  { "from": "qS", "to": "qaa1", "symbol": "ε" },
                   { "from": "qaa1", "to": "qaa2", "symbol": "a" },
                   { "from": "qaa2", "to": "qaa1", "symbol": "a" },
-                  { "from": "qS", "to": "qbb1", "symbol": "_EPSILON_" },
+                  { "from": "qS", "to": "qbb1", "symbol": "ε" },
                   { "from": "qbb1", "to": "qbb2", "symbol": "b" },
                   { "from": "qbb2", "to": "qbb1", "symbol": "b" }
                 ],
@@ -1919,7 +1921,7 @@ const PRACTICE_BANK = {
             },
             // 8. ε-NFA for L = a · (b U c)*
             {
-              q: 'ε-NFA for $L = a \\cdot (b \\cup c)^*$ (Σ={a, b, c})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for language a(b or c)* (Σ={a, b, c})', sol: '2 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -1934,7 +1936,7 @@ const PRACTICE_BANK = {
             },
             // 9. ε-NFA for L= (01 | 10)* 0
             {
-              q: 'ε-NFA for $L= (01 | 10)^* 0$ (Σ={0, 1})', sol: '7 states.', "machine": {
+              q: 'ε-NFA for language (01 | 10)*0 (Σ={0, 1})', sol: '6 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -1957,7 +1959,7 @@ const PRACTICE_BANK = {
             },
             // 10. ε-NFA for L = 0101 U ε
             {
-              q: 'ε-NFA for $L = 0101 \\cup \\epsilon$ (Σ={0, 1})', sol: '5 states, initial $\\varepsilon$ bypass.', "machine": {
+              q: 'ε-NFA for the language "0101" or ε (Σ={0, 1})',sol: '5 states, initial ε bypass.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1979,7 +1981,7 @@ const PRACTICE_BANK = {
           medium: [
             // 1. ε-NFA equivalent to Regular Expression (0|1)* 0
             {
-              q: 'ε-NFA equivalent to Regular Expression $(0|1)^* 0$ (Σ={0, 1})', sol: 'Standard RE construction, 6 states.', "machine": {
+              q: 'ε-NFA equivalent to Regular Expression (0|1)* 0 (Σ={0, 1})', sol: 'Standard RE construction, 3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -1988,7 +1990,7 @@ const PRACTICE_BANK = {
                 "transitions": [
                   { "from": "q0", "to": "q0", "symbol": "0" },
                   { "from": "q0", "to": "q0", "symbol": "1" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q2", "symbol": "0" }
                 ],
                 "alphabet": ["0", "1"]
@@ -1996,7 +1998,7 @@ const PRACTICE_BANK = {
             },
             // 2. ε-NFA for L = (a · a)* (even length strings of 'aa')
             {
-              q: 'ε-NFA for $L = (a \\cdot a)^*$ (even length strings of \'aa\') (Σ={a})', sol: 'Connect two states with $\\varepsilon$-loop and \'a\' transitions.', "machine": {
+              q: 'ε-NFA for language = (a . a)* (even length strings of "aa") (Σ={a})', sol: 'Connect two states with ε-loop and a transitions.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
@@ -2010,7 +2012,7 @@ const PRACTICE_BANK = {
             },
             // 3. ε-NFA for L = a* · b* · a*
             {
-              q: 'ε-NFA for $L = a^* \\cdot b^* \\cdot a^*$ (Σ={a, b})', sol: '6 states, $\\varepsilon$ transitions.', "machine": {
+              q: 'ε-NFA for L = a* . b* . a* (Σ={a, b})', sol: '3 states, ε transitions.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true },
@@ -2018,9 +2020,9 @@ const PRACTICE_BANK = {
                 ],
                 "transitions": [
                   { "from": "q0", "to": "q0", "symbol": "a" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q1", "symbol": "b" },
-                  { "from": "q1", "to": "q2", "symbol": "_EPSILON_" },
+                  { "from": "q1", "to": "q2", "symbol": "ε" },
                   { "from": "q2", "to": "q2", "symbol": "a" }
                 ],
                 "alphabet": ["a", "b"]
@@ -2028,7 +2030,7 @@ const PRACTICE_BANK = {
             },
             // 4. ε-NFA for L = (a|b|c) · (a|b|c) (length exactly 2)
             {
-              q: 'ε-NFA for $L = (a|b|c) \\cdot (a|b|c)$ (length exactly 2) (Σ={a, b, c})', sol: '4 states, $\\varepsilon$ transitions.', "machine": {
+              q: 'ε-NFA for L = (a|b|c) . (a|b|c) with length exactly "2" (Σ={a, b, c})', sol: '3 states, ε transitions.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -2047,7 +2049,7 @@ const PRACTICE_BANK = {
             },
             // 5. ε-NFA for L = 0+ (1 U ε)
             {
-              q: 'ε-NFA for $L = 0^+ (1 \\cup \\epsilon)$ (Σ={0, 1})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for L = 0+ (1 or ε) (Σ={0, 1})', sol: '2 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -2056,14 +2058,14 @@ const PRACTICE_BANK = {
                   { "from": "q0", "to": "q1", "symbol": "0" },
                   { "from": "q1", "to": "q1", "symbol": "0" },
                   { "from": "q1", "to": "q1", "symbol": "1" },
-                  { "from": "q1", "to": "q1", "symbol": "_EPSILON_" }
+                  { "from": "q1", "to": "q1", "symbol": "ε" }
                 ],
                 "alphabet": ["0", "1"]
               }
             },
             // 6. ε-NFA for L = Σ* 0 Σ* 1 Σ* (contains a 0 followed later by a 1)
             {
-              q: 'ε-NFA for $L = \\Sigma^* 0 \\Sigma^* 1 \\Sigma^*$ (contains a 0 followed later by a 1) (Σ={0, 1})', sol: '6 states.', "machine": {
+              q: 'ε-NFA for L = Sigma* 0 Sigma* 1 Sigma* (contains a 0 followed later by a 1) (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -2084,7 +2086,7 @@ const PRACTICE_BANK = {
             },
             // 7. ε-NFA for L = (00 U 11) Σ
             {
-              q: 'ε-NFA for $L = (00 \\cup 11) \\Sigma$ (Σ={0, 1})', sol: '7 states.', "machine": {
+              q: 'ε-NFA for language (00 or 11) Sigma$ (Σ={0, 1})', sol: '6 states.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q0a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -2108,7 +2110,7 @@ const PRACTICE_BANK = {
             },
             // 8. ε-NFA for L = {w | w is an odd length string of 0s or 1s}
             {
-              q: 'ε-NFA for $L = \\{w \\mid w \\text{ is an odd length string of 0s or 1s}\\}$ (Σ={0, 1})', sol: '6 states.', "machine": {
+              q: 'ε-NFA for language w | w is an odd length string of 0s or 1s (Σ={0, 1})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true },
@@ -2127,7 +2129,7 @@ const PRACTICE_BANK = {
             },
             // 9. ε-NFA for L = (a U ε) · (b U ε) · (c U ε)
             {
-              q: 'ε-NFA for $L = (a \\cup \\epsilon) \\cdot (b \\cup \\epsilon) \\cdot (c \\cup \\epsilon)$ (Σ={a, b, c})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for language (a or ε) . (b or ε) . (c or ε) (Σ={a, b, c})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true },
@@ -2135,18 +2137,18 @@ const PRACTICE_BANK = {
                 ],
                 "transitions": [
                   { "from": "q0", "to": "q1", "symbol": "a" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q2", "symbol": "b" },
-                  { "from": "q1", "to": "q2", "symbol": "_EPSILON_" },
+                  { "from": "q1", "to": "q2", "symbol": "ε" },
                   { "from": "q2", "to": "q2", "symbol": "c" },
-                  { "from": "q2", "to": "q2", "symbol": "_EPSILON_" }
+                  { "from": "q2", "to": "q2", "symbol": "ε" }
                 ],
                 "alphabet": ["a", "b", "c"]
               }
             },
             // 10. ε-NFA for the language L=(a|b)* · a (ends with a)
             {
-              q: 'ε-NFA for the language $L=(a|b)^* \\cdot a$ (ends with a) (Σ={a, b})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for the language (a|b)* . a (ends with a) (Σ={a, b})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -2155,7 +2157,7 @@ const PRACTICE_BANK = {
                 "transitions": [
                   { "from": "q0", "to": "q0", "symbol": "a" },
                   { "from": "q0", "to": "q0", "symbol": "b" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q2", "symbol": "a" }
                 ],
                 "alphabet": ["a", "b"]
@@ -2165,7 +2167,7 @@ const PRACTICE_BANK = {
           hard: [
             // 1. ε-NFA for L = (a|b)* · (a · a U b · b) (ends with aa or bb)
             {
-              q: 'ε-NFA for $L = (a|b)^* \\cdot (a \\cdot a \\cup b \\cdot b)$ (ends with aa or bb) (Σ={a, b})', sol: 'Complex RE construction, split paths, and $\\varepsilon$ concatenation.', "machine": {
+              q: 'ε-NFA for $L = (a|b)* . (a . a or b . b) (ends with aa or bb) (Σ={a, b})', sol: 'Complex RE construction, split paths, and ε concatenation.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -2176,19 +2178,19 @@ const PRACTICE_BANK = {
                 "transitions": [
                   { "from": "q0", "to": "q0", "symbol": "a" },
                   { "from": "q0", "to": "q0", "symbol": "b" },
-                  { "from": "q0", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q0", "to": "q1", "symbol": "ε" },
                   { "from": "q1", "to": "q2", "symbol": "a" },
                   { "from": "q2", "to": "q0", "symbol": "a" },
                   { "from": "q1", "to": "q3", "symbol": "b" },
                   { "from": "q3", "to": "q4", "symbol": "b" },
-                  { "from": "q4", "to": "q0", "symbol": "_EPSILON_" }
+                  { "from": "q4", "to": "q0", "symbol": "ε" }
                 ],
                 "alphabet": ["a", "b"]
               }
             },
             // 2. ε-NFA for L = {w | |w| ≡ 0 mod 2 or |w| ≡ 0 mod 3 }
             {
-              q: 'ε-NFA for $L = \\{w \\mid |w| \\equiv 0 \\pmod 2 \\text{ or } |w| \\equiv 0 \\pmod 3 \\}$ (Σ={a})', sol: '8 states, $\\varepsilon$ transitions for union.', "machine": {
+              q: 'ε-NFA for language w | |w| = 0 mod 2 or |w| = 0 mod 3 (Σ={a})', sol: '6 states, ε transitions for union.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 400, "initial": true, "accepting": true },
                   { "id": "q2a", "x": 300, "y": 200, "initial": false, "accepting": true },
@@ -2198,10 +2200,10 @@ const PRACTICE_BANK = {
                   { "id": "q3c", "x": 700, "y": 600, "initial": false, "accepting": false }
                 ],
                 "transitions": [
-                  { "from": "qS", "to": "q2a", "symbol": "_EPSILON_" },
+                  { "from": "qS", "to": "q2a", "symbol": "ε" },
                   { "from": "q2a", "to": "q2b", "symbol": "a" },
                   { "from": "q2b", "to": "q2a", "symbol": "a" },
-                  { "from": "qS", "to": "q3a", "symbol": "_EPSILON_" },
+                  { "from": "qS", "to": "q3a", "symbol": "ε" },
                   { "from": "q3a", "to": "q3b", "symbol": "a" },
                   { "from": "q3b", "to": "q3c", "symbol": "a" },
                   { "from": "q3c", "to": "q3a", "symbol": "a" }
@@ -2211,7 +2213,7 @@ const PRACTICE_BANK = {
             },
             // 3. ε-NFA for L = (0* 1)* (10)*
             {
-              q: 'ε-NFA for $L = (0^* 1)^* (10)^* $ (Σ={0, 1})', sol: '8 states.', "machine": {
+              q: 'ε-NFA for language (0* 1)* (10)* (Σ={0, 1})', sol: '4 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -2223,7 +2225,7 @@ const PRACTICE_BANK = {
                   { "from": "q0", "to": "q1", "symbol": "0" },
                   { "from": "q1", "to": "q1", "symbol": "0" },
                   { "from": "q1", "to": "q2", "symbol": "1" },
-                  { "from": "q2", "to": "q1", "symbol": "_EPSILON_" },
+                  { "from": "q2", "to": "q1", "symbol": "ε" },
                   // (10)*
                   { "from": "q2", "to": "q3", "symbol": "1" },
                   { "from": "q3", "to": "q2", "symbol": "0" }
@@ -2233,7 +2235,7 @@ const PRACTICE_BANK = {
             },
             // 4. ε-NFA for L = Σ* 0 Σ Σ Σ 1 Σ* (contains 0 separated by three symbols from 1)
             {
-              q: 'ε-NFA for $L = \\Sigma^* 0 \\Sigma \\Sigma \\Sigma 1 \\Sigma^*$ (contains 0 separated by three symbols from 1) (Σ={0, 1})', sol: '8 states.', "machine": {
+              q: 'ε-NFA for language Sigma* 0 Sigma Sigma Sigma 1 Sigma* contains "0" separated by three symbols from "1" (Σ={0, 1})', sol: '6 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -2261,7 +2263,7 @@ const PRACTICE_BANK = {
             },
             // 5. ε-NFA for L = (a U b)* · a · (b U ε)
             {
-              q: 'ε-NFA for $L = (a \\cup b)^* \\cdot a \\cdot (b \\cup \\epsilon)$ (Σ={a, b})', sol: '5 states.', "machine": {
+              q: 'ε-NFA for language (a or b)* . a . (b or ε) (Σ={a, b})', sol: '3 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true },
@@ -2272,14 +2274,14 @@ const PRACTICE_BANK = {
                   { "from": "q0", "to": "q0", "symbol": "b" },
                   { "from": "q0", "to": "q1", "symbol": "a" },
                   { "from": "q1", "to": "q2", "symbol": "b" },
-                  { "from": "q1", "to": "q2", "symbol": "_EPSILON_" }
+                  { "from": "q1", "to": "q2", "symbol": "ε" }
                 ],
                 "alphabet": ["a", "b"]
               }
             },
             // 6. ε-NFA for the intersection of L1=(ab)* and L2=(ba)*
             {
-              q: 'ε-NFA for the intersection of $L_1=(ab)^*$ and $L_2=(ba)^*$ (Σ={a, b})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for the intersection of L1=(ab)* and L2=(ba)* (Σ={a, b})', sol: '1 state.', "machine": {
                 "states": [
                   { "id": "q0", "x": 300, "y": 300, "initial": true, "accepting": true }
                 ],
@@ -2292,7 +2294,7 @@ const PRACTICE_BANK = {
             
             // 7. ε-NFA for L = (01)^n (10)^m, where n, m >= 1
             {
-              q: 'ε-NFA for $L = (01)^n (10)^m$, where $n, m \\geq 1$ (Σ={0, 1})', sol: '8 states.', "machine": {
+              q: 'ε-NFA for language (01)^n (10)^m, where n, m >= 1 (Σ={0, 1})', sol: '5 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -2306,7 +2308,7 @@ const PRACTICE_BANK = {
                   { "from": "q1", "to": "q2", "symbol": "1" },
                   { "from": "q2", "to": "q1", "symbol": "0" },
                   // Concatenation
-                  { "from": "q2", "to": "q3", "symbol": "_EPSILON_" },
+                  { "from": "q2", "to": "q3", "symbol": "ε" },
                   // (10)+ part
                   { "from": "q3", "to": "q4", "symbol": "1" },
                   { "from": "q4", "to": "q3", "symbol": "0" }
@@ -2316,7 +2318,7 @@ const PRACTICE_BANK = {
             },
             // 8. ε-NFA for L = a · Σ · a · Σ
             {
-              q: 'ε-NFA for $L = a \\cdot \\Sigma \\cdot a \\cdot \\Sigma$ (Σ={a, b})', sol: '6 states.', "machine": {
+              q: 'ε-NFA for $L = a \\cdot \\Sigma \\cdot a \\cdot \\Sigma$ (Σ={a, b})', sol: '4 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -2336,7 +2338,7 @@ const PRACTICE_BANK = {
             },
             // 9. ε-NFA for L = (00|11)* 01
             {
-              q: 'ε-NFA for $L = (00|11)^* 01$ (Σ={0, 1})', sol: '8 states.', "machine": {
+              q: 'ε-NFA for language (00|11)* 01 (Σ={0, 1})', sol: '5 states.', "machine": {
                 "states": [
                   { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "qA1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -2360,7 +2362,7 @@ const PRACTICE_BANK = {
             },
             // 10. ε-NFA for L = (a U b U c)* d
             {
-              q: 'ε-NFA for $L = (a \\cup b \\cup c)^* d$ (Σ={a, b, c, d})', sol: '4 states.', "machine": {
+              q: 'ε-NFA for language (a or b or c)* d (Σ={a, b, c, d})', sol: '4 states.', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -2380,7 +2382,7 @@ const PRACTICE_BANK = {
         ENFA_TO_NFA: [
           // 1. Convert the solution machine for "ε-NFA for a?b (optional a, then b)" to its equivalent NFA.
           {
-            q: 'Convert the solution machine for "ε-NFA for a?b (optional a, then b)" to its equivalent NFA.', sol: 'This conversion removes the $\\epsilon$-transitions, merging the start state with its $\\epsilon$-closure.', "machine": {
+            q: 'Convert the solution machine for "ε-NFA for a?b (optional a, then b)" to its equivalent NFA.', sol: 'This conversion removes the ε-transitions, merging the start state with its $\\epsilon$-closure.', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -2409,7 +2411,7 @@ const PRACTICE_BANK = {
           },
           // 3. Convert the solution machine for "ε-NFA to achieve a*b*" to its equivalent NFA.
           {
-            q: 'Convert the solution machine for "ε-NFA to achieve a*b*" to its equivalent NFA.', sol: 'The $\\epsilon$-transition must be replaced by a direct connection from the "a" loop to the "b" loop.', "machine": {
+            q: 'Convert the solution machine for "ε-NFA to achieve a*b*" to its equivalent NFA.', sol: 'The ε-transition must be replaced by a direct connection from the "a" loop to the "b" loop.', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -2442,7 +2444,7 @@ const PRACTICE_BANK = {
           },
           // 5. Convert the solution machine for "L = (0 U ε) 1" to its equivalent NFA (removing ε).
           {
-            q: 'Convert the solution machine for "$L = (0 \\cup \\epsilon) 1$" to its equivalent NFA (removing $\\epsilon$).', sol: 'The start state must gain the transition on 1 directly from the initial $\\epsilon$-closure.', "machine": {
+            q: 'Convert the solution machine for language (0 or ε) 1" to its equivalent NFA removing ε.', sol: 'The start state must gain the transition on 1 directly from the initial ε-closure.', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -2456,7 +2458,7 @@ const PRACTICE_BANK = {
           },
           // 6. Convert the solution machine for "L=a | ε" to its equivalent NFA.
           {
-            q: 'Convert the solution machine for "$L=a | \\epsilon$" to its equivalent NFA.', sol: 'The NFA will be simplified, allowing $\\epsilon$ to be accepted via the initial state being final.', "machine": {
+            q: 'Convert the solution machine for  language =a | ε to its equivalent NFA.', sol: 'The NFA will be simplified, allowing $\\epsilon$ to be accepted via the initial state being final.', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true }
@@ -2486,7 +2488,7 @@ const PRACTICE_BANK = {
           },
           // 8. Convert the solution machine for "L = (01)* | (10)*" to its equivalent NFA.
           {
-            q: 'Convert the solution machine for "$L = (01)^* | (10)^* $" to its equivalent NFA.', sol: 'This conversion removes the two initial $\\epsilon$-splits.', "machine": {
+            q: 'Convert the solution machine for "$L = (01)^* | (10)^* $" to its equivalent NFA.', sol: 'This conversion removes the two initial epsilon-splits.', "machine": {
               "states": [
                 { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q01a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -2522,7 +2524,7 @@ const PRACTICE_BANK = {
           },
           // 10. Convert the solution machine for "L = (a · a)* " to its equivalent NFA.
           {
-            q: 'Convert the solution machine for "$L = (a \\cdot a)^*$ " to its equivalent NFA.', sol: 'This conversion removes the $\\epsilon$-loop.', "machine": {
+            q: 'Convert the solution machine for language (a . a)* to its equivalent NFA.', sol: 'This conversion removes the ε-loop.', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
@@ -3175,7 +3177,7 @@ const PRACTICE_BANK = {
           },
           // 15. Minimize a 6-state DFA that accepts L={w | w has length divisible by 2 or 3 }. (Minimal: 6 states)
           {
-            q: 'Minimize a 6-state DFA that accepts $L=\\{w \\mid w \\text{ has length divisible by 2 or 3} \\}$.', sol: 'The minimal DFA is 6 states.', "machine": {
+            q: 'Minimize a 6-state DFA that accepts language w | w has length divisible by 2 or 3.', sol: 'The minimal DFA is 6 states.', "machine": {
               "states": [
                 { "id": "q00", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q01", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -3200,7 +3202,7 @@ const PRACTICE_BANK = {
         NFA_TO_MIN_DFA: [
           // 1. Convert the NFA for L = (0|1)* 01 (ends with 01) to its equivalent Minimal DFA. (3 states)
           {
-            q: 'Convert the NFA for $L = (0|1)^* 01$ (ends with 01) to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (3 states), then Minimization (3 states).', "machine": {
+            q: 'Convert the NFA for language (0|1)* 01 (ends with 01) to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (3 states), then Minimization (3 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q0,q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -3219,7 +3221,7 @@ const PRACTICE_BANK = {
           },
           // 2. Convert the NFA for L = (00)* U (11)* to its equivalent Minimal DFA. (4 states)
           {
-            q: 'Convert the NFA for $L = (00)^* \\cup (11)^*$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (5 states), then Minimization (4 states).', "machine": {
+            q: 'Convert the NFA for language  (00)* or (11)* to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', "machine": {
               "states": [
                 { "id": "qS", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q0a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -3242,7 +3244,7 @@ const PRACTICE_BANK = {
           
           // 3. Convert the ε-NFA for a?b to its equivalent Minimal DFA. (3 states)
           {
-            q: 'Convert the $\\varepsilon$-NFA for $a?b$ to its equivalent Minimal DFA.', sol: 'Requires $\\varepsilon$-NFA to NFA, NFA to DFA, then Minimization (3 states).', "machine": {
+            q: 'Convert the ε-NFA for a?b to its equivalent Minimal DFA.', sol: 'Requires ε-NFA to NFA, NFA to DFA, then Minimization (3 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": true },
@@ -3261,7 +3263,7 @@ const PRACTICE_BANK = {
           },
           // 4. Convert the NFA for L = (ab U ba)* to its equivalent Minimal DFA. (4 states)
           {
-            q: 'Convert the NFA for $L = (ab \\cup ba)^*$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (6 states), then Minimization (4 states).', "machine": {
+            q: 'Convert the NFA for language (ab or ba)* to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "qA", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -3305,7 +3307,7 @@ const PRACTICE_BANK = {
           },
           // 6. Convert the NFA for L = Σ* 0 Σ (second to last symbol is 0) to its equivalent Minimal DFA. (4 states)
           {
-            q: 'Convert the NFA for $L = \\Sigma^* 0 \\Sigma$ (second to last symbol is 0) to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', "machine": {
+            q: 'Convert the NFA for language Sigma* 0 Sigma where second to last symbol is "0" to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -3325,9 +3327,9 @@ const PRACTICE_BANK = {
               "alphabet": ["0", "1"]
             }
           },
-          // 7. Convert the NFA for L = 00 U 11 to its equivalent Minimal DFA. (5 states)
+          // 7. Convert the NFA for L = 00 U 11 to its equivalent Minimal DFA. (6 states)
           {
-            q: 'Convert the NFA for $L = 00 \\cup 11$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (7 states), then Minimization (5 states).', "machine": {
+            q: 'Convert the NFA for language = 00 or 11 to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (6 states), then Minimization (5 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q0a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -3355,7 +3357,7 @@ const PRACTICE_BANK = {
           },
           // 8. Convert the ε-NFA for L= (01)* | (10)* to its equivalent Minimal DFA. (5 states)
           {
-            q: 'Convert the $\\varepsilon$-NFA for $L= (01)^* | (10)^* $ to its equivalent Minimal DFA.', sol: 'Requires three steps, resulting in 7 states.', "machine": {
+            q: 'Convert the ε-NFA for language (01)* | (10)* to its equivalent Minimal DFA.', sol: 'Requires three steps, resulting in 5 states.', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q01a", "x": 300, "y": 200, "initial": false, "accepting": false },
@@ -3378,7 +3380,7 @@ const PRACTICE_BANK = {
           },
           // 9. Convert the NFA for L = a* b* to its equivalent Minimal DFA. (3 states)
           {
-            q: 'Convert the NFA for $L = a^* b^*$ to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (3 states), then Minimization (3 states).', "machine": {
+            q: 'Convert the NFA for language a* b* to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (3 states), then Minimization (3 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                 { "id": "q1", "x": 300, "y": 200, "initial": false, "accepting": true },
@@ -3397,7 +3399,7 @@ const PRACTICE_BANK = {
           },
           // 10. Convert the NFA for L = a Σ* a (starts and ends with 'a') to its equivalent Minimal DFA. (4 states)
           {
-            q: 'Convert the NFA for $L = a \\Sigma^* a$ (starts and ends with \'a\') to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', "machine": {
+            q: 'Convert the NFA for language a sigma* a that starts and ends with "a" to its equivalent Minimal DFA.', sol: 'Requires NFA to DFA (4 states), then Minimization (4 states).', "machine": {
               "states": [
                 { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": false },
                 { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false },
@@ -3408,7 +3410,7 @@ const PRACTICE_BANK = {
                 { "from": "q0", "to": "q1", "symbol": "a" },
                 { "from": "q0", "to": "qT", "symbol": "b" },
                 { "from": "q1", "to": "q12", "symbol": "a" },
-                { "from": "q1", "to": "q1", "symbol": "b" },
+                { "from": "q1", "to": "q1", "symbol": "b" }, 
                 { "from": "q12", "to": "q12", "symbol": "a" },
                 { "from": "q12", "to": "q1", "symbol": "b" },
                 { "from": "qT", "to": "qT", "symbol": "a" },
