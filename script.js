@@ -44,7 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
       let SELECTED_STATE = null;
       let CURRENT_PRACTICE = null;
       let simSteps = [], simIndex = 0, simTimer = null;
-      let IS_ANIMATING = false;
 
 
       function enforceInitialStateRule() {
@@ -216,11 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('modeLabel').textContent = getModeLabel();
     updateUndoRedoButtons();
-        if (!IS_ANIMATING) {
-        if (typeof autoLogFiveTupleToStepLog === 'function') autoLogFiveTupleToStepLog();
-        if (typeof validateMachineWithoutAlert === 'function') validateMachineWithoutAlert();
         }
-      }
       
       function enforceInitialStateRule() {
         try {
@@ -503,21 +498,6 @@ if (clearCanvasBtn) {
 
     document.getElementById('manualButtons').style.display = 'none';
     playAuto();
-      }
-      async function playAuto() {
-    IS_ANIMATING = true; // <-- Switch ON
-    try {
-        for (let i = 0; i < simSteps.length; i++) {
-            await showStep(i);
-            const speed = parseInt(document.getElementById('testSpeed').value || '2000');
-            if (i < simSteps.length - 1) {
-                await sleep(speed);
-            }
-        }
-    } finally {
-        IS_ANIMATING = false; // <-- Switch OFF
-        renderAll(); // <-- Final render to restore logs
-    }
       }
 
       function epsilonClosure(list) {
@@ -1216,70 +1196,68 @@ function convertNfaToDfa(nfa) {
       });
       // PRACTICE: Show Solution with Animated Step-by-Step Drawing and Log
       showSolBtn.addEventListener('click', async () => {
-    if (!CURRENT_PRACTICE || !CURRENT_PRACTICE.machine) {
-      validationLine.textContent = 'No practice generated or missing solution data.';
-      validationLine.classList.add('error', 'show');
-      setTimeout(() => validationLine.classList.remove('show'), 4000);
-      return;
-    }
-    
-    IS_ANIMATING = true;
-    try { // <-- ADD THIS LINE
+        if (!CURRENT_PRACTICE || !CURRENT_PRACTICE.machine) {
+          validationLine.textContent = 'No practice generated or missing solution data.';
+          validationLine.classList.add('error', 'show');
+          setTimeout(() => validationLine.classList.remove('show'), 4000);
+          return;
+        }
+
         // Display the textual solution
         practiceBox.innerHTML = `<strong>Problem:</strong> ${CURRENT_PRACTICE.q}<br><strong>Solution:</strong><div style="white-space:pre-wrap;">${CURRENT_PRACTICE.sol}</div>`;
+
         pushUndo();
+
         const solutionMachine = CURRENT_PRACTICE.machine;
         const preservedType = (MACHINE && MACHINE.type) || (document.getElementById('modeSelect') && document.getElementById('modeSelect').value) || 'DFA';
-        const tempMachine = { ...solutionMachine, states: [], transitions: [], type: preservedType };
+        const tempMachine = { ...solutionMachine, states: [], transitions: [], type: preservedType }; // Start with empty canvas (preserve type)
         MACHINE = tempMachine;
         renderAll();
         document.getElementById('stepLog').innerHTML = `<div><i data-lucide="zap"></i> **Starting Solution Construction...**</div>`;
-        lucide.createIcons();
+        lucide.createIcons(); // Re-render icons after changing log HTML
+
+        // Helper to add log messages
         const addConstructionLog = (message) => {
           const log = document.getElementById('stepLog');
           log.innerHTML = `<div class="new-log"><i data-lucide="edit"></i> ${message}</div>` + log.innerHTML;
           lucide.createIcons();
         };
+
+        // Animate Drawing - States
         for (const state of solutionMachine.states) {
           MACHINE.states.push(state);
           renderAll();
+
           let message = `**Added state ${state.id}**`;
           if (state.initial) message += " (Set as **Initial**)";
           if (state.accepting) message += " (Set as **Final**)";
-          addConstructionLog(message);
+
+          addConstructionLog(message); // LOG MESSAGE APPEARS HERE
+
+          // Animate the newly drawn state
           const stateG = document.querySelector(`[data-id="${state.id}"]`);
           if (stateG) stateG.querySelector('circle')?.classList.add('state-drawing');
           await sleep(2000);
           stateG.querySelector('circle')?.classList.remove('state-drawing');
         }
+
+        // Animate Drawing - Transitions
         let renderedTransitions = new Set();
         for (const transition of solutionMachine.transitions) {
           const arcKey = `${transition.from}->${transition.to}`;
+
           if (renderedTransitions.has(arcKey)) {
+            // If arc is already drawn, just log the additional symbol on it
             addConstructionLog(`Added symbol '${transition.symbol}' to arc ${transition.from} → ${transition.to}`);
             continue;
           }
+
           MACHINE.transitions.push(transition);
           updateAlphabet();
           renderAll();
-          addConstructionLog(`**Drawing transition** from ${transition.from} to ${transition.to} on symbol '${transition.symbol}'`);
-          const pathEl = document.querySelector(`.transition-path[data-from="${transition.from}"][data-to="${transition.to}"]`);
-          if (pathEl) {
-            pathEl.classList.add('transition-drawing');
-          }
-          renderedTransitions.add(arcKey);
-          await sleep(2000);
-        }
-        MACHINE = JSON.parse(JSON.stringify(solutionMachine));
-        MACHINE.type = (typeof preservedType !== 'undefined') ? preservedType : (MACHINE.type || 'DFA');
-        if (typeof ensureSingleInitial === 'function') { ensureSingleInitial(); }
-        addConstructionLog(`**Construction Complete!** Final machine loaded.`);
-        renderAll();
-    } finally { // <-- This block is now correctly attached
-        IS_ANIMATING = false;
-        renderAll();
-    }
-});
+
+          addConstructionLog(`**Drawing transition** from ${transition.from} to ${transition.to} on symbol '${transition.symbol}'`); // LOG MESSAGE APPEARS HERE
+
           // Animate the newly drawn path
           const pathEl = document.querySelector(`.transition-path[data-from="${transition.from}"][data-to="${transition.to}"]`);
           if (pathEl) {
@@ -1291,7 +1269,12 @@ function convertNfaToDfa(nfa) {
 
         // Final clean-up and update global machine state
         MACHINE = JSON.parse(JSON.stringify(solutionMachine));
-
+        MACHINE.type = (typeof preservedType !== 'undefined') ? preservedType : (MACHINE.type || 'DFA');
+        // Ensure exactly one initial state after loading a practice solution
+        if (typeof ensureSingleInitial === 'function') { ensureSingleInitial(); }
+        addConstructionLog(`**Construction Complete!** Final machine loaded.`);
+        renderAll();
+      });
       resetPractice.addEventListener('click', () => { CURRENT_PRACTICE = null; practiceBox.textContent = 'No practice generated yet.'; });
       checkAnswerBtn.addEventListener('click', () => {
         if (!CURRENT_PRACTICE) { validationLine.textContent = 'No practice generated yet.'; validationLine.classList.add('error', 'show'); return; }
@@ -2430,6 +2413,28 @@ function initializeBulkTesting() {
         logToStepLog(`Bulk test completed: ${lines.length} strings tested`, 'info');
     });
 }
+
+// === Enhanced renderAll with auto-logging ===
+const originalRenderAll = window.renderAll;
+window.renderAll = function() {
+    if (originalRenderAll) {
+        originalRenderAll.apply(this, arguments);
+    }
+
+    // Auto-log five-tuple after each render
+    try {
+        autoLogFiveTupleToStepLog();
+    } catch (e) {
+        console.warn('Error auto-logging five-tuple:', e);
+    }
+
+    // Auto-validate
+    try {
+        validateMachineWithoutAlert();
+    } catch (e) {
+        console.warn('Error in auto-validation:', e);
+    }
+};
 
 // === Initialize enhancements ===
 document.addEventListener('DOMContentLoaded', function() {
