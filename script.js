@@ -76,128 +76,147 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       }
 
-            function renderAll() {
-        statesGroup.innerHTML = '';
-        edgesGroup.innerHTML = '';
-        document.getElementById('canvasHint').style.display = (!MACHINE.states || MACHINE.states.length === 0) ? 'block' : 'none';
-    
-        const processedArcs = new Set();
-        (MACHINE.transitions || []).forEach(t => {
-            const from = MACHINE.states.find(s => s.id === t.from);
-            const to = MACHINE.states.find(s => s.id === t.to);
-            if (!from || !to) return;
-    
-            const arcKey = `${t.from}->${t.to}`;
-            // Only process the drawing of the arc once for each pair of states
-            if (processedArcs.has(arcKey)) return;
-            processedArcs.add(arcKey);
-    
-            let pathD, labelX, labelY;
-            // Check for a self-loop
-            if (t.from === t.to) {
-                const loop = getLoopPathAndLabel(from.x, from.y, 30);
-                pathD = loop.pathData;
-                labelX = loop.labelX;
-                labelY = loop.labelY;
+        function renderAll() {
+    statesGroup.innerHTML = '';
+    edgesGroup.innerHTML = '';
+    document.getElementById('canvasHint').style.display = (!MACHINE.states || MACHINE.states.length === 0) ? 'block' : 'none';
+
+    const processedArcs = new Set();
+    (MACHINE.transitions || []).forEach(t => {
+        const from = MACHINE.states.find(s => s.id === t.from);
+        const to = MACHINE.states.find(s => s.id === t.to);
+        if (!from || !to) return;
+
+        const arcKey = `${t.from}->${t.to}`;
+        if (processedArcs.has(arcKey)) return;
+        processedArcs.add(arcKey);
+
+        let pathD, labelX, labelY;
+        if (t.from === t.to) {
+            const loop = getLoopPathAndLabel(from.x, from.y, 30);
+            pathD = loop.pathData;
+            labelX = loop.labelX;
+            labelY = loop.labelY;
+        } else {
+            const dx = to.x - from.x, dy = to.y - from.y;
+            const angle = Math.atan2(dy, dx);
+            const r = 30;
+            const startX = from.x + r * Math.cos(angle), startY = from.y + r * Math.sin(angle);
+            const endX = to.x - r * Math.cos(angle), endY = to.y - r * Math.sin(angle);
+
+            const reverse = MACHINE.transitions.some(o => o.from === t.to && o.to === t.from);
+            if (reverse) {
+                const offset = 40, midX = (startX + endX) / 2, midY = (startY + endY) / 2;
+                const normX = -dy / Math.hypot(dx, dy), normY = dx / Math.hypot(dx, dy);
+                const cpx = midX + normX * offset, cpy = midY + normY * offset;
+                pathD = `M ${startX} ${startY} Q ${cpx} ${cpy} ${endX} ${endY}`;
+                labelX = cpx;
+                labelY = cpy;
             } else {
-                const dx = to.x - from.x, dy = to.y - from.y;
-                const angle = Math.atan2(dy, dx);
-                const r = 30; // state radius
-                const startX = from.x + r * Math.cos(angle), startY = from.y + r * Math.sin(angle);
-                const endX = to.x - r * Math.cos(angle), endY = to.y - r * Math.sin(angle);
-    
-                // Check if a reverse transition exists to draw a curved path
-                const reverse = MACHINE.transitions.some(o => o.from === t.to && o.to === t.from);
-                if (reverse) {
-                    const offset = 40, midX = (startX + endX) / 2, midY = (startY + endY) / 2;
-                    const normX = -dy / Math.hypot(dx, dy), normY = dx / Math.hypot(dx, dy);
-                    const cpx = midX + normX * offset, cpy = midY + normY * offset;
-                    pathD = `M ${startX} ${startY} Q ${cpx} ${cpy} ${endX} ${endY}`;
-                    labelX = cpx;
-                    labelY = cpy;
-                } else {
-                    pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
-                    labelX = (startX + endX) / 2;
-                    labelY = (startY + endY) / 2;
-                }
+                pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
+                labelX = (startX + endX) / 2;
+                labelY = (startY + endY) / 2;
             }
-    
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', pathD);
-            path.classList.add('transition-path');
-            // ✨ **FIX:** Added data attributes for animation targeting
-            path.setAttribute('data-from', t.from);
-            path.setAttribute('data-to', t.to);
-            edgesGroup.appendChild(path);
-    
-            // Group all symbols for this arc together (e.g., "0, 1")
-            const arcSymbols = MACHINE.transitions
-                .filter(tt => tt.from === t.from && tt.to === t.to)
-                .map(tt => (tt.symbol === '' || tt.symbol === undefined) ? 'ε' : tt.symbol);
-            
-            const labelText = [...new Set(arcSymbols)].join(', ');
-    
-            const textHalo = document.createElementNS(svg.namespaceURI, 'text');
-            textHalo.setAttribute('class', 'transition-label');
-            textHalo.setAttribute('x', labelX);
-            textHalo.setAttribute('y', labelY);
-            textHalo.style.stroke = 'white';
-            textHalo.style.strokeWidth = '4px';
-            textHalo.style.strokeLinejoin = 'round';
-            textHalo.textContent = labelText;
-            edgesGroup.appendChild(textHalo);
-    
-            const text = document.createElementNS(svg.namespaceURI, 'text');
-            text.setAttribute('class', 'transition-label');
-            text.setAttribute('x', labelX);
-            text.setAttribute('y', labelY);
-            text.textContent = labelText;
-            edgesGroup.appendChild(text);
-        });
-    
+        }
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathD);
+        path.classList.add('transition-path');
+        path.setAttribute('data-from', t.from);
+        path.setAttribute('data-to', t.to);
+        edgesGroup.appendChild(path);
+
+        const arcSymbols = MACHINE.transitions
+            .filter(tt => tt.from === t.from && tt.to === t.to)
+            .map(tt => (tt.symbol === '' || tt.symbol === undefined) ? 'ε' : tt.symbol);
         
-        MACHINE.states.forEach(state => {
-            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            g.setAttribute('data-id', state.id);
-            g.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (CURRENT_MODE === 'transition') {
-                    // ... (rest of your click logic is fine)
-                } 
-                // ...
-            });
+        const labelText = [...new Set(arcSymbols)].join(', ');
+
+        const textHalo = document.createElementNS(svg.namespaceURI, 'text');
+        textHalo.setAttribute('class', 'transition-label');
+        textHalo.setAttribute('x', labelX);
+        textHalo.setAttribute('y', labelY);
+        textHalo.style.stroke = 'white';
+        textHalo.style.strokeWidth = '4px';
+        textHalo.style.strokeLinejoin = 'round';
+        textHalo.textContent = labelText;
+        edgesGroup.appendChild(textHalo);
+
+        const text = document.createElementNS(svg.namespaceURI, 'text');
+        text.setAttribute('class', 'transition-label');
+        text.setAttribute('x', labelX);
+        text.setAttribute('y', labelY);
+        text.textContent = labelText;
+        edgesGroup.appendChild(text);
+    });
+
     
-            if (state.initial) {
-                // ... (initial arrow logic is fine)
+    MACHINE.states.forEach(state => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('data-id', state.id);
+        g.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (CURRENT_MODE === 'transition') {
+                const circle = g.querySelector('.state-circle');
+                if (!TRANS_FROM) {
+                    TRANS_FROM = state.id;
+                    circle.classList.add('state-selected');
+                } else {
+                    showTransModal(TRANS_FROM, state.id);
+                    document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
+                    TRANS_FROM = null;
+                }
+            } else if (CURRENT_MODE === 'delete') {
+                deleteState(state.id);
+            } else if (CURRENT_MODE === 'rename') {
+                renameState(state.id);
+            } else if (CURRENT_MODE === 'stateprops') {
+                openPropsModal(state.id);
             }
-    
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', state.x);
-            circle.setAttribute('cy', state.y);
-            circle.setAttribute('r', 30);
-            circle.classList.add('state-circle');
-            // ✨ **FIX:** Added data-id to the circle for easier selection during animation
-            circle.setAttribute('data-id', state.id); 
-            if (state.initial) circle.classList.add('initial-pulse');
-            g.appendChild(circle);
-    
-            if (state.accepting) {
-                // ... (final ring logic is fine)
-            }
-    
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', state.x);
-            text.setAttribute('y', state.y);
-            text.classList.add('state-label');
-            text.textContent = state.id;
-            g.appendChild(text);
-    
-            statesGroup.appendChild(g);
         });
-    
-        document.getElementById('modeLabel').textContent = getModeLabel();
-        updateUndoRedoButtons();
-            }
+
+        if (state.initial) {
+            const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            arrow.setAttribute('x1', state.x - 60);
+            arrow.setAttribute('y1', state.y);
+            arrow.setAttribute('x2', state.x - 32);
+            arrow.setAttribute('y2', state.y);
+            arrow.classList.add('initial-arrow');
+            g.appendChild(arrow);
+        }
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', state.x);
+        circle.setAttribute('cy', state.y);
+        circle.setAttribute('r', 30);
+        circle.classList.add('state-circle');
+        circle.setAttribute('data-id', state.id); 
+        if (state.initial) circle.classList.add('initial-pulse');
+        g.appendChild(circle);
+
+        if (state.accepting) {
+            const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            innerCircle.setAttribute('cx', state.x);
+            innerCircle.setAttribute('cy', state.y);
+            innerCircle.setAttribute('r', 24);
+            innerCircle.classList.add('final-ring');
+            g.appendChild(innerCircle);
+        }
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', state.x);
+        text.setAttribute('y', state.y);
+        text.classList.add('state-label');
+        text.textContent = state.id;
+        g.appendChild(text);
+
+        statesGroup.appendChild(g);
+    });
+
+    document.getElementById('modeLabel').textContent = getModeLabel();
+    updateUndoRedoButtons();
+        }
+      
       
     
       function getModeLabel() {
@@ -402,57 +421,71 @@ if (clearCanvasBtn) {
       }
 
       async function runSimulation(inputStr) {
-        simSteps = [];
-        simIndex = 0; clearTimeout(simTimer);
-        document.getElementById('stepLog').innerHTML = '';
-        testOutput.textContent = 'Simulating...';
-        const startStates = MACHINE.states.filter(s => s.initial).map(s => s.id);
+    simSteps = [];
+    simIndex = 0; 
+    clearTimeout(simTimer);
+    document.getElementById('stepLog').innerHTML = '';
+    testOutput.textContent = 'Simulating...';
+    
+    const startStates = MACHINE.states.filter(s => s.initial).map(s => s.id);
 
-        if (startStates.length === 0) {
-          validationLine.textContent = 'Invalid: No initial state set.';
-          validationLine.classList.add('error', 'show');
-          return;
-        }
-        let currentSet = (MACHINE.type === 'ENFA') ?
-          epsilonClosure(startStates) : [...startStates];
-        if (MACHINE.type === 'DFA' && currentSet.length > 1) currentSet = [currentSet[0]];
-        simSteps.push({ start: true, active: [...currentSet] });
+    if (startStates.length === 0) {
+        testOutput.textContent = 'Error: No initial state defined.';
+        testOutput.style.color = '#e53e3e';
+        return;
+    }
 
-        for (const sym of inputStr) {
-          const frame = { before: [...currentSet], symbol: sym, steps: [], after: [] };
-          const next = new Set();
-          const transitions = MACHINE.transitions.filter(t => t.symbol === sym);
+    let currentStates = (MACHINE.type === 'ENFA') ? epsilonClosure(startStates) : [...startStates];
+    
+    if (MACHINE.type === 'DFA' && currentStates.length > 1) {
+        currentStates = [currentStates[0]];
+    }
+    
+    simSteps.push({ start: true, active: [...currentStates] });
 
-          if (MACHINE.type === 'DFA') {
-            if (currentSet.length > 0) {
-              const t = transitions.find(tt => tt.from === currentSet[0]);
+    let halted = false;
+    for (const symbol of inputStr) {
+        if (halted) break;
 
-              if (t) {
-                frame.steps.push({ from: t.from, to: t.to, symbol: t.symbol }); next.add(t.to);
-              }
+        const frame = { before: [...currentStates], symbol: symbol, steps: [], after: [] };
+        const nextStates = new Set();
+        
+        if (MACHINE.type === 'DFA') {
+            if (currentStates.length > 0) {
+                const transition = MACHINE.transitions.find(t => t.from === currentStates[0] && t.symbol === symbol);
+                if (transition) {
+                    frame.steps.push({ from: transition.from, to: transition.to, symbol: transition.symbol });
+                    nextStates.add(transition.to);
+                }
             }
-          } else {
-            for (const q of currentSet) {
-              transitions.filter(t => t.from === q).forEach(t => {
-                frame.steps.push({ from: q, to: t.to, symbol: t.symbol }); next.add(t.to);
-              });
+        } 
+        else { 
+            for (const stateId of currentStates) {
+                MACHINE.transitions
+                    .filter(t => t.from === stateId && t.symbol === symbol)
+                    .forEach(t => {
+                        frame.steps.push({ from: t.from, to: t.to, symbol: t.symbol });
+                        nextStates.add(t.to);
+                    });
             }
-          }
-          const after = (MACHINE.type === 'ENFA') ? epsilonClosure([...next]) : [...next];
-          frame.after = after; simSteps.push(frame); currentSet = after;
-          if (currentSet.length === 0) break;
         }
-        simSteps.push({ end: true, active: [...currentSet] });
 
-        const mode = document.querySelector('input[name="simMode"]:checked')?.value || 'auto';
-        if (mode === 'manual') {
-          document.getElementById('manualButtons').style.display = 'flex';
-          simIndex = 0;
-          showStep(0);
-        } else {
-          document.getElementById('manualButtons').style.display = 'none';
-          playAuto();
+        const afterStates = (MACHINE.type === 'ENFA') ? epsilonClosure([...nextStates]) : [...nextStates];
+        
+        frame.after = afterStates;
+        simSteps.push(frame);
+        currentStates = afterStates;
+
+        if (currentStates.length === 0) {
+            halted = true;
         }
+    }
+    
+    simSteps.push({ end: true, active: [...currentStates] });
+
+    document.getElementById('manualButtons').style.display = 'none';
+    playAuto();
+      }
       }
 
       function epsilonClosure(list) {
@@ -469,65 +502,69 @@ if (clearCanvasBtn) {
       }
 
       async function showStep(idx) {
-        if (idx < 0 || idx >= simSteps.length) {
-          simIndex = Math.max(0, Math.min(idx, simSteps.length - 1));
-          return;
-        }
-        simIndex = idx;
-        const step = simSteps[idx];
-        const log = document.getElementById('stepLog');
-        const speed = parseInt(document.getElementById('testSpeed').value || '500');
+    if (idx < 0 || idx >= simSteps.length) {
+      simIndex = Math.max(0, Math.min(idx, simSteps.length - 1));
+      return;
+    }
+    simIndex = idx;
+    const step = simSteps[idx];
+    const log = document.getElementById('stepLog');
+    const speed = parseInt(document.getElementById('testSpeed').value || '500');
 
-        document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
+    document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
 
-        if (idx === 0) log.innerHTML = '';
+    if (idx === 0) log.innerHTML = '';
 
-        if (step.end) {
-          const accept = (step.active || []).some(sid => MACHINE.states.find(s => s.id === sid && s.accepting));
+    if (step.end) {
+      const isAccepted = (step.active || []).some(sid => MACHINE.states.find(s => s.id === sid && s.accepting));
+      testOutput.textContent = isAccepted ? 'Accepted' : 'Rejected';
+      testOutput.style.color = isAccepted ? '#38a169' : '#e53e3e';
+      
+      step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+      
+      const finalLog = `<div><strong>Final active states: {${(step.active || []).join(', ') || '∅'}}</strong></div>`;
+      const resultLog = `<div><strong style="color:${isAccepted ? '#4ade80' : '#f87171'}">${isAccepted ? '✔ Accepted' : '✘ Rejected'}</strong></div>`;
+      log.innerHTML = resultLog + finalLog + log.innerHTML;
+      return;
+    }
 
-          testOutput.textContent = accept ? 'Accepted' : 'Rejected';
-          testOutput.style.color = accept ? '#38a169' : '#e53e3e';
-          step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+    if (step.start) {
+      log.innerHTML = `<div><strong>Initial active states: {${(step.active || []).join(', ')}}</strong></div>` + log.innerHTML;
+      step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+      return;
+    }
+    
+    testOutput.textContent = `Processing '${step.symbol}'... Active: {${(step.after || []).join(', ') || '∅'}}`;
 
-          log.innerHTML = `<div><strong>Final active states: {${(step.active || []).join(', ')}}</strong></div>` + log.innerHTML;
-          log.innerHTML = `<div><strong style="color:${accept ? '#4ade80' : '#f87171'}">${accept ?
-            '✔ Accepted' : '✘ Rejected'}</strong></div>` + log.innerHTML;
-          return;
-        }
+    step.before.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+    await sleep(speed / 2);
 
-        if (step.start) {
-          log.innerHTML = `<div><strong>Initial active states: {${(step.active || []).join(', ')}}</strong></div>` + log.innerHTML;
-          step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
-          return;
-        }
-
-        testOutput.textContent = `After '${step.symbol}', active: {${(step.after || []).join(', ')}}`;
-
-        step.before.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
-        await sleep(speed / 2);
-
-        if (step.steps.length > 0) {
-          step.steps.forEach(s => {
+    if (step.steps.length > 0) {
+        step.steps.forEach(s => {
             log.innerHTML = `<div>Read '<b>${s.symbol}</b>': δ(${s.from}, ${s.symbol}) → ${s.to}</div>` + log.innerHTML;
             document.querySelector(`.transition-path[data-from="${s.from}"][data-to="${s.to}"]`)?.classList.add('transition-animating');
-          });
-        } else {
-          log.innerHTML = `<div>Read '<b>${step.symbol}</b>': No transitions from {${step.before.join(', ')}}.
-      Halting.</div>` + log.innerHTML;
-        }
+        });
+    } else {
+        log.innerHTML = `<div>Read '<b>${step.symbol}</b>': No transitions from {${step.before.join(', ')}}. Halting.</div>` + log.innerHTML;
+    }
+    
+    await sleep(speed / 2);
 
-        await sleep(speed / 2);
-        document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
-        step.after.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
+    document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
+    step.after.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
       }
+
 
       async function playAuto() {
-        for (let i = 0; i < simSteps.length; i++) {
-          await showStep(i);
-          const speed = parseInt(document.getElementById('testSpeed').value || '500');
+    for (let i = 0; i < simSteps.length; i++) {
+      await showStep(i);
+      const speed = parseInt(document.getElementById('testSpeed').value || '800');
+      if (i < simSteps.length - 1) {
           await sleep(speed);
-        }
       }
+    }
+      }
+
 
       
 
