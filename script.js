@@ -217,7 +217,20 @@ document.addEventListener("DOMContentLoaded", () => {
     updateUndoRedoButtons();
         }
       
-      
+      function enforceInitialStateRule() {
+        try {
+            if (!MACHINE || !Array.isArray(MACHINE.states)) return;
+            const initialStates = MACHINE.states.filter(s => s.initial);
+            if (initialStates.length > 1) {
+                initialStates.slice(1).forEach(s => s.initial = false);
+            }
+            if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
+                MACHINE.states[0].initial = true;
+            }
+        } catch (e) {
+            console.error('enforceInitialStateRule failed:', e);
+        }
+      }
     
       function getModeLabel() {
         const val = modeSelect.value;
