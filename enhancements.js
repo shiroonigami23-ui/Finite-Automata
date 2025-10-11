@@ -49,7 +49,7 @@ function display5Tuple() {
 
     IS_ANIMATING = true; // <-- Switch ON
     try {
-        const animationDelay = 1300; 
+        const animationDelay = 2000; 
 
         if (typeof pushUndo === 'function') {
             pushUndo();
@@ -129,7 +129,7 @@ function display5Tuple() {
             validationLine.className = 'validation-box show success';
             setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
         }
-     finally {
+    }finally {
         IS_ANIMATING = false; // <-- Switch OFF
         renderAll(); // <-- Final render to restore logs
     }
