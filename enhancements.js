@@ -129,11 +129,11 @@ function display5Tuple() {
             validationLine.className = 'validation-box show success';
             setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
         }
-    } finally {
+     finally {
         IS_ANIMATING = false; // <-- Switch OFF
         renderAll(); // <-- Final render to restore logs
     }
-    }  
+}  
 
 
 // --- Make All Enhancement Functions Globally Available ---
