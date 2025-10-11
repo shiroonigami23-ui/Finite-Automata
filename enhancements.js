@@ -41,16 +41,13 @@ function display5Tuple() {
     `;
 }
 
-/**
- * UPGRADED: Loads a machine from an object with step-by-step animation on the canvas.
- * This function now mimics the behavior of the "Show Solution" button from the practice generator.
- * @param {object} machineObject - The finite automaton object to load.
- */
 async function loadMachineFromObject(machineObject) {
   if (!machineObject || !machineObject.states) {
     console.error("Invalid machine object provided to load.");
     return;
   }
+
+  const animationDelay = 1300; // Fixed delay of 800ms
 
   if (typeof pushUndo === 'function') {
     pushUndo();
@@ -108,7 +105,7 @@ async function loadMachineFromObject(machineObject) {
 
       const stateG = document.querySelector(`g[data-id="${state.id}"]`);
       if (stateG) stateG.querySelector('circle')?.classList.add('state-drawing');
-      await sleep(1300); // Animation delay
+      await sleep(animationDelay); 
       if (stateG) stateG.querySelector('circle')?.classList.remove('state-drawing');
   }
 
@@ -123,7 +120,7 @@ async function loadMachineFromObject(machineObject) {
 
       const pathEl = document.querySelector(`.transition-path[data-from="${transition.from}"][data-to="${transition.to}"]`);
       if (pathEl) pathEl.classList.add('transition-drawing');
-      await sleep(1300); // Animation delay
+      await sleep(animationDelay);
   }
 
   // 5. Finalize the machine state and display completion message
@@ -143,6 +140,7 @@ async function loadMachineFromObject(machineObject) {
       setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
   }
 }
+
 
 // --- Make All Enhancement Functions Globally Available ---
 if (typeof window !== 'undefined') {
