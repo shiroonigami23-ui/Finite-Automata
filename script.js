@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
       let SELECTED_STATE = null;
       let CURRENT_PRACTICE = null;
       let simSteps = [], simIndex = 0, simTimer = null;
+      let IS_ANIMATING = false;
 
 
       function enforceInitialStateRule() {
@@ -215,7 +216,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('modeLabel').textContent = getModeLabel();
     updateUndoRedoButtons();
+        if (!IS_ANIMATING) {
+        if (typeof autoLogFiveTupleToStepLog === 'function') autoLogFiveTupleToStepLog();
+        if (typeof validateMachineWithoutAlert === 'function') validateMachineWithoutAlert();
         }
+      }
       
       function enforceInitialStateRule() {
         try {
