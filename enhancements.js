@@ -123,7 +123,7 @@ async function loadMachineFromObject(machineObject) {
 
       const pathEl = document.querySelector(`.transition-path[data-from="${transition.from}"][data-to="${transition.to}"]`);
       if (pathEl) pathEl.classList.add('transition-drawing');
-      await sleep(800); // Animation delay
+      await sleep(1300); // Animation delay
   }
 
   // 5. Finalize the machine state and display completion message
