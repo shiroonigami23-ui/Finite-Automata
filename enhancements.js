@@ -41,99 +41,105 @@ function display5Tuple() {
     `;
 }
 
-    async function loadMachineFromObject(machineObject) {
-    if (!machineObject || !machineObject.states) {
-        console.error("Invalid machine object provided to load.");
-        return;
-    }
+async function loadMachineFromObject(machineObject) {
+  if (!machineObject || !machineObject.states) {
+    console.error("Invalid machine object provided to load.");
+    return;
+  }
 
-    IS_ANIMATING = true; // <-- Switch ON
-    try {
-        const animationDelay = 2000; 
+  const animationDelay = 1300; // Fixed delay of 800ms
 
-        if (typeof pushUndo === 'function') {
-            pushUndo();
-        }
+  if (typeof pushUndo === 'function') {
+    pushUndo();
+  }
 
-        const title = machineObject.title || machineObject.id || 'machine';
-        const preservedType = machineObject.type || 'DFA';
-        
-        const tempMachine = { ...machineObject, states: [], transitions: [], type: preservedType };
-        window.MACHINE = tempMachine;
-        if (typeof renderAll === 'function') {
-            renderAll();
-        }
-        
-        const stepLog = document.getElementById('stepLog');
-        if (stepLog) {
-            stepLog.innerHTML = `<div><i data-lucide="zap"></i> **Loading "${title}" from library...**</div>`;
-            if (window.lucide?.createIcons) window.lucide.createIcons();
-        }
+  const title = machineObject.title || machineObject.id || 'machine';
+  const preservedType = machineObject.type || 'DFA';
+  
+  // 1. Clear the canvas and prepare the step log for drawing
+  const tempMachine = { ...machineObject, states: [], transitions: [], type: preservedType };
+  window.MACHINE = tempMachine;
+  if (typeof renderAll === 'function') {
+    renderAll();
+  }
+  
+  const stepLog = document.getElementById('stepLog');
+  if (stepLog) {
+      stepLog.innerHTML = `<div><i data-lucide="zap"></i> **Loading "${title}" from library...**</div>`;
+      if (window.lucide?.createIcons) window.lucide.createIcons();
+  }
 
-        const addConstructionLog = (message) => {
-            if (!stepLog) return;
-            stepLog.innerHTML = `<div class="new-log"><i data-lucide="edit"></i> ${message}</div>` + stepLog.innerHTML;
-            if (window.lucide?.createIcons) window.lucide.createIcons();
-        };
+  const addConstructionLog = (message) => {
+      if (!stepLog) return;
+      stepLog.innerHTML = `<div class="new-log"><i data-lucide="edit"></i> ${message}</div>` + stepLog.innerHTML;
+      if (window.lucide?.createIcons) window.lucide.createIcons();
+  };
 
-        const statesToLoad = machineObject.states;
-        const needsLayout = statesToLoad.some(s => s.x === undefined || s.y === undefined);
-        if (needsLayout) {
-            addConstructionLog("Machine needs layout. Calculating positions...");
-            const canvasWidth = 1400; const marginX = 150; const spacingX = 180;
-            const perRow = Math.max(1, Math.floor((canvasWidth - marginX * 2) / spacingX));
-            statesToLoad.forEach((s, i) => {
-                const row = Math.floor(i / perRow);
-                const col = i % perRow;
-                s.x = marginX + col * spacingX;
-                s.y = 150 + row * 150;
-            });
-        }
+  // 2. Automatically lay out states if they don't have coordinates
+  const statesToLoad = machineObject.states;
+  const needsLayout = statesToLoad.some(s => s.x === undefined || s.y === undefined);
+  if (needsLayout) {
+      addConstructionLog("Machine needs layout. Calculating positions...");
+      const canvasWidth = 1400;
+      const marginX = 150;
+      const spacingX = 180;
+      const perRow = Math.max(1, Math.floor((canvasWidth - marginX * 2) / spacingX));
 
-        for (const state of statesToLoad) {
-            window.MACHINE.states.push(state);
-            if (typeof renderAll === 'function') renderAll();
-            let message = `**Added state ${state.id}**`;
-            if (state.initial) message += " (Set as **Initial**)";
-            if (state.accepting) message += " (Set as **Final**)";
-            addConstructionLog(message);
-            const stateG = document.querySelector(`g[data-id="${state.id}"]`);
-            if (stateG) stateG.querySelector('circle')?.classList.add('state-drawing');
-            await sleep(animationDelay); 
-            if (stateG) stateG.querySelector('circle')?.classList.remove('state-drawing');
-        }
+      statesToLoad.forEach((s, i) => {
+          const row = Math.floor(i / perRow);
+          const col = i % perRow;
+          s.x = marginX + col * spacingX;
+          s.y = 150 + row * 150;
+      });
+  }
 
-        const transitionsToLoad = machineObject.transitions || [];
-        for (const transition of transitionsToLoad) {
-            window.MACHINE.transitions.push(transition);
-            if (typeof updateAlphabet === 'function') updateAlphabet();
-            if (typeof renderAll === 'function') renderAll();
-            addConstructionLog(`**Drawing transition** from ${transition.from} to ${transition.to} on symbol '${transition.symbol || 'ε'}'`);
-            const pathEl = document.querySelector(`.transition-path[data-from="${transition.from}"][data-to="${transition.to}"]`);
-            if (pathEl) pathEl.classList.add('transition-drawing');
-            await sleep(animationDelay);
-        }
+  // 3. Animate drawing each state
+  for (const state of statesToLoad) {
+      window.MACHINE.states.push(state);
+      if (typeof renderAll === 'function') renderAll();
 
-        window.MACHINE = JSON.parse(JSON.stringify(machineObject));
-        window.MACHINE.type = preservedType;
+      let message = `**Added state ${state.id}**`;
+      if (state.initial) message += " (Set as **Initial**)";
+      if (state.accepting) message += " (Set as **Final**)";
+      addConstructionLog(message);
 
-        if (typeof enforceInitialStateRule === 'function') {
-            enforceInitialStateRule();
-        }
-        addConstructionLog(`**Construction Complete!** "${title}" loaded.`);
-        if (typeof renderAll === 'function') renderAll();
-        
-        const validationLine = document.getElementById('validationLine');
-        if (validationLine) {
-            validationLine.textContent = `Loaded "${title}" from library.`;
-            validationLine.className = 'validation-box show success';
-            setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
-        }
-    }finally {
-        IS_ANIMATING = false; // <-- Switch OFF
-        renderAll(); // <-- Final render to restore logs
-    }
-}  
+      const stateG = document.querySelector(`g[data-id="${state.id}"]`);
+      if (stateG) stateG.querySelector('circle')?.classList.add('state-drawing');
+      await sleep(animationDelay); 
+      if (stateG) stateG.querySelector('circle')?.classList.remove('state-drawing');
+  }
+
+  // 4. Animate drawing each transition
+  const transitionsToLoad = machineObject.transitions || [];
+  for (const transition of transitionsToLoad) {
+      window.MACHINE.transitions.push(transition);
+      if (typeof updateAlphabet === 'function') updateAlphabet();
+      if (typeof renderAll === 'function') renderAll();
+
+      addConstructionLog(`**Drawing transition** from ${transition.from} to ${transition.to} on symbol '${transition.symbol || 'ε'}'`);
+
+      const pathEl = document.querySelector(`.transition-path[data-from="${transition.from}"][data-to="${transition.to}"]`);
+      if (pathEl) pathEl.classList.add('transition-drawing');
+      await sleep(animationDelay);
+  }
+
+  // 5. Finalize the machine state and display completion message
+  window.MACHINE = JSON.parse(JSON.stringify(machineObject));
+  window.MACHINE.type = preservedType;
+
+  if (typeof enforceInitialStateRule === 'function') {
+      enforceInitialStateRule();
+  }
+  addConstructionLog(`**Construction Complete!** "${title}" loaded.`);
+  if (typeof renderAll === 'function') renderAll();
+  
+  const validationLine = document.getElementById('validationLine');
+  if (validationLine) {
+      validationLine.textContent = `Loaded "${title}" from library.`;
+      validationLine.className = 'validation-box show success';
+      setTimeout(() => { validationLine.classList.remove('show'); }, 4000);
+  }
+}
 
 
 // --- Make All Enhancement Functions Globally Available ---
