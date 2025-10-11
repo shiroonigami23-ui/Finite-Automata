@@ -2414,28 +2414,6 @@ function initializeBulkTesting() {
     });
 }
 
-// === Enhanced renderAll with auto-logging ===
-const originalRenderAll = window.renderAll;
-window.renderAll = function() {
-    if (originalRenderAll) {
-        originalRenderAll.apply(this, arguments);
-    }
-
-    // Auto-log five-tuple after each render
-    try {
-        autoLogFiveTupleToStepLog();
-    } catch (e) {
-        console.warn('Error auto-logging five-tuple:', e);
-    }
-
-    // Auto-validate
-    try {
-        validateMachineWithoutAlert();
-    } catch (e) {
-        console.warn('Error in auto-validation:', e);
-    }
-};
-
 // === Initialize enhancements ===
 document.addEventListener('DOMContentLoaded', function() {
     // Wait a bit for the original script to initialize
