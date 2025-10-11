@@ -910,7 +910,7 @@ const PRACTICE_BANK = {
             },
             // 5. NFA accepting L = (10)*
             {
-              q: 'NFA accepting $L = (10)^*$ (Σ={0, 1})', sol: '2 states: q0, q1, q2(accept)', "machine": {
+              q: 'NFA accepting language = (10)* (Σ={0, 1})', sol: '2 states: q0, q1, q2(accept)', "machine": {
                 "states": [
                   { "id": "q0", "x": 100, "y": 300, "initial": true, "accepting": true },
                   { "id": "q1", "x": 300, "y": 300, "initial": false, "accepting": false }
