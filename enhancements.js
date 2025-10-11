@@ -108,7 +108,7 @@ async function loadMachineFromObject(machineObject) {
 
       const stateG = document.querySelector(`g[data-id="${state.id}"]`);
       if (stateG) stateG.querySelector('circle')?.classList.add('state-drawing');
-      await sleep(800); // Animation delay
+      await sleep(1300); // Animation delay
       if (stateG) stateG.querySelector('circle')?.classList.remove('state-drawing');
   }
 
