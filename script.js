@@ -486,7 +486,6 @@ if (clearCanvasBtn) {
     document.getElementById('manualButtons').style.display = 'none';
     playAuto();
       }
-      }
 
       function epsilonClosure(list) {
         const out = new Set(list);
