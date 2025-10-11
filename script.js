@@ -504,6 +504,21 @@ if (clearCanvasBtn) {
     document.getElementById('manualButtons').style.display = 'none';
     playAuto();
       }
+      async function playAuto() {
+    IS_ANIMATING = true; // <-- Switch ON
+    try {
+        for (let i = 0; i < simSteps.length; i++) {
+            await showStep(i);
+            const speed = parseInt(document.getElementById('testSpeed').value || '2000');
+            if (i < simSteps.length - 1) {
+                await sleep(speed);
+            }
+        }
+    } finally {
+        IS_ANIMATING = false; // <-- Switch OFF
+        renderAll(); // <-- Final render to restore logs
+    }
+      }
 
       function epsilonClosure(list) {
         const out = new Set(list);
@@ -1279,6 +1294,11 @@ function convertNfaToDfa(nfa) {
         if (typeof ensureSingleInitial === 'function') { ensureSingleInitial(); }
         addConstructionLog(`**Construction Complete!** Final machine loaded.`);
         renderAll();
+            
+    } finally {
+        IS_ANIMATING = false; // <-- Switch OFF
+        renderAll(); // <-- Final render to restore logs
+      }
       });
       resetPractice.addEventListener('click', () => { CURRENT_PRACTICE = null; practiceBox.textContent = 'No practice generated yet.'; });
       checkAnswerBtn.addEventListener('click', () => {
