@@ -5,7 +5,7 @@ import { validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
-import { checkEquivalence } from './equivalence.js';
+import { areEquivalent } from './equivalence.js';
 import { animateEnfaToNfa, animateNfaToDfa, animateDfaToMinDfa, animateNfaToMinDfa } from './conversion-animation.js';
 
 
