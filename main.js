@@ -12,14 +12,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const startApp = () => {
         if (mainApp) mainApp.style.display = 'block';
-        
-        // CRITICAL FIX: Render icons BEFORE initializing the UI that adds listeners to them.
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-        
-        initializeState();
-        initializeUI();
+
+        // DEFINITIVE FIX for race condition:
+        // Use a timeout to push the execution to the end of the browser's event queue.
+        // This guarantees that all external libraries (like Lucide) have finished
+        // manipulating the DOM before our scripts try to interact with those elements.
+        setTimeout(() => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            initializeState();
+            initializeUI();
+        }, 0); 
     };
 
     if (faButton && splashScreen && mainApp) {
@@ -31,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 800); 
         });
     } else {
-        // Fallback for development or if splash screen is removed
         startApp();
     }
 });
