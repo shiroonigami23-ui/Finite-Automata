@@ -1,7 +1,12 @@
-import { MACHINE, UNDO_STACK, REDO_STACK, CURRENT_MODE, TRANS_FROM, SELECTED_STATE, CURRENT_PRACTICE, simSteps, simIndex, simTimer, initializeState } from './state.js';
+// The entry point for the application.
+// It initializes the state and then the UI, which sets up all event listeners.
+import { initializeState } from './state.js';
 import { initializeUI } from './ui.js';
 
+// Wait for the DOM to be fully loaded before running the app.
 document.addEventListener("DOMContentLoaded", () => {
+    // Set the initial state of the machine.
     initializeState();
+    // Set up all the UI elements and event listeners.
     initializeUI();
 });
