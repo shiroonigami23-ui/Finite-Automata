@@ -48,43 +48,40 @@ export function validateAutomaton() {
 
 export async function convertEnfaToNfa(machine, stepCallback = async () => {}) {
     const m = JSON.parse(JSON.stringify(machine));
-    const newTrans = [];
-    const seen = new Set();
+    let tempTransitions = [];
     
-    await stepCallback({ ...m, transitions: [] }, "Starting ε-NFA to NFA conversion. Removing all transitions first.");
+    await stepCallback({ ...m, transitions: [] }, "Starting ε-NFA to NFA conversion. Current transitions cleared.");
 
     for (const st of m.states) {
         const closure = computeEpsilonClosure(st.id, m.transitions);
-        await stepCallback(m, `Computed ε-closure for <strong>${st.id}</strong>: {${closure.join(', ')}}.`);
+        await stepCallback({ ...m, transitions: tempTransitions }, `Computed ε-closure for <strong>${st.id}</strong>: {${closure.join(', ')}}.`);
+
+        const closureStates = m.states.filter(s => closure.includes(s.id));
+        if (closureStates.some(cs => cs.accepting)) {
+            const originalState = m.states.find(x => x.id === st.id);
+            if (originalState && !originalState.accepting) {
+                originalState.accepting = true;
+                await stepCallback({ ...m, transitions: tempTransitions }, `State <strong>${st.id}</strong> is now accepting because its closure contains an accepting state.`);
+            }
+        }
 
         for (const closureStateId of closure) {
             for (const t of m.transitions) {
                 if (t.from === closureStateId && t.symbol !== '' && t.symbol !== 'ε') {
                     const destClosure = computeEpsilonClosure(t.to, m.transitions);
                     
-                    await stepCallback(m, `From closure of ${st.id}, found transition ${closureStateId} → ${t.to} on '<strong>${t.symbol}</strong>'. Destination ε-closure is {${destClosure.join(', ')}}.`);
-
                     for (const dest of destClosure) {
-                        const key = `${st.id}->${dest}:${t.symbol}`;
-                        if (!seen.has(key)) {
-                            newTrans.push({ from: st.id, to: dest, symbol: t.symbol });
-                            seen.add(key);
-                            await stepCallback({ ...m, transitions: [...newTrans] }, `Adding new transition: <strong>${st.id}</strong> → <strong>${dest}</strong> on '<strong>${t.symbol}</strong>'.`);
+                        const alreadyExists = tempTransitions.some(nt => nt.from === st.id && nt.to === dest && nt.symbol === t.symbol);
+                        if (!alreadyExists) {
+                            tempTransitions.push({ from: st.id, to: dest, symbol: t.symbol });
+                            await stepCallback({ ...m, transitions: [...tempTransitions] }, `Adding new transition: <strong>${st.id}</strong> → <strong>${dest}</strong> on '<strong>${t.symbol}</strong>'.`);
                         }
                     }
                 }
             }
         }
-         const closureStates = m.states.filter(s => closure.includes(s.id));
-        if (closureStates.some(cs => cs.accepting)) {
-            const originalState = m.states.find(x => x.id === st.id);
-            if (originalState && !originalState.accepting) {
-                originalState.accepting = true;
-                await stepCallback(m, `State <strong>${st.id}</strong> is now accepting because its closure contains an accepting state.`);
-            }
-        }
     }
-    m.transitions = newTrans.filter(t => t.symbol !== '' && t.symbol !== 'ε');
+    m.transitions = tempTransitions;
     m.type = 'NFA';
     
     m.states.forEach(s => { delete s.x; delete s.y; });
@@ -101,19 +98,19 @@ export async function convertNfaToDfa(nfa, stepCallback = async () => {}) {
     const initialDFAStateSet = computeEpsilonClosure(initialNFAStates, nfaMachine.transitions);
     const initialKey = mapKey(initialDFAStateSet);
 
-    const dfaStatesData = new Map();
+    const dfaStateKeys = new Set();
     const queue = [initialDFAStateSet];
     const newMachine = { type: 'DFA', states: [], transitions: [], alphabet };
 
-    dfaStatesData.set(initialKey, { id: initialKey, isAccepting: initialDFAStateSet.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting) });
-    
-    newMachine.states.push({ id: initialKey, initial: true, accepting: dfaStatesData.get(initialKey).isAccepting });
+    dfaStateKeys.add(initialKey);
+    const isInitialAccepting = initialDFAStateSet.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting);
+    newMachine.states.push({ id: initialKey, initial: true, accepting: isInitialAccepting });
     await stepCallback(newMachine, `Initial DFA state created from ε-closure of NFA start states: <strong>${initialKey}</strong>.`);
 
-    let processedIndex = 0;
-    while(processedIndex < newMachine.states.length){
-        const currentKey = newMachine.states[processedIndex].id;
-        const currentSet = currentKey.slice(1, -1).split(',').filter(Boolean);
+    let head = 0;
+    while(head < queue.length){
+        const currentSet = queue[head++];
+        const currentKey = mapKey(currentSet);
         
         await stepCallback(newMachine, `Processing new DFA state: <strong>${currentKey}</strong>.`);
 
@@ -128,24 +125,24 @@ export async function convertNfaToDfa(nfa, stepCallback = async () => {}) {
             const nextSetClosure = computeEpsilonClosure(Array.from(nextNfaStates), nfaMachine.transitions);
             const nextKey = mapKey(nextSetClosure);
             
-            if (nextKey === '{}') {
-                if (!dfaStatesData.has(nextKey)) {
-                     newMachine.states.push({ id: nextKey, initial: false, accepting: false });
-                     dfaStatesData.set(nextKey, { id: nextKey, isAccepting: false });
-                     await stepCallback(newMachine, `Created trap state <strong>${nextKey}</strong>.`);
-                }
-            }
-            else if (!dfaStatesData.has(nextKey)) {
-                const isAccepting = nextSetClosure.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting);
-                newMachine.states.push({ id: nextKey, initial: false, accepting: isAccepting });
-                dfaStatesData.set(nextKey, { id: nextKey, isAccepting: isAccepting });
-                await stepCallback(newMachine, `Found new DFA state from {${currentSet.join(',')}} on '<strong>${symbol}</strong>': <strong>${nextKey}</strong>.`);
+            if (!dfaStateKeys.has(nextKey)) {
+                 dfaStateKeys.add(nextKey);
+                 queue.push(nextSetClosure);
+                 const isAccepting = nextSetClosure.some(s => nfaMachine.states.find(ns => ns.id === s)?.accepting);
+                 newMachine.states.push({ id: nextKey, initial: false, accepting: isAccepting });
+                 await stepCallback(newMachine, `Found new DFA state from {${currentSet.join(',')}} on '<strong>${symbol}</strong>': <strong>${nextKey}</strong>.`);
             }
 
             newMachine.transitions.push({ from: currentKey, to: nextKey, symbol: symbol });
             await stepCallback(newMachine, `Adding transition: δ(<strong>${currentKey}</strong>, '<strong>${symbol}</strong>') = <strong>${nextKey}</strong>.`);
         }
-        processedIndex++;
+    }
+
+    if (!dfaStateKeys.has('{}')) {
+        newMachine.states.push({ id: '{}', initial: false, accepting: false });
+        for(const symbol of alphabet) {
+            newMachine.transitions.push({ from: '{}', to: '{}', symbol: symbol });
+        }
     }
 
     return newMachine;
@@ -163,7 +160,7 @@ export async function minimizeDfa(dfa, stepCallback = async () => {}) {
         dfaClean.states.filter(s => !s.accepting).map(s => s.id)
     ].filter(g => g.length > 0);
 
-    await stepCallback(dfaClean, `Step 2: Initial partition into accepting and non-accepting states. Groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
+    await stepCallback(dfaClean, `Step 2: Initial partition. Groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
 
     let W = [...P];
     while (W.length > 0) {
@@ -185,11 +182,7 @@ export async function minimizeDfa(dfa, stepCallback = async () => {}) {
                     if (wIndex > -1) {
                         W.splice(wIndex, 1, intersection, difference);
                     } else {
-                        if (intersection.length <= difference.length) {
-                            W.push(intersection);
-                        } else {
-                            W.push(difference);
-                        }
+                        W.push(intersection.length <= difference.length ? intersection : difference);
                     }
                 } else {
                     newP.push(Y);
@@ -197,7 +190,7 @@ export async function minimizeDfa(dfa, stepCallback = async () => {}) {
             }
              if(changed) {
                 P = newP;
-                await stepCallback(dfaClean, `Refining partition based on symbol '<strong>${symbol}</strong>'. New groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
+                await stepCallback(dfaClean, `Refining partition on '<strong>${symbol}</strong>'. New groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
             }
         }
     }
@@ -208,32 +201,33 @@ export async function minimizeDfa(dfa, stepCallback = async () => {}) {
         group.forEach(s => repMap[s] = rep);
     });
 
-    const finalStates = P.map((group) => {
+    const finalMachine = { type: 'DFA', alphabet: alph, states: [], transitions: [] };
+
+    await stepCallback(dfaClean, `Step 3: Final partitions found. Building minimized DFA.`);
+
+    for (const group of P) {
         const rep = group.sort()[0];
         const oldState = dfaClean.states.find(s => s.id === rep);
         const isInitial = dfaClean.states.some(s => s.initial && group.includes(s.id));
-        return { id: rep, initial: isInitial, accepting: oldState.accepting };
-    });
-    
-    await stepCallback({ ...dfaClean, states: finalStates, transitions: [] }, `Step 3: Created new states from final partitions.`);
+        finalMachine.states.push({ id: rep, initial: isInitial, accepting: oldState.accepting });
+        await stepCallback(finalMachine, `Creating new state for group {${group.join(',')}}, represented by <strong>${rep}</strong>.`);
+    }
 
-    const finalTransitions = [];
-    finalStates.forEach(s => {
-        const originalStateId = P.find(g => g.includes(s.id))[0];
-        alph.forEach(symbol => {
+    for (const state of finalMachine.states) {
+        const originalStateId = state.id;
+        for (const symbol of alph) {
             const t = dfaClean.transitions.find(tr => tr.from === originalStateId && tr.symbol === symbol);
             if (t) {
                 const toRep = repMap[t.to];
-                if (!finalTransitions.some(ft => ft.from === s.id && ft.to === toRep && ft.symbol === symbol)) {
-                     finalTransitions.push({ from: s.id, to: toRep, symbol });
+                if (!finalMachine.transitions.some(ft => ft.from === state.id && ft.to === toRep && ft.symbol === symbol)) {
+                     finalMachine.transitions.push({ from: state.id, to: toRep, symbol });
+                     await stepCallback(finalMachine, `Adding transition: δ(<strong>${state.id}</strong>, '<strong>${symbol}</strong>') = <strong>${toRep}</strong>.`);
                 }
             }
-        });
-    });
+        }
+    }
     
-    await stepCallback({ ...dfaClean, states: finalStates, transitions: finalTransitions }, `Step 4: Remapped transitions to new states.`);
-    
-    return { type: 'DFA', alphabet: alph, states: finalStates, transitions: finalTransitions };
+    return finalMachine;
 }
 
 
