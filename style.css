@@ -73,7 +73,7 @@ body {
 .control-section-header, .control-section summary {
     font-weight: 600;
     cursor: pointer;
-    list-style: none;
+    list-style: none; /* Hide default arrow */
     display: flex;
     align-items: center;
     gap: 8px;
@@ -155,6 +155,7 @@ body {
 
 .toolbar-icon.active {
   background: linear-gradient(90deg, var(--accent1), var(--accent2));
+  color: #fff;
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.18);
   transform: translateY(-2px);
 }
@@ -378,10 +379,6 @@ body {
   background: var(--accent2);
   color: #fff;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
 }
 .control-row button:hover { opacity: 0.85; }
 
