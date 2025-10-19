@@ -12,29 +12,28 @@ document.addEventListener("DOMContentLoaded", () => {
     // This breaks the circular dependency, as the state module no longer needs to import it.
     setRenderFunction(renderAll);
 
+    const startApp = () => {
+        if (mainApp) mainApp.style.display = 'block';
+        
+        // CRITICAL FIX: Render icons BEFORE initializing UI that depends on them.
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        initializeState();
+        initializeUI();
+    };
+
     if (faButton && splashScreen && mainApp) {
         faButton.addEventListener('click', () => {
             splashScreen.style.opacity = '0';
             setTimeout(() => {
                 splashScreen.style.display = 'none';
-                mainApp.style.display = 'block';
-                
-                // Initialize the application AFTER the main view is visible
-                initializeState();
-                initializeUI();
-                
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
+                startApp();
             }, 800); 
         });
     } else {
         // Fallback for development or if splash screen is removed
-        if (mainApp) mainApp.style.display = 'block';
-        initializeState();
-        initializeUI();
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        startApp();
     }
 });
