@@ -5,8 +5,16 @@ import { setValidationMessage } from './utils.js';
 
 export function generatePractice() {
     const practiceBox = document.getElementById('practiceBox');
-    const mode = MACHINE.type;
+    const modeSelect = document.getElementById('modeSelect'); // CORRECTED: Get mode from the select element
+    const mode = modeSelect.value;
     const level = document.getElementById('practiceMode').value;
+    
+    // Ensure PRACTICE_BANK is available
+    if (typeof window.PRACTICE_BANK === 'undefined') {
+        practiceBox.textContent = "Practice bank not loaded.";
+        return;
+    }
+
     const bank = window.PRACTICE_BANK[mode]?.[level];
 
     if (!bank || bank.length === 0) {
@@ -14,7 +22,7 @@ export function generatePractice() {
         return;
     }
     const newPractice = bank[Math.floor(Math.random() * bank.length)];
-    setCurrentPractice(newPractice); // CORRECTED: Use a function to set state
+    setCurrentPractice(newPractice);
     practiceBox.innerHTML = `<strong>${mode} | ${level}</strong><div style="margin-top:8px">${newPractice.q}</div>`;
 }
 
@@ -32,7 +40,7 @@ export async function showSolution() {
 }
 
 export function resetPractice() {
-    setCurrentPractice(null); // CORRECTED: Use a function to set state
+    setCurrentPractice(null);
     document.getElementById('practiceBox').textContent = 'No practice generated yet.';
 }
 
