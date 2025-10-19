@@ -3,10 +3,6 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Finite Automata Practice — Enhanced Interactive Studio</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
@@ -306,21 +302,21 @@
   </div>
 
   <!--
-    SCRIPT LOADING ORDER:
-    1. Classic scripts that define global variables are loaded first. The 'defer' attribute
-       ensures they don't block HTML parsing and execute in order before the module.
-    2. The main application module ('main.js') is loaded last. As a module, it is
-       naturally deferred. It serves as the single entry point for the modular application.
+    CORRECTED SCRIPT LOADING ORDER:
+    1. practice-bank.js: Defines window.PRACTICE_BANK. `defer` ensures it runs before DOMContentLoaded.
+    2. animation-fix.js: Defines global animation variables.
+    3. library_helper.js: This is a module that creates the window.loadMachineFromObject bridge function.
+       Modules are naturally deferred and will execute after classic deferred scripts.
+    4. library-loader.js: This classic script runs after the bridge is created. Its DOMContentLoaded listener
+       will correctly find the function on the window object.
+    5. main.js: The main application entry point, runs last to initialize the UI.
   -->
   <script src="practice-bank.js" defer></script>
   <script src="animation-fix.js" defer></script>
+  <script type="module" src="library_helper.js"></script>
   <script src="library-loader.js" defer></script>
-
-  <!-- Main application entry point -->
   <script type="module" src="main.js"></script>
 
 </body>
 
 </html>
-
-
