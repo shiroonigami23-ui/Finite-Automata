@@ -251,6 +251,8 @@
         </div>
       </div>
     </div>
+
+    <!-- MODALS -->
     <div id="transitionModal" class="modal-overlay" style="display:none">
       <div class="modal-box">
         <h3>Add Transition</h3>
@@ -268,58 +270,54 @@
     <div id="statePropsModal" class="modal-overlay" style="display:none">
       <div class="modal-box">
         <h3>State Properties</h3>
-        <label><input type="checkbox" id="propInitial"> Initial</label>
-        <label><input type="checkbox" id="propFinal"> Final</label>
+        <div class="modal-prop-row"><label><input type="checkbox" id="propInitial"> Initial State</label></div>
+        <div class="modal-prop-row"><label><input type="checkbox" id="propFinal"> Final State</label></div>
         <div class="modal-actions">
           <button id="propCancel">Cancel</button>
           <button id="propSave">Save</button>
         </div>
       </div>
     </div>
-  </div>
-  <div id="renameModal" class="modal-overlay" style="display:none">
-    <div class="modal-box">
-      <h3>Rename State</h3>
-      <p style="margin: 4px 0 8px 0; font-size: 0.9em; color: #555;">Enter the new name for the state.</p>
-      <input id="renameInput" class="modal-input" placeholder="New state name" />
-      <div class="modal-actions">
-        <button id="renameCancel">Cancel</button>
-        <button id="renameSave">Save</button>
-      </div>
+    <div id="renameModal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <h3>Rename State</h3>
+            <p class="modal-description">Enter the new name for the state.</p>
+            <input id="renameInput" class="modal-input" placeholder="New state name" />
+            <div class="modal-actions">
+                <button id="renameCancel">Cancel</button>
+                <button id="renameSave">Save</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirmClearModal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <h3>Clear Canvas</h3>
+            <p class="modal-description">Are you sure you want to clear the entire canvas? This action can be undone.</p>
+            <div class="modal-actions">
+                <button id="confirmClearCancel">Cancel</button>
+                <button id="confirmClearConfirm" class="danger-btn">Clear Canvas</button>
+            </div>
+        </div>
+    </div>
+    <!-- NEW: Alert Modal -->
+    <div id="alertModal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <h3 id="alertTitle">Alert</h3>
+            <p id="alertMessage" class="modal-description"></p>
+            <div class="modal-actions">
+                <button id="alertOk">OK</button>
+            </div>
+        </div>
     </div>
   </div>
 
-  <div id="confirmClearModal" class="modal-overlay" style="display:none">
-    <div class="modal-box">
-      <h3>Clear Canvas</h3>
-      <p style="margin: 4px 0 12px 0; font-size: 0.9em; color: #555;">Are you sure you want to clear the entire canvas?
-        This action can be undone.</p>
-      <div class="modal-actions">
-        <button id="confirmClearCancel">Cancel</button>
-        <button id="confirmClearConfirm" style="background: #e53e3e;">Clear Canvas</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FIX: Added all necessary modules and corrected script loading order -->
   <script src="practice-bank.js" defer></script>
   <script src="library-loader.js" defer></script>
-  
-  <script type="module" src="utils.js"></script>
-  <script type="module" src="state.js"></script>
-  <script type="module" src="renderer.js"></script>
-  <script type="module" src="automata.js"></script>
-  <script type="module" src="simulation.js"></script>
-  <script type="module" src="file.js"></script>
-  <script type="module" src="animation.js"></script>
-  <script type="module" src="practice.js"></script>
-  <script type="module" src="ui.js"></script>
   <script type="module" src="library_helper.js"></script>
-  
-  <!-- Main entry point should be last -->
   <script type="module" src="main.js"></script>
 
 </body>
 
 </html>
+
 
