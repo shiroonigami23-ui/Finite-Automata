@@ -1,6 +1,7 @@
 :root {
   --bg1: linear-gradient(135deg, #f5f7fa 0%, #e6eef8 100%);
   --panel-bg: rgba(255, 255, 255, 0.98);
+  --glass-bg: rgba(240, 245, 255, 0.7); /* Glassmorphism background */
   --accent1: #667eea;
   --accent2: #764ba2;
   --muted: #94a3b8;
@@ -93,10 +94,11 @@ details.control-section {
 
 /* The content area that gets the background when open */
 .control-section .control-section-content {
-    background: var(--panel-bg);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
     border-radius: 14px;
     padding: 18px;
-    border: 1px solid #eef2ff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 /* --- END NEW SECTION STYLING --- */
