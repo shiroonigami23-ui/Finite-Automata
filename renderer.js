@@ -1,5 +1,4 @@
-import { MACHINE, CURRENT_MODE, TRANS_FROM } from './state.js';
-import { showTransModal, openPropsModal, deleteState, renameState } from './ui.js';
+import { MACHINE } from './state.js';
 import { getModeLabel, updateUndoRedoButtons } from './utils.js';
 
 const svg = document.getElementById('dfaSVG');
@@ -20,18 +19,23 @@ export function renderAll() {
     edgesGroup.innerHTML = '';
     document.getElementById('canvasHint').style.display = (!MACHINE.states || MACHINE.states.length === 0) ? 'block' : 'none';
 
-    const processedArcs = new Set();
+    const processedArcs = new Map();
     (MACHINE.transitions || []).forEach(t => {
-        const from = MACHINE.states.find(s => s.id === t.from);
-        const to = MACHINE.states.find(s => s.id === t.to);
+        const arcKey = `${t.from}->${t.to}`;
+        if (!processedArcs.has(arcKey)) {
+            processedArcs.set(arcKey, []);
+        }
+        processedArcs.get(arcKey).push(t.symbol);
+    });
+
+    processedArcs.forEach((symbols, arcKey) => {
+        const [fromId, toId] = arcKey.split('->');
+        const from = MACHINE.states.find(s => s.id === fromId);
+        const to = MACHINE.states.find(s => s.id === toId);
         if (!from || !to) return;
 
-        const arcKey = `${t.from}->${t.to}`;
-        if (processedArcs.has(arcKey)) return;
-        processedArcs.add(arcKey);
-
         let pathD, labelX, labelY;
-        if (t.from === t.to) {
+        if (fromId === toId) {
             const loop = getLoopPathAndLabel(from.x, from.y, 30);
             pathD = loop.pathData;
             labelX = loop.labelX;
@@ -42,8 +46,8 @@ export function renderAll() {
             const r = 30;
             const startX = from.x + r * Math.cos(angle), startY = from.y + r * Math.sin(angle);
             const endX = to.x - r * Math.cos(angle), endY = to.y - r * Math.sin(angle);
-
-            const reverse = MACHINE.transitions.some(o => o.from === t.to && o.to === t.from);
+            
+            const reverse = processedArcs.has(`${toId}->${fromId}`);
             if (reverse) {
                 const offset = 40, midX = (startX + endX) / 2, midY = (startY + endY) / 2;
                 const normX = -dy / Math.hypot(dx, dy), normY = dx / Math.hypot(dx, dy);
@@ -61,15 +65,11 @@ export function renderAll() {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathD);
         path.classList.add('transition-path');
-        path.setAttribute('data-from', t.from);
-        path.setAttribute('data-to', t.to);
+        path.setAttribute('data-from', fromId);
+        path.setAttribute('data-to', toId);
         edgesGroup.appendChild(path);
 
-        const arcSymbols = MACHINE.transitions
-            .filter(tt => tt.from === t.from && tt.to === t.to)
-            .map(tt => (tt.symbol === '' || tt.symbol === undefined) ? 'ε' : tt.symbol);
-        
-        const labelText = [...new Set(arcSymbols)].join(', ');
+        const labelText = [...new Set(symbols.map(s => s || 'ε'))].join(', ');
 
         const textHalo = document.createElementNS(svg.namespaceURI, 'text');
         textHalo.setAttribute('class', 'transition-label');
@@ -89,30 +89,9 @@ export function renderAll() {
         edgesGroup.appendChild(text);
     });
 
-    
     MACHINE.states.forEach(state => {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('data-id', state.id);
-        g.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (CURRENT_MODE === 'transition') {
-                const circle = g.querySelector('.state-circle');
-                if (!TRANS_FROM) {
-                    TRANS_FROM = state.id;
-                    circle.classList.add('state-selected');
-                } else {
-                    showTransModal(TRANS_FROM, state.id);
-                    document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
-                    TRANS_FROM = null;
-                }
-            } else if (CURRENT_MODE === 'delete') {
-                deleteState(state.id);
-            } else if (CURRENT_MODE === 'rename') {
-                renameState(state.id);
-            } else if (CURRENT_MODE === 'stateprops') {
-                openPropsModal(state.id);
-            }
-        });
 
         if (state.initial) {
             const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -129,7 +108,6 @@ export function renderAll() {
         circle.setAttribute('cy', state.y);
         circle.setAttribute('r', 30);
         circle.classList.add('state-circle');
-        circle.setAttribute('data-id', state.id); 
         if (state.initial) circle.classList.add('initial-pulse');
         g.appendChild(circle);
 
