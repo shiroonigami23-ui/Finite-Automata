@@ -1,6 +1,53 @@
 // automata.js
 import { MACHINE } from './state.js';
 
+/**
+ * Validates the current automaton against the rules of its type (DFA, NFA, etc.).
+ * @returns {{message: string, type: 'success'|'error'|'warning'}} Validation result.
+ */
+export function validateAutomaton() {
+    const { states, transitions, type, alphabet } = MACHINE;
+    if (!states || states.length === 0) {
+        return { message: 'Automaton is empty.', type: 'warning' };
+    }
+
+    const initialStates = states.filter(s => s.initial);
+    if (initialStates.length === 0) {
+        return { message: 'Error: No initial state defined.', type: 'error' };
+    }
+
+    if (type === 'DFA') {
+        if (initialStates.length > 1) {
+            return { message: 'DFA Error: Multiple initial states found.', type: 'error' };
+        }
+        for (const state of states) {
+            const symbols = new Set();
+            for (const t of transitions.filter(tr => tr.from === state.id)) {
+                if (t.symbol === '' || t.symbol === 'ε') {
+                    return { message: `DFA Error: State ${state.id} has an ε-transition.`, type: 'error' };
+                }
+                if (symbols.has(t.symbol)) {
+                    return { message: `DFA Error: State ${state.id} is not deterministic for symbol '${t.symbol}'.`, type: 'error' };
+                }
+                symbols.add(t.symbol);
+            }
+        }
+    }
+    
+    // Check if all transition symbols are in the alphabet if alphabet is defined
+    if (alphabet && alphabet.length > 0) {
+        for (const t of transitions) {
+            if (t.symbol && t.symbol !== 'ε' && !alphabet.includes(t.symbol)) {
+                return { message: `Warning: Transition symbol '${t.symbol}' not in alphabet {${alphabet.join(', ')}}.`, type: 'warning' };
+            }
+        }
+    }
+
+
+    return { message: 'Automaton is valid.', type: 'success' };
+}
+
+
 export function convertEnfaToNfa(machine) {
     const m = JSON.parse(JSON.stringify(machine));
     const newTrans = [];
