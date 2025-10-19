@@ -3,12 +3,10 @@ import { renderAll, layoutStatesCircular } from './renderer.js';
 import { sleep, addLogMessage } from './utils.js';
 import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa } from './automata.js';
 
-const ANIMATION_DELAY = 1000;
+const ANIMATION_DELAY = 1500; // Changed from 1000 to 1500 for a slower animation
 
-// 1. Accept the update function here
 async function animateConversion(conversionFn, initialMachine, successMessage, updateUIFn) {
     document.getElementById('stepLog').innerHTML = '';
-    // 2. Pass it to pushUndo
     pushUndo(updateUIFn);
 
     const stepCallback = async (machineState, message) => {
@@ -26,7 +24,6 @@ async function animateConversion(conversionFn, initialMachine, successMessage, u
     addLogMessage(successMessage, 'check-circle');
 }
 
-// 3. Update all exported functions to accept and pass the function
 export async function animateEnfaToNfa(machine, updateUIFn) {
     await animateConversion(convertEnfaToNfa, machine, "ε-NFA to NFA conversion complete.", updateUIFn);
 }
@@ -41,7 +38,6 @@ export async function animateDfaToMinDfa(machine, updateUIFn) {
 
 export async function animateNfaToMinDfa(machine, updateUIFn) {
     document.getElementById('stepLog').innerHTML = '';
-    // 4. Also fix it here for the multi-step conversion
     pushUndo(updateUIFn);
 
     addLogMessage("Starting NFA to Minimal DFA conversion...", 'zap');
