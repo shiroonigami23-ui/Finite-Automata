@@ -1,7 +1,7 @@
 :root {
   --bg1: linear-gradient(135deg, #f5f7fa 0%, #e6eef8 100%);
   --panel-bg: rgba(255, 255, 255, 0.98);
-  --glass-bg: rgba(240, 245, 255, 0.7); /* Glassmorphism background */
+  --glass-bg: rgba(230, 235, 245, 0.65); /* Glassmorphism background */
   --accent1: #667eea;
   --accent2: #764ba2;
   --muted: #94a3b8;
@@ -88,7 +88,7 @@ details.control-section {
 }
 
 /* Make only the icon appear clickable */
-.control-section summary > i {
+.control-section summary > svg {
     cursor: pointer;
 }
 
@@ -96,6 +96,7 @@ details.control-section {
 .control-section .control-section-content {
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 14px;
     padding: 18px;
     border: 1px solid rgba(255, 255, 255, 0.2);
