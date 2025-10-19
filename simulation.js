@@ -1,11 +1,11 @@
-import { MACHINE, simSteps, simIndex, simTimer } from './state.js';
+import { MACHINE, simState } from './state.js';
 import { sleep } from './utils.js';
 import { computeEpsilonClosure } from './automata.js';
 
 export async function runSimulation(inputStr) {
-    simSteps.length = 0;
-    simIndex = 0; 
-    clearTimeout(simTimer);
+    simState.steps.length = 0;
+    simState.index = 0; 
+    clearTimeout(simState.timer);
     document.getElementById('stepLog').innerHTML = '';
     const testOutput = document.getElementById('testOutput');
     testOutput.textContent = 'Simulating...';
@@ -24,7 +24,7 @@ export async function runSimulation(inputStr) {
         currentStates = [currentStates[0]];
     }
     
-    simSteps.push({ start: true, active: [...currentStates] });
+    simState.steps.push({ start: true, active: [...currentStates] });
 
     let halted = false;
     for (const symbol of inputStr) {
@@ -56,7 +56,7 @@ export async function runSimulation(inputStr) {
         const afterStates = (MACHINE.type === 'ENFA') ? computeEpsilonClosure([...nextStates], MACHINE.transitions) : [...nextStates];
         
         frame.after = afterStates;
-        simSteps.push(frame);
+        simState.steps.push(frame);
         currentStates = afterStates;
 
         if (currentStates.length === 0) {
@@ -64,19 +64,19 @@ export async function runSimulation(inputStr) {
         }
     }
     
-    simSteps.push({ end: true, active: [...currentStates] });
+    simState.steps.push({ end: true, active: [...currentStates] });
 
     document.getElementById('manualButtons').style.display = 'none';
     playAuto();
 }
 
-async function showStep(idx) {
-    if (idx < 0 || idx >= simSteps.length) {
-        simIndex = Math.max(0, Math.min(idx, simSteps.length - 1));
+export async function showStep(idx) {
+    if (idx < 0 || idx >= simState.steps.length) {
+        simState.index = Math.max(0, Math.min(idx, simState.steps.length - 1));
         return;
     }
-    simIndex = idx;
-    const step = simSteps[idx];
+    simState.index = idx;
+    const step = simState.steps[idx];
     const log = document.getElementById('stepLog');
     const speed = parseInt(document.getElementById('testSpeed').value || '500');
 
@@ -125,10 +125,10 @@ async function showStep(idx) {
 }
 
 async function playAuto() {
-    for (let i = 0; i < simSteps.length; i++) {
+    for (let i = 0; i < simState.steps.length; i++) {
         await showStep(i);
         const speed = parseInt(document.getElementById('testSpeed').value || '800');
-        if (i < simSteps.length - 1) {
+        if (i < simState.steps.length - 1) {
             await sleep(speed);
         }
     }
