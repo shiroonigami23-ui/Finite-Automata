@@ -1,3 +1,4 @@
+// automata.js
 import { MACHINE } from './state.js';
 
 export function convertEnfaToNfa(machine) {
@@ -106,9 +107,16 @@ export function convertNfaToDfa(nfa) {
     }
 
     let i = 0;
+    const keyToNewId = new Map();
+    Array.from(dfaStatesData.keys()).forEach((key, index) => {
+        keyToNewId.set(key, `q${index}`);
+    });
+
+
     for (const [key, data] of dfaStatesData.entries()) {
+        const newId = keyToNewId.get(key);
         newMachine.states.push({
-            id: key,
+            id: newId,
             initial: key === initialKey,
             accepting: data.isAccepting,
             x: 200 + (i % 5) * 180,
@@ -118,16 +126,18 @@ export function convertNfaToDfa(nfa) {
     }
 
     for (const [key, data] of dfaStatesData.entries()) {
+        const fromId = keyToNewId.get(key);
         for (const symbol of alphabet) {
-            let toState = data.transitions.get(symbol);
-            if (!toState) {
-                toState = trapStateKey;
+            let toStateKey = data.transitions.get(symbol) || trapStateKey;
+            const toId = keyToNewId.get(toStateKey);
+            
+            if(toId) {
+                newMachine.transitions.push({
+                    from: fromId,
+                    to: toId,
+                    symbol: symbol
+                });
             }
-            newMachine.transitions.push({
-                from: key,
-                to: toState,
-                symbol: symbol
-            });
         }
     }
 
@@ -216,7 +226,7 @@ export function minimizeDfa(dfa) {
     };
 }
 
-function computeEpsilonClosure(states, transitions) {
+export function computeEpsilonClosure(states, transitions) {
     const stateSet = new Set(Array.isArray(states) ? states : [states]);
     const stack = Array.isArray(states) ? [...states] : [states];
 
