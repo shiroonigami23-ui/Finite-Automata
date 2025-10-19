@@ -46,6 +46,7 @@ body {
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  position: relative;
 }
 
 .control-panel {
@@ -358,18 +359,17 @@ body {
   fill: #0b1220;
   text-anchor: middle;
   font-size: 13px;
+  pointer-events: none;
 }
-
-/* --- NEW: Style for the clickable halo around transition text --- */
-.transition-label-text {
-  fill: transparent; /* Make the text itself invisible */
-  stroke: transparent; /* Make the halo invisible by default */
+.transition-label-text{
+    stroke: white;
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    pointer-events: all;
+    cursor: default;
 }
-
-/* --- NEW: Change cursor to a delete icon in delete mode --- */
-.mode-delete .state-circle:hover,
 .mode-delete .transition-label-text {
-    cursor: crosshair;
+    cursor: pointer;
 }
 
 .kv {
@@ -395,55 +395,27 @@ body {
 }
 
 @keyframes pulseState {
-  0% {
-    stroke-width: 3;
-    stroke: gold;
-    filter: drop-shadow(0 0 4px gold);
-  }
-
-  50% {
-    stroke-width: 8;
-    stroke: orange;
-    filter: drop-shadow(0 0 12px orange);
-  }
-
-  100% {
-    stroke-width: 3;
-    stroke: gold;
-    filter: drop-shadow(0 0 4px gold);
-  }
+    0% { stroke-width: 3; filter: drop-shadow(0 0 2px gold); }
+    50% { stroke-width: 6; filter: drop-shadow(0 0 10px orange); }
+    100% { stroke-width: 3; filter: drop-shadow(0 0 2px gold); }
 }
 
 @keyframes pulseTransition {
-  0% {
-    stroke-width: 2;
-    stroke: gold;
-    filter: drop-shadow(0 0 3px gold);
-  }
-
-  50% {
-    stroke-width: 6;
-    stroke: orange;
-    filter: drop-shadow(0 0 8px orange);
-  }
-
-  100% {
-    stroke-width: 2;
-    stroke: gold;
-    filter: drop-shadow(0 0 3px gold);
-  }
+    0% { stroke-width: 2; filter: drop-shadow(0 0 2px gold); }
+    50% { stroke-width: 5; filter: drop-shadow(0 0 8px orange); }
+    100% { stroke-width: 2; filter: drop-shadow(0 0 2px gold); }
 }
 
 .state-animating {
   animation-name: pulseState;
-  animation-duration: 1s;
+  animation-duration: 0.8s;
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
 
 .transition-animating {
   animation-name: pulseTransition;
-  animation-duration: 1s;
+  animation-duration: 0.8s;
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
@@ -466,11 +438,12 @@ body {
 }
 
 @keyframes drawTransition {
-  from {
+  0% {
     stroke-dashoffset: 1000;
     opacity: 0;
   }
-  to {
+
+  100% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
@@ -486,7 +459,6 @@ body {
   animation: drawTransition 0.8s ease-out forwards;
 }
 
-
 .state-selected {
   stroke: yellow !important;
   stroke-width: 6 !important;
@@ -501,7 +473,6 @@ body {
 
 #zoomSlider {
   writing-mode: bt-lr;
-  appearance: slider-vertical;
   -webkit-appearance: slider-vertical;
   width: 8px;
   height: 120px;
@@ -971,45 +942,9 @@ button:disabled {
 .mode-indicator.enfa {
   background-color: #fce7f3;
   color: #be185d;
-                        }
-/* --- Append this to the bottom of your existing style.css file --- */
-
-.modal-description {
-    margin: 4px 0 12px 0;
-    font-size: 0.9em;
-    color: #555;
-    line-height: 1.5;
 }
-
-.danger-btn {
-    background: #e53e3e !important;
-    color: #fff !important;
-}
-
-.danger-btn:hover {
-    background: #c53030 !important;
-}
-
-.modal-prop-row {
-    margin-bottom: 12px;
-}
-
-.modal-prop-row label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1rem;
-}
-
-.modal-prop-row input[type="checkbox"] {
-    width: 1.3em;
-    height: 1.3em;
-    accent-color: var(--accent1);
-}
-/* --- Append this to the bottom of your existing style.css file --- */
-
 .panel-toggle-btn {
-  display: none; /* Hidden by default on large screens */
+  display: none;
   position: fixed;
   top: 85px;
   left: 15px;
@@ -1028,15 +963,13 @@ button:disabled {
   justify-content: center;
 }
 
-/* Responsive styles for smaller screens */
 @media (max-width: 1024px) {
   .panel-toggle-btn {
     display: flex;
   }
 
   .main-content {
-    flex-direction: row; /* Keep it as a row */
-    align-items: stretch;
+    flex-direction: row;
   }
 
   .control-panel {
@@ -1075,8 +1008,35 @@ button:disabled {
     top: 75px;
   }
 }
+.modal-description {
+    margin: 4px 0 12px 0;
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1.5;
+}
 
-/* Make transition labels clickable in delete mode */
-.mode-delete .transition-label-text {
-    cursor: pointer;
+.danger-btn {
+    background: #e53e3e !important;
+    color: #fff !important;
+}
+
+.danger-btn:hover {
+    background: #c53030 !important;
+}
+
+.modal-prop-row {
+    margin-bottom: 12px;
+}
+
+.modal-prop-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+
+.modal-prop-row input[type="checkbox"] {
+    width: 1.3em;
+    height: 1.3em;
+    accent-color: var(--accent1);
 }
