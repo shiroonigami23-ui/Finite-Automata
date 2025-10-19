@@ -1,9 +1,31 @@
-import { MACHINE, CURRENT_MODE, TRANS_FROM, pushUndo, doUndo, doRedo, initializeState } from './state.js';
+import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, setMachine, initializeState, simState } from './state.js';
 import { renderAll } from './renderer.js';
-import { runSimulation } from './simulation.js';
+import { runSimulation, showStep } from './simulation.js';
 import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer, validateAutomaton, updateAlphabet } from './practice.js';
+import { updateUndoRedoButtons } from './utils.js';
+
+function layoutStatesLine(states) {
+    if (!states || states.length === 0) return;
+    const canvasWidth = 1400;
+    const canvasHeight = 900;
+    const marginX = 100; 
+    const marginY = 100;
+    const spacingX = 160; 
+    const spacingY = 120;
+
+    const perRow = Math.max(1, Math.floor((canvasWidth - marginX * 2) / spacingX));
+
+    states.forEach((s, i) => {
+        const row = Math.floor(i / perRow);
+        const col = i % perRow;
+        s.x = marginX + col * spacingX;
+        s.y = marginY + row * spacingY;
+        if (row % 2 === 1) s.y += 40;
+    });
+    renderAll();
+}
 
 export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
@@ -34,8 +56,8 @@ export function initializeUI() {
         tool.addEventListener('click', () => {
             document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
             tool.classList.add('active');
-            CURRENT_MODE = tool.dataset.mode;
-            TRANS_FROM = null;
+            setGlobal('CURRENT_MODE', tool.dataset.mode);
+            setGlobal('TRANS_FROM', null);
             document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
         });
     });
@@ -146,8 +168,22 @@ export function initializeUI() {
     });
 
     // Main controls
-    undoBtn.addEventListener('click', doUndo);
-    redoBtn.addEventListener('click', doRedo);
+    undoBtn.addEventListener('click', () => {
+        if (UNDO_STACK.length > 0) {
+            REDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
+            const prevState = UNDO_STACK.pop();
+            setMachine(prevState);
+            renderAll();
+        }
+    });
+    redoBtn.addEventListener('click', () => {
+        if (REDO_STACK.length > 0) {
+            UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
+            const nextState = REDO_STACK.pop();
+            setMachine(nextState);
+            renderAll();
+        }
+    });
     saveMachineBtn.addEventListener('click', saveMachine);
     loadMachineBtn.addEventListener('click', () => document.getElementById('loadFileInput').click());
     document.getElementById('loadFileInput').addEventListener('change', loadMachine);
@@ -188,7 +224,7 @@ export function initializeUI() {
         }
         if (convertedMachine) {
             pushUndo();
-            MACHINE = convertedMachine;
+            setMachine(convertedMachine);
 
             MACHINE.type = 'DFA';
             if (newMode === 'ENFA_TO_NFA') MACHINE.type = 'NFA';
@@ -210,12 +246,12 @@ export function initializeUI() {
         const len = Math.floor(Math.random() * 8) + 3;
         testInput.value = Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
     });
-    stepNextBtn.addEventListener('click', () => showStep(++simIndex));
-    stepPrevBtn.addEventListener('click', () => showStep(--simIndex));
+    stepNextBtn.addEventListener('click', () => showStep(++simState.index));
+    stepPrevBtn.addEventListener('click', () => showStep(--simState.index));
     stepResetBtn.addEventListener('click', () => {
-        simIndex = 0;
-        simSteps = [];
-        clearTimeout(simTimer);
+        simState.index = 0;
+        simState.steps.length = 0;
+        clearTimeout(simState.timer);
         document.getElementById('stepLog').innerHTML = '';
         document.getElementById('testOutput').textContent = 'Ready';
         renderAll();
@@ -333,4 +369,4 @@ function setValidationMessage(message, type) {
     validationLine.classList.remove('success', 'error', 'show', 'warning');
     validationLine.classList.add(type, 'show');
     setTimeout(() => validationLine.classList.remove('show'), 4000);
-                                                             }
+}
