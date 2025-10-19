@@ -1,9 +1,13 @@
-import { initializeState, pushUndo, setMachine } from './state.js';
+// main.js
+import { initializeState, setRenderFunction } from './state.js';
 import { initializeUI } from './ui.js';
 import { renderAll } from './renderer.js';
 
 // --- Main Application Startup ---
 document.addEventListener("DOMContentLoaded", () => {
+    // Break the circular dependency by passing the render function to the state module.
+    setRenderFunction(renderAll);
+
     const splashScreen = document.getElementById('splashScreen');
     const mainApp = document.getElementById('mainApp');
     const faButton = document.querySelector('.splash-nav-btn[data-target="Automata"]');
@@ -14,19 +18,16 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 splashScreen.style.display = 'none';
                 mainApp.style.display = 'block';
-                
-                // Initialize the application AFTER the main view is visible
+
                 initializeState();
                 initializeUI();
-                
-                // Render Lucide icons
+
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
-            }, 800); 
+            }, 800);
         });
     } else {
-        // Fallback if splash screen is missing
         if (mainApp) mainApp.style.display = 'block';
         initializeState();
         initializeUI();
@@ -35,26 +36,3 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
-
-
-// --- Bridge for Legacy Scripts ---
-// Expose the loadMachineFromObject function on the window so the old library-loader.js can call it.
-window.loadMachineFromObject = function(machineObject) {
-    if (machineObject && machineObject.states) {
-        pushUndo();
-        // Ensure type is set, defaulting to DFA
-        const machineToLoad = { ...machineObject, type: machineObject.type || 'DFA' };
-        setMachine(machineToLoad);
-        
-        // Update the UI to reflect the loaded machine's type
-        const modeSelect = document.getElementById('modeSelect');
-        if (modeSelect) {
-            modeSelect.value = machineToLoad.type;
-        }
-        
-        renderAll();
-        console.log("Loaded machine from library:", machineObject.id);
-    } else {
-        console.error("Invalid machine object from library:", machineObject);
-    }
-}
