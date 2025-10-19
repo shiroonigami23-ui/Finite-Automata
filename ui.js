@@ -58,11 +58,23 @@ export function initializeUI() {
     const showSolBtn = document.getElementById('showSolBtn');
     const resetPracticeBtn = document.getElementById('resetPractice');
     const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+    const panelToggleBtn = document.getElementById('panel-toggle-btn');
+    const controlPanel = document.querySelector('.control-panel');
+    const visualizationPanel = document.getElementById('visualization-panel');
 
     document.getElementById('alertOk').addEventListener('click', () => {
         document.getElementById('alertModal').style.display = 'none';
     });
     
+    panelToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        controlPanel.classList.toggle('open');
+    });
+
+    visualizationPanel.addEventListener('click', () => {
+        controlPanel.classList.remove('open');
+    });
+
     document.querySelectorAll('.toolbar-icon[data-mode]').forEach(tool => {
         tool.addEventListener('click', () => {
             document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
@@ -431,4 +443,4 @@ function enforceInitialStateRule() {
     if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
-            }
+}
