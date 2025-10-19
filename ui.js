@@ -1,11 +1,19 @@
-// ui.js
-import { MACHINE, CURRENT_MODE, TRANS_FROM, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
+import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
 import { renderAll } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
-import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa } from './automata.js';
+import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa, validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
-import { generatePractice, showSolution, resetPractice, checkAnswer, validateAutomaton, updateAlphabet } from './practice.js';
-import { setValidationMessage } from './utils.js';
+import { generatePractice, showSolution, resetPractice, checkAnswer, } from './practice.js';
+import { setValidationMessage, getModeLabel } from './utils.js';
+
+// This function is now passed to the state mutations to break the circular dependency.
+export function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
+    if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
+}
+
 
 function layoutStatesLine(states) {
     if (!states || states.length === 0) return;
@@ -22,7 +30,6 @@ function layoutStatesLine(states) {
 
 export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
-    const statesGroup = document.getElementById('states');
     const modeSelect = document.getElementById('modeSelect');
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
@@ -45,7 +52,6 @@ export function initializeUI() {
     const resetPracticeBtn = document.getElementById('resetPractice');
     const checkAnswerBtn = document.getElementById('checkAnswerBtn');
 
-    // Toolbar mode selection
     document.querySelectorAll('.toolbar-icon[data-mode]').forEach(tool => {
         tool.addEventListener('click', () => {
             document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
@@ -57,7 +63,6 @@ export function initializeUI() {
         });
     });
 
-    // Main canvas click for adding states
     svg.addEventListener('click', (e) => {
         if (e.target.closest('g[data-id]')) return;
         if (CURRENT_MODE === 'addclick') {
@@ -69,17 +74,13 @@ export function initializeUI() {
         }
     });
 
-    // Event delegation for state clicks
-    statesGroup.addEventListener('click', (e) => {
+    svg.addEventListener('click', (e) => {
         const stateGroup = e.target.closest('g[data-id]');
         if (!stateGroup) return;
-
         const stateId = stateGroup.dataset.id;
         const state = MACHINE.states.find(s => s.id === stateId);
         if (!state) return;
-
         e.stopPropagation();
-
         switch (CURRENT_MODE) {
             case 'transition':
                 {
@@ -106,79 +107,22 @@ export function initializeUI() {
         }
     });
 
-    // --- CORRECTED: Move Tool Logic ---
-    let dragging = false;
-    let selectedStateElement = null;
-    let offset = { x: 0, y: 0 };
-
-    statesGroup.addEventListener('pointerdown', (e) => {
-        if (CURRENT_MODE !== 'move') return;
-        const target = e.target.closest('g[data-id]');
-        if (target) {
-            dragging = true;
-            selectedStateElement = target;
-            const stateId = target.getAttribute('data-id');
-            const state = MACHINE.states.find(s => s.id === stateId);
-
-            const pt = svg.createSVGPoint();
-            pt.x = e.clientX;
-            pt.y = e.clientY;
-            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-            offset.x = svgP.x - state.x;
-            offset.y = svgP.y - state.y;
-            
-            pushUndo();
-        }
-    });
-
-    svg.addEventListener('pointermove', (e) => {
-        if (dragging && selectedStateElement) {
-            const stateId = selectedStateElement.getAttribute('data-id');
-            const state = MACHINE.states.find(s => s.id === stateId);
-
-            const pt = svg.createSVGPoint();
-            pt.x = e.clientX;
-            pt.y = e.clientY;
-            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-            state.x = svgP.x - offset.x;
-            state.y = svgP.y - offset.y;
-            renderAll();
-        }
-    });
-
-    svg.addEventListener('pointerup', () => {
-        dragging = false;
-        selectedStateElement = null;
-    });
-     svg.addEventListener('pointerleave', () => {
-        dragging = false;
-        selectedStateElement = null;
-    });
-
-
-    // --- Modals ---
     document.getElementById('transCancel').addEventListener('click', hideTransModal);
     document.getElementById('transSave').addEventListener('click', () => {
         const from = document.getElementById('transFrom').value;
         const to = document.getElementById('transTo').value;
         const symbol = document.getElementById('transSymbol').value.trim() || 'ε';
-
         if (MACHINE.type === 'DFA' && symbol === 'ε') {
-            setValidationMessage('DFA rule: ε-transitions disallowed.', 'error');
+            alert('DFA rule: ε-transitions disallowed.');
             return;
         }
-
         const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
         if (MACHINE.type === 'DFA' && conflict) {
-            setValidationMessage(`DFA rule: State ${from} is already deterministic on '${symbol}'.`, 'error');
+            alert(`DFA rule: State ${from} is already deterministic on '${symbol}'.`);
             return;
         }
-
-        pushUndo();
-        MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) || 'ε' });
-        updateAlphabet();
+        pushUndo(updateUndoRedoButtons);
+        MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) });
         renderAll();
         hideTransModal();
     });
@@ -188,9 +132,9 @@ export function initializeUI() {
         const modal = document.getElementById('statePropsModal');
         const s = MACHINE.states.find(st => st.id === modal.dataset.stateId);
         if (s) {
-            pushUndo();
+            pushUndo(updateUndoRedoButtons);
             const isInitial = document.getElementById('propInitial').checked;
-            if (isInitial) { // Always enforce single initial state
+            if (isInitial && (MACHINE.type === 'DFA')) {
                 MACHINE.states.forEach(x => x.initial = false);
             }
             s.initial = isInitial;
@@ -206,20 +150,13 @@ export function initializeUI() {
         const modal = document.getElementById('renameModal');
         const oldId = modal.dataset.oldId;
         const newId = document.getElementById('renameInput').value.trim();
-
-        if (!newId || newId === oldId) {
-             modal.style.display = 'none';
-             return;
-        }
-        if (MACHINE.states.find(s => s.id === newId)) {
-            setValidationMessage('State name already exists', 'error');
+        if (!newId || newId === oldId || MACHINE.states.find(s => s.id === newId)) {
+            if (MACHINE.states.find(s => s.id === newId)) alert('State name already exists');
+            modal.style.display = 'none';
             return;
         }
-        
-        pushUndo();
-        const stateToRename = MACHINE.states.find(s => s.id === oldId);
-        if(stateToRename) stateToRename.id = newId;
-
+        pushUndo(updateUndoRedoButtons);
+        MACHINE.states.find(s => s.id === oldId).id = newId;
         MACHINE.transitions.forEach(t => {
             if (t.from === oldId) t.from = newId;
             if (t.to === oldId) t.to = newId;
@@ -230,16 +167,15 @@ export function initializeUI() {
 
     document.getElementById('confirmClearCancel').addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'none');
     document.getElementById('confirmClearConfirm').addEventListener('click', () => {
-        pushUndo();
+        pushUndo(updateUndoRedoButtons);
         initializeState();
         renderAll();
+        updateUndoRedoButtons();
         document.getElementById('confirmClearModal').style.display = 'none';
     });
 
-
-    // --- Main Controls ---
-    undoBtn.addEventListener('click', doUndo);
-    redoBtn.addEventListener('click', doRedo);
+    undoBtn.addEventListener('click', () => doUndo(updateUndoRedoButtons));
+    redoBtn.addEventListener('click', () => doRedo(updateUndoRedoButtons));
     saveMachineBtn.addEventListener('click', saveMachine);
     loadMachineBtn.addEventListener('click', () => document.getElementById('loadFileInput').click());
     document.getElementById('loadFileInput').addEventListener('change', loadMachine);
@@ -256,14 +192,10 @@ export function initializeUI() {
         let convertedMachine = null;
         let successMsg = '';
         let targetType = 'DFA';
-
         try {
-            if (validateAutomaton().type === 'error' && !newMode.includes('TO')) {
-                 MACHINE.type = newMode;
-                 renderAll();
-                 return;
+            if (validateAutomaton().type === 'error') {
+                setValidationMessage('Cannot convert invalid automaton.', 'warning');
             }
-
             if (newMode === 'ENFA_TO_NFA') {
                 convertedMachine = convertEnfaToNfa(MACHINE);
                 successMsg = 'Converted ε-NFA to NFA.';
@@ -283,9 +215,8 @@ export function initializeUI() {
             modeSelect.value = MACHINE.type;
             return;
         }
-
         if (convertedMachine) {
-            pushUndo();
+            pushUndo(updateUndoRedoButtons);
             convertedMachine.type = targetType;
             setMachine(convertedMachine);
             modeSelect.value = targetType;
@@ -297,10 +228,8 @@ export function initializeUI() {
         renderAll();
     });
 
-    // --- Testing ---
     runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
     genRandBtn.addEventListener('click', () => {
-        updateAlphabet();
         const alphabet = MACHINE.alphabet.length ? MACHINE.alphabet : ['0', '1'];
         const len = Math.floor(Math.random() * 8) + 3;
         testInput.value = Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
@@ -316,13 +245,11 @@ export function initializeUI() {
         renderAll();
     });
 
-    // --- Practice ---
     genPracticeBtn.addEventListener('click', generatePractice);
     showSolBtn.addEventListener('click', showSolution);
     resetPracticeBtn.addEventListener('click', resetPractice);
     checkAnswerBtn.addEventListener('click', checkAnswer);
 
-    // --- Zoom ---
     const setZoom = (pct) => {
         const wrapper = document.getElementById('svgWrapper');
         wrapper.style.transform = `scale(${pct / 100})`;
@@ -334,8 +261,73 @@ export function initializeUI() {
     zoomOutBtn.addEventListener('click', () => setZoom(Math.max(50, Number(zoomSlider.value) - 10)));
     zoomResetBtn.addEventListener('click', () => setZoom(100));
     setZoom(100);
+    
+    // --- Move Tool Logic ---
+    let dragging = false;
+    let currentStateG = null;
+    let dragOffsetX = 0, dragOffsetY = 0;
+
+    function getPoint(evt) {
+        const pt = svg.createSVGPoint();
+        const touch = evt.touches ? evt.touches[0] : evt;
+        pt.x = touch.clientX;
+        pt.y = touch.clientY;
+        return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function startDrag(e) {
+        const stateG = e.target.closest('g[data-id]');
+        if (CURRENT_MODE !== 'move' || !stateG) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+
+        const sid = stateG.getAttribute('data-id');
+        const sObj = MACHINE.states.find(x => x.id === sid);
+        if (!sObj) return;
+
+        pushUndo(updateUndoRedoButtons);
+        dragging = true;
+        currentStateG = stateG;
+        
+        const p = getPoint(e);
+        dragOffsetX = p.x - sObj.x;
+        dragOffsetY = p.y - sObj.y;
+        
+        stateG.querySelector('circle').classList.add('state-selected');
+    }
+
+    function moveDrag(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        const sid = currentStateG.getAttribute('data-id');
+        const sObj = MACHINE.states.find(x => x.id === sid);
+        if (!sObj) return;
+        const p = getPoint(e);
+        sObj.x = p.x - dragOffsetX;
+        sObj.y = p.y - dragOffsetY;
+        renderAll();
+    }
+
+    function endDrag(e) {
+        if (!dragging) return;
+        dragging = false;
+        currentStateG.querySelector('circle').classList.remove('state-selected');
+        currentStateG = null;
+    }
+
+    svg.addEventListener('mousedown', startDrag);
+    svg.addEventListener('mousemove', moveDrag);
+    svg.addEventListener('mouseup', endDrag);
+    svg.addEventListener('mouseleave', endDrag);
+    svg.addEventListener('touchstart', startDrag);
+    svg.addEventListener('touchmove', moveDrag);
+    svg.addEventListener('touchend', endDrag);
+    svg.addEventListener('touchcancel', endDrag);
+
 
     renderAll();
+    updateUndoRedoButtons();
 }
 
 
@@ -348,11 +340,9 @@ function addState(x, y) {
         }
     });
     const newId = 'q' + (maxId + 1);
-
-    pushUndo();
+    pushUndo(updateUndoRedoButtons);
     MACHINE.states.push({ id: newId, x, y, initial: MACHINE.states.length === 0, accepting: false });
     renderAll();
-
     const stateG = document.querySelector(`g[data-id="${newId}"] circle`);
     if (stateG) {
         stateG.classList.add('state-drawing');
@@ -361,9 +351,12 @@ function addState(x, y) {
 }
 
 function deleteState(id) {
-    pushUndo();
-    MACHINE.states = MACHINE.states.filter(s => s.id !== id);
-    MACHINE.transitions = MACHINE.transitions.filter(t => t.from !== id && t.to !== id);
+    pushUndo(updateUndoRedoButtons);
+    setMachine({
+        ...MACHINE,
+        states: MACHINE.states.filter(s => s.id !== id),
+        transitions: MACHINE.transitions.filter(t => t.from !== id && t.to !== id)
+    });
     enforceInitialStateRule();
     renderAll();
 }
@@ -403,8 +396,7 @@ function hideTransModal() {
 
 function enforceInitialStateRule() {
     if (!MACHINE || !Array.isArray(MACHINE.states)) return;
-    const initialStates = MACHINE.states.filter(s => s.initial);
-    if (MACHINE.states.length > 0 && initialStates.length === 0) {
+    if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
-            }
+}
