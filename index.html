@@ -47,8 +47,7 @@
                 <span>Mode & Interaction</span>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
-              <select id="modeSelect" aria-label="Mode select"
-                style="flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef8">
+              <select id="modeSelect" aria-label="Mode select">
                 <option value="DFA">DFA</option>
                 <option value="NFA">NFA</option>
                 <option value="ENFA">ε-NFA</option>
@@ -96,39 +95,36 @@
                   <button id="runTestBtn" class="run-btn">Run</button>
                 </div>
                 <div id="randomStringBox">
-                  🎲 <button id="genRandBtn" class="icon-btn">Random</button>
+                  <i data-lucide="dice-5"></i> <button id="genRandBtn" class="icon-btn">Random</button>
                 </div>
-                <details id="testOptionsCollapse" style="margin:6px 0; font-size:0.9em;">
-                  <summary>
-                    ⚙️ Simulation Options</summary>
-                  <div id="testOptions" style="padding:8px 6px;">
-                    <label style="margin-right:8px;"><input type="radio" name="simMode" value="auto" checked>
+                <details id="testOptionsCollapse">
+                  <summary><i data-lucide="settings-2"></i> Simulation Options</summary>
+                  <div id="testOptions">
+                    <label><input type="radio" name="simMode" value="auto" checked>
                       Auto</label>
-                    <label style="margin-right:8px;"><input type="radio" name="simMode" value="manual"> Manual</label>
-                    <label style="display:inline-flex;align-items:center;gap:6px;">Speed:
-                      <select id="testSpeed"
-                        style="margin-left:6px;padding:6px;border-radius:6px;border:1px solid #e6eef8">
+                    <label><input type="radio" name="simMode" value="manual"> Manual</label>
+                    <label>Speed:
+                      <select id="testSpeed">
                         <option value="500">Fast</option>
                         <option value="1000">Normal</option>
                         <option value="2000" selected>Slow</option>
                       </select>
                     </label>
-                    <div id="manualButtons" style="display:none;margin-top:8px;display:flex;gap:6px;">
+                    <div id="manualButtons" style="display:none;">
                       <button id="stepPrev" class="icon-btn">◀ Prev</button>
                       <button id="stepNext" class="icon-btn">Next ▶</button>
                       <button id="stepReset" class="icon-btn">⟲ Reset</button>
                     </div>
                   </div>
                 </details>
-                <div style="margin-top:8px" id="testOutput" class="output-display">Ready</div>
+                <div id="testOutput" class="output-display">Ready</div>
               </div>
             </div>
 
-            <div style="border-top:1px solid #e6eef8;margin-top:8px;">
+            <div style="border-top:1px solid #e6eef8;margin-top:12px;padding-top:12px;">
               <details id="bulkTestSection">
-                <summary>
-                  Bulk Testing</summary>
-                <div style="padding-top:8px;">
+                <summary><i data-lucide="test-tubes"></i> Bulk Testing</summary>
+                <div>
                   <textarea id="bulkTestInput" placeholder="Enter test strings (one per line)..."></textarea>
                   <button id="bulkRunBtn" class="icon-btn" style="margin-top:8px;width:100%;">Run Bulk Test</button>
                   <div id="bulkTestOutput">
@@ -143,11 +139,11 @@
                 <span>File</span>
             </summary>
             <div class="control-row">
-              <button id="saveMachineBtn" title="Save machine (JSON)">💾 Save</button>
-              <button id="loadMachineBtn" title="Load machine (JSON)">📂 Load</button>
+              <button id="saveMachineBtn" title="Save machine (JSON)"><i data-lucide="save"></i> Save</button>
+              <button id="loadMachineBtn" title="Load machine (JSON)"><i data-lucide="folder-open"></i> Load</button>
             </div>
             <div class="control-row">
-              <button id="exportPngBtn" title="Export canvas as PNG">🖼️ Export PNG</button>
+              <button id="exportPngBtn" title="Export canvas as PNG"><i data-lucide="image"></i> Export PNG</button>
             </div>
             <input type="file" id="loadFileInput" accept=".json" style="display:none" />
           </details>
@@ -167,14 +163,14 @@
                   <option value="NFA">NFA</option>
                   <option value="ENFA">ε-NFA</option>
                 </select>
-                <button id="libRefresh" class="icon-btn" title="Refresh library">Refresh</button>
+                <button id="libRefresh" class="icon-btn" title="Refresh library"><i data-lucide="refresh-cw"></i></button>
               </div>
               <div id="libraryList">
-                <div>Library empty — click Refresh to load library.json</div>
+                <div>Library empty — click Refresh to load.</div>
               </div>
               <div style="margin-top:8px;display:flex;gap:8px">
-                <button id="openLibJson" class="icon-btn">Open library.json</button>
-                <button id="downloadLib" class="icon-btn">Download ZIP</button>
+                <button id="openLibJson" class="icon-btn"><i data-lucide="file-json-2"></i> Open JSON</button>
+                <button id="downloadLib" class="icon-btn"><i data-lucide="download"></i> Download ZIP</button>
               </div>
             </div>
           </details>
