@@ -21,7 +21,7 @@ function renderEntry(entry) {
   head.className = 'library-entry-header';
 
   const title = document.createElement('div');
-  title.innerHTML = `<strong>${entry.title || entry.id}</strong> <span class="library-entry-type">[${entry.type || 'N/A'}]</span>`;
+  title.innerHTML = `<strong>${entry.title || entry.id || 'Untitled'}</strong> <span class="library-entry-type">[${entry.type || 'N/A'}]</span>`;
   head.appendChild(title);
 
   const actions = document.createElement('div');
@@ -29,23 +29,27 @@ function renderEntry(entry) {
 
   const openBtn = document.createElement('button');
   openBtn.className = 'icon-btn';
-  openBtn.innerHTML = '<i data-lucide="play-circle"></i> Open';
-  openBtn.onclick = () => {
-    const machineData = entry.machine || entry;
-    if (machineData && machineData.states) {
-        // Directly call the imported animation function
-        animateMachineDrawing({ ...machineData, type: entry.type || 'DFA', title: entry.title });
-        
-        // Also update the mode select dropdown to match
-        const modeSelect = document.getElementById('modeSelect');
-        if (modeSelect) {
-            modeSelect.value = entry.type || 'DFA';
-            modeSelect.dispatchEvent(new Event('change'));
-        }
-    } else {
-        customAlert('Error', 'No valid machine data in this library entry.');
-    }
-  };
+  
+  // --- UPDATED: Check for machine data before enabling the button ---
+  const machineData = entry.machine || entry;
+  const hasMachineData = machineData && machineData.states && machineData.states.length > 0;
+
+  if (hasMachineData) {
+      openBtn.innerHTML = '<i data-lucide="play-circle"></i> Open';
+      openBtn.onclick = () => {
+          animateMachineDrawing({ ...machineData, type: entry.type || 'DFA', title: entry.title });
+          
+          const modeSelect = document.getElementById('modeSelect');
+          if (modeSelect) {
+              modeSelect.value = entry.type || 'DFA';
+              modeSelect.dispatchEvent(new Event('change'));
+          }
+      };
+  } else {
+      openBtn.innerHTML = '<i data-lucide="file-question"></i> No Data';
+      openBtn.disabled = true;
+  }
+  
   actions.appendChild(openBtn);
 
   head.appendChild(actions);
@@ -53,10 +57,9 @@ function renderEntry(entry) {
 
   const desc = document.createElement('div');
   desc.className = 'library-entry-description';
-  desc.textContent = entry.description || entry.sol || '';
+  desc.textContent = entry.description || entry.sol || 'No description available.';
   container.appendChild(desc);
 
-  // Add lucide icons to the new button
   if (typeof lucide !== 'undefined') {
     lucide.createIcons({ nodes: [openBtn] });
   }
@@ -99,8 +102,7 @@ function renderLibraryItems(data) {
   });
 }
 
-// Initial load is handled by main.js now, this just sets up the listeners
-function initializeLibrary() {
+export function initializeLibrary() {
     const refreshBtn = document.getElementById('libRefresh');
     if (refreshBtn) refreshBtn.onclick = refreshLibrary;
     
@@ -109,9 +111,5 @@ function initializeLibrary() {
     if (search) search.oninput = () => renderLibraryItems(window._LIB_DATA || []);
     if (filter) filter.onchange = () => renderLibraryItems(window._LIB_DATA || []);
 
-    // Initial fetch
     refreshLibrary();
 }
-
-// The main DOMContentLoaded listener in main.js will call this
-export { initializeLibrary };
