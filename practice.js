@@ -1,6 +1,6 @@
 import { MACHINE, CURRENT_PRACTICE, pushUndo, setCurrentPractice } from './state.js';
 import { animateMachineDrawing } from './animation.js';
-import { setValidationMessage, addLog } from './utils.js';
+import { setValidationMessage, addLogMessage } from './utils.js';
 import { areEquivalent } from './equivalence.js';
 
 export function generatePractice() {
@@ -77,7 +77,7 @@ export async function checkAnswer() {
 
     const logContainer = document.getElementById('stepLog');
     if (logContainer) logContainer.innerHTML = '';
-    addLog('Checking your answer...', 'search');
+    addLogMessage('Checking your answer...', 'search');
     
     // The user's machine currently on the canvas
     const userMachine = MACHINE;
@@ -94,9 +94,9 @@ export async function checkAnswer() {
 
     if (isCorrect) {
         setValidationMessage('Correct Solution! Your automaton is logically equivalent to the solution.', 'success');
-        addLog('Result: Correct!', 'check-circle');
+        addLogMessage('Result: Correct! good job buddy nice work', 'check-circle');
     } else {
-        setValidationMessage('Incorrect Solution. The behavior of your automaton does not match the solution.', 'error');
-        addLog('Result: Incorrect. Try again.', 'x-circle');
+        setValidationMessage('Incorrect! Your automaton does not match the solution.', 'error');
+        addLogMessage('Result: Incorrect! come on bro u can do it.', 'x-circle');
     }
 }
