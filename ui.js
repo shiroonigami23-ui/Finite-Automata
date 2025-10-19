@@ -59,11 +59,27 @@ export function initializeUI() {
     const showSolBtn = document.getElementById('showSolBtn');
     const resetPracticeBtn = document.getElementById('resetPractice');
     const checkAnswerBtn = document.getElementById('checkAnswerBtn');
-    // FIX: Corrected ID from panel-toggle-btn to panelToggleBtn
     const panelToggleBtn = document.getElementById('panelToggleBtn');
     const controlPanel = document.querySelector('.control-panel');
     const visualizationPanel = document.getElementById('visualization-panel');
     const alertOkBtn = document.getElementById('alertOk');
+
+    // --- NEW: Logic for icon-only collapsible sections ---
+    document.querySelectorAll('.control-section').forEach(detailsEl => {
+        const summary = detailsEl.querySelector('summary');
+        const icon = summary.querySelector('i');
+
+        // Prevent the default toggle behavior on the entire summary
+        summary.addEventListener('click', (event) => {
+            event.preventDefault();
+        });
+
+        // Add a click listener only to the icon to programmatically toggle the 'open' attribute
+        icon.addEventListener('click', () => {
+            detailsEl.open = !detailsEl.open;
+        });
+    });
+    // --- END NEW LOGIC ---
 
     if (alertOkBtn) {
         alertOkBtn.addEventListener('click', () => {
