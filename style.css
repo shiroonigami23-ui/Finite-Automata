@@ -460,7 +460,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     backdrop-filter: none;
     border: none;
     padding: 0;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   .control-panel.open {
     transform: scale(1) translateX(0);
