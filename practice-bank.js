@@ -3421,3 +3421,5 @@ const PRACTICE_BANK = {
           }
         ]
       };
+
+window.PRACTICE_BANK = PRACTICE_BANK;
