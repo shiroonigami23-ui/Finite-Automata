@@ -161,7 +161,7 @@ body {
 }
 .toolbar-icon.active svg { stroke: #fff !important; }
 
-/* --- FIX FOR COLORFUL ICONS --- */
+/* --- Colorful Toolbar Icons --- */
 .toolbar-icon#tool-addclick svg { stroke: #4caf50; }
 .toolbar-icon#tool-move svg { stroke: #2196f3; }
 .toolbar-icon#tool-transition svg { stroke: #9c27b0; }
@@ -171,6 +171,28 @@ body {
 .toolbar-icon#clearCanvasBtn svg { stroke: #f44336; }
 .toolbar-icon#undoBtn svg, .toolbar-icon#redoBtn svg { stroke: #607d8b; }
 .toolbar-icon#validateBtn svg {stroke: #4caf50;}
+
+/* --- FIX: Colorful Control Panel Section Icons --- */
+.control-section-header [data-lucide='sliders-horizontal'],
+.control-section summary [data-lucide='sliders-horizontal'] {
+    stroke: #2196f3;
+}
+.control-section-header [data-lucide='puzzle'],
+.control-section summary [data-lucide='puzzle'] {
+    stroke: #9c27b0;
+}
+.control-section-header [data-lucide='flask-conical'],
+.control-section summary [data-lucide='flask-conical'] {
+    stroke: #009688;
+}
+.control-section-header [data-lucide='folder'],
+.control-section summary [data-lucide='folder'] {
+    stroke: #ff9800;
+}
+.control-section-header [data-lucide='library'],
+.control-section summary [data-lucide='library'] {
+    stroke: #e91e63;
+}
 /* --- End of Fix --- */
 
 
