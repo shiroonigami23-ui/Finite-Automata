@@ -3,13 +3,15 @@ import { renderAll, layoutStatesCircular } from './renderer.js';
 import { sleep, addLogMessage } from './utils.js';
 import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa } from './automata.js';
 
-const ANIMATION_DELAY = 1500; // Changed from 1000 to 1500 for a slower animation
+const ANIMATION_DELAY = 1500;
 
 async function animateConversion(conversionFn, initialMachine, successMessage, updateUIFn) {
     document.getElementById('stepLog').innerHTML = '';
     pushUndo(updateUIFn);
 
     const stepCallback = async (machineState, message) => {
+        // This is the fix: Re-layout the states at every step
+        layoutStatesCircular(machineState.states); 
         setMachine(machineState);
         renderAll();
         addLogMessage(message, 'git-branch');
@@ -45,6 +47,8 @@ export async function animateNfaToMinDfa(machine, updateUIFn) {
     
     addLogMessage("Part 1: Converting NFA to DFA...", 'loader');
     const dfa = await convertNfaToDfa(machine, async (machineState, message) => {
+        // Also add the fix to the multi-step conversion
+        layoutStatesCircular(machineState.states);
         setMachine(machineState);
         renderAll();
         addLogMessage(message, 'git-branch');
@@ -59,6 +63,8 @@ export async function animateNfaToMinDfa(machine, updateUIFn) {
 
     addLogMessage("Part 2: Minimizing the DFA...", 'loader');
     const minDfa = await minimizeDfa(dfa, async (machineState, message) => {
+        // And here as well
+        layoutStatesCircular(machineState.states);
         setMachine(machineState);
         renderAll();
         addLogMessage(message, 'git-branch');
