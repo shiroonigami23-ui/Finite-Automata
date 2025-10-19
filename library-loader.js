@@ -1,3 +1,7 @@
+import { pushUndo } from './state.js';
+import { animateMachineDrawing } from './animation.js';
+import { updateUndoRedoButtons } from './ui.js';
+
 const LIB_URL = './library.json';
 
 async function fetchLibrary() {
@@ -36,15 +40,25 @@ function renderEntry(entry) {
   openBtn.className = 'icon-btn';
   openBtn.textContent = 'Open';
   openBtn.onclick = () => {
-    if (entry.machine) {
-      if (typeof window.loadMachineFromObject === 'function') {
-        const machineToLoad = { ...entry.machine, type: entry.type || 'DFA', title: entry.title || entry.id };
-        window.loadMachineFromObject(machineToLoad);
-      } else {
-        alert('Error: The loadMachineFromObject function is missing. Make sure library_helper.js is loaded.');
-      }
+    // FIX: Directly call the animation and state management functions.
+    const machineData = entry.machine || entry; // Handles both old and new library formats
+    if (machineData && machineData.states) {
+        pushUndo(updateUndoRedoButtons); // Correctly call pushUndo with the UI update function
+        
+        const machineToLoad = { ...machineData, type: entry.type || 'DFA', title: entry.title || entry.id };
+
+        // Directly call the animation function from animation.js
+        animateMachineDrawing(machineToLoad);
+
+        // Update the mode dropdown to match the loaded machine's type
+        const modeSelect = document.getElementById('modeSelect');
+        if (modeSelect) {
+            modeSelect.value = machineToLoad.type;
+        }
+
+        console.log("Loading machine from library:", entry.title || entry.id);
     } else {
-      alert('No machine data in this entry.');
+        alert('No valid machine data found in this entry.');
     }
   };
   actions.appendChild(openBtn);
@@ -70,7 +84,6 @@ function renderEntry(entry) {
   desc.textContent = entry.description || entry.sol || '';
   container.appendChild(desc);
 
-  // This block checks for an imageUrl and displays the image if it exists.
   if (entry.imageUrl) {
     const imgWrapper = document.createElement('div');
     imgWrapper.style.marginTop = '8px';
@@ -141,9 +154,5 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadLib = document.getElementById('downloadLib');
   if (downloadLib) downloadLib.onclick = () => window.open('./fa_library_package_fixed.zip', '_blank');
 
-  setTimeout(()=>refreshLibrary(), 300);
+  setTimeout(()=>refreshLibrary(), 200);
 });
-
-/*const s = document.createElement('script');
-s.src = './auto-renderer.js';
-document.body.appendChild(s);*/
