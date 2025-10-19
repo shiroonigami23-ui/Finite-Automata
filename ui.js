@@ -5,7 +5,6 @@ import { validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
-// NEW: Import the animation orchestrators
 import { animateEnfaToNfa, animateNfaToDfa, animateMinimizeDfa } from './conversion-animation.js';
 
 
@@ -50,6 +49,9 @@ export function initializeUI() {
     const controlPanel = document.querySelector('.control-panel');
     const visualizationPanel = document.getElementById('visualization-panel');
     const alertOkBtn = document.getElementById('alertOk');
+
+    // Hide check answer button initially
+    if(checkAnswerBtn) checkAnswerBtn.hidden = true;
 
     document.querySelectorAll('.control-section summary').forEach(summary => {
         summary.addEventListener('click', (event) => {
@@ -230,7 +232,6 @@ export function initializeUI() {
     if (clearCanvasBtn) clearCanvasBtn.addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
     if (validateBtn) validateBtn.addEventListener('click', () => setValidationMessage(validateAutomaton().message, validateAutomaton().type));
 
-    // UPDATED: Mode select now triggers animations for conversions
     if (modeSelect) {
         modeSelect.addEventListener('change', async () => {
             const newMode = modeSelect.value;
@@ -238,7 +239,7 @@ export function initializeUI() {
 
             if (validateAutomaton().type === 'error' && newMode.includes('_TO_')) {
                 customAlert('Conversion Error', 'Cannot convert an invalid automaton. Please fix the errors first.');
-                modeSelect.value = originalType; // Revert dropdown
+                modeSelect.value = originalType;
                 return;
             }
             
@@ -255,7 +256,7 @@ export function initializeUI() {
                         modeSelect.value = 'DFA';
                         break;
                     case 'NFA_TO_MIN_DFA':
-                         const dfa = await convertNfaToDfa(MACHINE, async () => {}); // silent conversion
+                         const dfa = await convertNfaToDfa(MACHINE, async () => {});
                          await animateMinimizeDfa(dfa);
                          modeSelect.value = 'DFA';
                         break;
@@ -264,7 +265,6 @@ export function initializeUI() {
                         modeSelect.value = 'DFA';
                         break;
                     default:
-                        // No conversion, just change type
                         MACHINE.type = newMode;
                         renderAll();
                         break;
@@ -272,13 +272,11 @@ export function initializeUI() {
             } catch (err) {
                 customAlert('Conversion Failed', err.message);
                 console.error(err);
-                // Attempt to revert state on error
                 doUndo(updateUndoRedoButtons); 
                 modeSelect.value = originalType;
             }
         });
     }
-
 
     if(runTestBtn) runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
     if(genRandBtn) genRandBtn.addEventListener('click', () => {
