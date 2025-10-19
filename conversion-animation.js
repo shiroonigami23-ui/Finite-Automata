@@ -5,9 +5,11 @@ import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa } from './automata.js';
 
 const ANIMATION_DELAY = 1000;
 
-async function animateConversion(conversionFn, initialMachine, successMessage) {
+// 1. Accept the update function here
+async function animateConversion(conversionFn, initialMachine, successMessage, updateUIFn) {
     document.getElementById('stepLog').innerHTML = '';
-    pushUndo();
+    // 2. Pass it to pushUndo
+    pushUndo(updateUIFn);
 
     const stepCallback = async (machineState, message) => {
         setMachine(machineState);
@@ -24,21 +26,23 @@ async function animateConversion(conversionFn, initialMachine, successMessage) {
     addLogMessage(successMessage, 'check-circle');
 }
 
-export async function animateEnfaToNfa(machine) {
-    await animateConversion(convertEnfaToNfa, machine, "ε-NFA to NFA conversion complete.");
+// 3. Update all exported functions to accept and pass the function
+export async function animateEnfaToNfa(machine, updateUIFn) {
+    await animateConversion(convertEnfaToNfa, machine, "ε-NFA to NFA conversion complete.", updateUIFn);
 }
 
-export async function animateNfaToDfa(machine) {
-    await animateConversion(convertNfaToDfa, machine, "NFA to DFA conversion complete.");
+export async function animateNfaToDfa(machine, updateUIFn) {
+    await animateConversion(convertNfaToDfa, machine, "NFA to DFA conversion complete.", updateUIFn);
 }
 
-export async function animateDfaToMinDfa(machine) {
-    await animateConversion(minimizeDfa, machine, "Minimization Complete. Final Minimized DFA created.");
+export async function animateDfaToMinDfa(machine, updateUIFn) {
+    await animateConversion(minimizeDfa, machine, "Minimization Complete. Final Minimized DFA created.", updateUIFn);
 }
 
-export async function animateNfaToMinDfa(machine) {
+export async function animateNfaToMinDfa(machine, updateUIFn) {
     document.getElementById('stepLog').innerHTML = '';
-    pushUndo();
+    // 4. Also fix it here for the multi-step conversion
+    pushUndo(updateUIFn);
 
     addLogMessage("Starting NFA to Minimal DFA conversion...", 'zap');
     await sleep(ANIMATION_DELAY);
