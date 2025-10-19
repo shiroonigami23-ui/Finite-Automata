@@ -58,6 +58,8 @@ export function initializeUI() {
             setCurrentMode(tool.dataset.mode);
             setTransFrom(null);
             document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
+            // --- FIX: Add a class to the SVG to indicate the current mode for styling ---
+            if (svg) svg.className.baseVal = `mode-${tool.dataset.mode}`;
             renderAll();
         });
     });
@@ -106,6 +108,47 @@ export function initializeUI() {
         }
     });
 
+    // --- NEW: Event listener for deleting transitions ---
+    svg.addEventListener('click', (e) => {
+        const label = e.target.closest('.transition-label-text');
+        if (!label || CURRENT_MODE !== 'delete') return;
+
+        e.stopPropagation(); // Prevent other click handlers from firing
+
+        const from = label.dataset.from;
+        const to = label.dataset.to;
+        const symbolsStr = label.dataset.symbols;
+        const symbols = symbolsStr.split(',').map(s => s.trim());
+
+        let symbolToDelete = null;
+
+        if (symbols.length === 1) {
+            symbolToDelete = symbols[0]; // This will be 'ε' or the symbol itself
+        } else {
+            // Prompt the user to specify which symbol to delete if there are multiple
+            const input = prompt(`Delete which transition from ${from} to ${to}?\nAvailable: ${symbolsStr}`, symbols[0]);
+            if (input === null) {
+                return; // User cancelled the prompt
+            }
+            
+            const trimmedInput = input.trim();
+            // Handle epsilon case: user can type 'e', 'epsilon', or just leave it blank
+            const isEpsilon = ['e', 'epsilon', ''].includes(trimmedInput.toLowerCase());
+            const symbolInArray = isEpsilon ? 'ε' : trimmedInput;
+
+            if (symbols.includes(symbolInArray)) {
+                symbolToDelete = symbolInArray;
+            } else {
+                alert(`Invalid symbol '${input}'. No transition deleted.`);
+                return;
+            }
+        }
+
+        if (symbolToDelete !== null) {
+            deleteTransition(from, to, symbolToDelete);
+        }
+    });
+
     document.getElementById('transCancel').addEventListener('click', hideTransModal);
     document.getElementById('transSave').addEventListener('click', () => {
         const from = document.getElementById('transFrom').value;
@@ -121,7 +164,7 @@ export function initializeUI() {
             return;
         }
         pushUndo(updateUndoRedoButtons);
-        MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) });
+        MACHINE.transitions.push({ from, to, symbol: (symbol === 'ε' ? '' : symbol.charAt(0)) });
         renderAll();
         hideTransModal();
     });
@@ -262,7 +305,6 @@ export function initializeUI() {
     if(zoomResetBtn) zoomResetBtn.addEventListener('click', () => setZoom(100));
     setZoom(100);
 
-    // --- FIX: Enhanced Dragging Logic for Touch and Mouse ---
     let dragging = false, currentStateG = null, dragOffsetX = 0, dragOffsetY = 0;
 
     function getPoint(evt) {
@@ -276,16 +318,13 @@ export function initializeUI() {
     function startDrag(e) {
         const stateG = e.target.closest('g[data-id]');
         if (CURRENT_MODE !== 'move' || !stateG) return;
-        e.preventDefault(); 
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         const sObj = MACHINE.states.find(x => x.id === stateG.getAttribute('data-id'));
         if (!sObj) return;
         pushUndo(updateUndoRedoButtons);
-        dragging = true; 
-        currentStateG = stateG;
+        dragging = true; currentStateG = stateG;
         const p = getPoint(e);
-        dragOffsetX = p.x - sObj.x; 
-        dragOffsetY = p.y - sObj.y;
+        dragOffsetX = p.x - sObj.x; dragOffsetY = p.y - sObj.y;
         stateG.querySelector('circle').classList.add('state-selected');
     }
 
@@ -295,32 +334,28 @@ export function initializeUI() {
         const sObj = MACHINE.states.find(x => x.id === currentStateG.getAttribute('data-id'));
         if (!sObj) return;
         const p = getPoint(e);
-        sObj.x = p.x - dragOffsetX; 
-        sObj.y = p.y - dragOffsetY;
+        sObj.x = p.x - dragOffsetX; sObj.y = p.y - dragOffsetY;
         renderAll();
     }
 
     function endDrag() {
         if (!dragging) return;
         dragging = false;
-        if (currentStateG) {
+        if(currentStateG) {
             currentStateG.querySelector('circle').classList.remove('state-selected');
         }
         currentStateG = null;
     }
 
-    // Mouse events
     svg.addEventListener('mousedown', startDrag);
     svg.addEventListener('mousemove', moveDrag);
     svg.addEventListener('mouseup', endDrag);
     svg.addEventListener('mouseleave', endDrag);
-
-    // Touch events for mobile devices
     svg.addEventListener('touchstart', startDrag);
     svg.addEventListener('touchmove', moveDrag);
     svg.addEventListener('touchend', endDrag);
     svg.addEventListener('touchcancel', endDrag);
-    
+
     renderAll();
     updateUndoRedoButtons();
 }
@@ -354,6 +389,25 @@ function deleteState(id) {
     enforceInitialStateRule();
     renderAll();
 }
+
+// --- NEW: Function to delete a specific transition ---
+function deleteTransition(from, to, symbol) {
+    pushUndo(updateUndoRedoButtons);
+    // Convert display 'ε' to internal '' for matching
+    const symbolToMatch = symbol === 'ε' ? '' : symbol;
+
+    const indexToDelete = MACHINE.transitions.findIndex(t => 
+        t.from === from && 
+        t.to === to && 
+        (t.symbol || '') === symbolToMatch
+    );
+
+    if (indexToDelete > -1) {
+        MACHINE.transitions.splice(indexToDelete, 1);
+        renderAll();
+    }
+}
+
 
 function renameState(oldId) {
     const modal = document.getElementById('renameModal');
