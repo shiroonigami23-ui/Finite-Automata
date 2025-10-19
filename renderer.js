@@ -1,26 +1,47 @@
-// renderer.js
 import { MACHINE } from './state.js';
-import { getModeLabel, updateUndoRedoButtons } from './utils.js';
+import { getModeLabel } from '../utils.js';
+import { updateUndoRedoButtons } from '../state.js';
 
 const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
 const edgesGroup = document.getElementById('edges');
 
+/**
+ * Calculates the path and label position for a self-loop on a state.
+ * @param {number} cx - The center x-coordinate of the state.
+ * @param {number} cy - The center y-coordinate of the state.
+ * @param {number} r - The radius of the state circle.
+ * @returns {object} An object containing the SVG path data and label coordinates.
+ */
 function getLoopPathAndLabel(cx, cy, r) {
     const loopRadius = 35;
+    const angleOffset = -Math.PI / 2; // Places the loop at the top of the state.
+    const startX = cx + r * Math.cos(angleOffset);
+    const startY = cy + r * Math.sin(angleOffset);
+    const endX = cx + r * Math.cos(angleOffset + 0.1); // Slightly offset for a clean arc
+    const endY = cy + r * Math.sin(angleOffset + 0.1);
+
+    // Control points for a nice circular loop using a cubic Bezier curve.
+    const cp1x = cx - loopRadius * 1.5;
+    const cp1y = cy - r - loopRadius;
+    const cp2x = cx + loopRadius * 1.5;
+    const cp2y = cy - r - loopRadius;
+
     return {
-        pathData: `M ${cx} ${cy - r} C ${cx - loopRadius} ${cy - r - loopRadius}, ${cx + loopRadius} ${cy - r - loopRadius}, ${cx} ${cy - r}`,
+        pathData: `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`,
         labelX: cx,
-        labelY: cy - r - (loopRadius / 2) - 10
+        labelY: cy - r - loopRadius + 10,
     };
 }
 
 export function renderAll() {
     if (!statesGroup || !edgesGroup) return;
+
     statesGroup.innerHTML = '';
     edgesGroup.innerHTML = '';
     document.getElementById('canvasHint').style.display = (!MACHINE.states || MACHINE.states.length === 0) ? 'block' : 'none';
 
+    // Group all transition symbols by their source and destination states.
     const processedArcs = new Map();
     (MACHINE.transitions || []).forEach(t => {
         const arcKey = `${t.from}->${t.to}`;
@@ -37,42 +58,50 @@ export function renderAll() {
         if (!from || !to) return;
 
         let pathD, labelX, labelY;
+
         if (fromId === toId) {
+            // Case 1: Self-loop.
             const loop = getLoopPathAndLabel(from.x, from.y, 30);
             pathD = loop.pathData;
             labelX = loop.labelX;
             labelY = loop.labelY;
         } else {
-            const dx = to.x - from.x,
-                dy = to.y - from.y;
-            const angle = Math.atan2(dy, dx);
-            const r = 30;
-            const startX = from.x + r * Math.cos(angle),
-                startY = from.y + r * Math.sin(angle);
-            const endX = to.x - r * Math.cos(angle),
-                endY = to.y - r * Math.sin(angle);
-
-            const reverseKey = `${toId}->${fromId}`;
-            const reverse = processedArcs.has(reverseKey) && processedArcs.get(reverseKey).length > 0;
+            // Check if a transition exists in the opposite direction.
+            const reverse = processedArcs.has(`${toId}->${fromId}`);
             
+            const dx = to.x - from.x, dy = to.y - from.y;
+            const angle = Math.atan2(dy, dx);
+            const r = 30; // State radius.
+            
+            const startX = from.x + r * Math.cos(angle);
+            const startY = from.y + r * Math.sin(angle);
+            const endX = to.x - r * Math.cos(angle);
+            const endY = to.y - r * Math.sin(angle);
+
             if (reverse) {
-                const offset = 40,
-                    midX = (startX + endX) / 2,
-                    midY = (startY + endY) / 2;
-                const normX = -dy / Math.hypot(dx, dy),
-                    normY = dx / Math.hypot(dx, dy);
-                const cpx = midX + normX * offset,
-                    cpy = midY + normY * offset;
+                // Case 2: Bi-directional transition. Draw a curved arc.
+                const offset = 30; // Determines how much the curve bows out.
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2;
+                
+                // Use a normal vector to find a control point for a quadratic curve.
+                const normX = -dy / Math.hypot(dx, dy);
+                const normY = dx / Math.hypot(dx, dy);
+                const cpx = midX + normX * offset;
+                const cpy = midY + normY * offset;
+
                 pathD = `M ${startX} ${startY} Q ${cpx} ${cpy} ${endX} ${endY}`;
                 labelX = cpx;
                 labelY = cpy;
             } else {
+                // Case 3: Single-directional transition. Draw a straight line.
                 pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
                 labelX = (startX + endX) / 2;
                 labelY = (startY + endY) / 2;
             }
         }
-
+        
+        // Create and append the SVG elements for the path and its label.
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathD);
         path.classList.add('transition-path');
@@ -100,6 +129,7 @@ export function renderAll() {
         edgesGroup.appendChild(text);
     });
 
+    // Render all the states.
     MACHINE.states.forEach(state => {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('data-id', state.id);
@@ -141,6 +171,7 @@ export function renderAll() {
         statesGroup.appendChild(g);
     });
 
+    // Update UI elements.
     document.getElementById('modeLabel').textContent = getModeLabel();
     updateUndoRedoButtons();
 }
