@@ -54,7 +54,6 @@ export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
     const modeSelect = document.getElementById('modeSelect');
 
-    // FIX: Changed 'alertOk' to 'alertModalClose' to match the ID in index.html.
     document.getElementById('alertModalClose').addEventListener('click', () => {
         document.getElementById('alertModal').style.display = 'none';
     });
@@ -106,15 +105,18 @@ export function initializeUI() {
         switch (CURRENT_MODE) {
             case 'transition':
                 {
+                    // --- FIX FOR SELF-LOOPS ---
                     const circle = stateGroup.querySelector('.state-circle');
                     if (!TRANS_FROM) {
+                        // This is the first click, select the start state.
                         setTransFrom(stateId);
                         if(circle) circle.classList.add('state-selected');
-                    } else if (TRANS_FROM !== stateId) {
+                    } else {
+                        // This is the second click. Open the modal for the transition.
+                        // It works whether stateId is the same as TRANS_FROM or different.
                         showTransModal(TRANS_FROM, stateId);
-                        document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
-                        setTransFrom(null);
-                    } else { // Clicked the same state twice
+                        
+                        // Clean up UI after the second click.
                         document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
                         setTransFrom(null);
                     }
@@ -149,7 +151,6 @@ export function initializeUI() {
     document.getElementById('transSave').addEventListener('click', () => {
         const from = document.getElementById('transFrom').value;
         const to = document.getElementById('transTo').value;
-        // FIX: Standardize epsilon to an empty string on save. The renderer will display it as 'ε'.
         const symbol = document.getElementById('transSymbol').value.trim(); 
         
         if (MACHINE.type === 'DFA' && symbol === '') {
@@ -158,11 +159,19 @@ export function initializeUI() {
         }
         
         const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
-        if (MACHINE.type === 'DFA' && conflict) {
+        if (MACHINE.type === 'DFA' && conflict && from !== to) { // Allow self-loops to have same symbol in DFA for overwriting
             customAlert('Invalid Transition', `DFA rule: State ${from} is already deterministic on '${symbol}'.`);
             return;
         }
         pushUndo(updateUndoRedoButtons);
+        // If it's a DFA and a transition with the same symbol from the same state already exists, remove it.
+        if (MACHINE.type === 'DFA') {
+            const existingIndex = MACHINE.transitions.findIndex(t => t.from === from && t.symbol === symbol);
+            if (existingIndex > -1) {
+                MACHINE.transitions.splice(existingIndex, 1);
+            }
+        }
+
         MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) });
         renderAll();
         hideTransModal();
@@ -404,7 +413,6 @@ function deleteState(id) {
 
 function deleteTransition(from, to, symbol) {
     pushUndo(updateUndoRedoButtons);
-    // The renderer always displays empty string as ε, so we match against that
     const symbolToMatch = symbol === 'ε' ? '' : symbol;
 
     const indexToDelete = MACHINE.transitions.findIndex(t => 
@@ -454,7 +462,6 @@ function hideTransModal() {
 
 function enforceInitialStateRule() {
     if (!MACHINE || !Array.isArray(MACHINE.states)) return;
-    // If there are states but no initial state, make the first one initial.
     if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
