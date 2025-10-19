@@ -309,10 +309,12 @@
     <div id="saveLibraryModal" class="modal-overlay" style="display:none">
         <div class="modal-box">
             <h3>Save to Library File</h3>
-            <p class="modal-description">Enter the details for this automaton. This will generate a JSON file ready for your library.</p>
+            <p class="modal-description">Review the auto-generated details for your automaton. This will generate a JSON file ready for your library.</p>
             <input id="libTitleInput" class="modal-input" placeholder="Title (e.g., DFA for even number of 0s)" />
-            <textarea id="libDescInput" class="modal-input" placeholder="Description..." style="height: 80px; resize: vertical;"></textarea>
-             <select id="libTypeInput" class="modal-input">
+            <textarea id="libDescInput" class="modal-input" placeholder="Custom notes about the machine..." style="height: 60px; resize: vertical;"></textarea>
+            <!-- THIS IS THE NEW PART -->
+            <div id="libAlphabetDisplay" style="background: #f1f5f9; padding: 8px 10px; border-radius: 8px; font-size: 0.9em; color: #475569; margin-top: 8px; display: none;"></div>
+            <select id="libTypeInput" class="modal-input" style="margin-top: 12px;">
                   <option value="DFA">DFA</option>
                   <option value="NFA">NFA</option>
                   <option value="ENFA">ε-NFA</option>
