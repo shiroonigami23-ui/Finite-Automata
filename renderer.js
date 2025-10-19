@@ -1,7 +1,8 @@
 import { MACHINE } from './state.js';
 import { getModeLabel } from './utils.js';
 
-// FIX: Removed circular dependency by no longer importing from ui.js
+// This module is now self-contained and only pulls from state.js and utils.js.
+// It no longer creates a circular dependency.
 
 const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
@@ -92,20 +93,27 @@ export function renderAll() {
         edgesGroup.appendChild(path);
 
         const labelText = [...new Set(symbols.map(s => s || 'ε'))].join(', ');
+        
+        // --- FIX: Add data attributes and a class to the label text elements ---
         const textHalo = document.createElementNS(svg.namespaceURI, 'text');
-        textHalo.setAttribute('class', 'transition-label');
+        textHalo.setAttribute('class', 'transition-label-text'); // Use a specific class for clicking
         textHalo.setAttribute('x', labelX);
         textHalo.setAttribute('y', labelY);
         textHalo.style.stroke = 'white';
-        textHalo.style.strokeWidth = '4px';
+        textHalo.style.strokeWidth = '6px'; // Make halo thicker for easier clicking
         textHalo.style.strokeLinejoin = 'round';
+        textHalo.style.pointerEvents = 'bounding-box'; // Make the entire box clickable
         textHalo.textContent = labelText;
+        textHalo.setAttribute('data-from', fromId);
+        textHalo.setAttribute('data-to', toId);
+        textHalo.setAttribute('data-symbols', labelText);
         edgesGroup.appendChild(textHalo);
 
         const text = document.createElementNS(svg.namespaceURI, 'text');
         text.setAttribute('class', 'transition-label');
         text.setAttribute('x', labelX);
         text.setAttribute('y', labelY);
+        text.style.pointerEvents = 'none'; // The text itself doesn't need to be clickable
         text.textContent = labelText;
         edgesGroup.appendChild(text);
     });
@@ -152,5 +160,4 @@ export function renderAll() {
     });
 
     document.getElementById('modeLabel').textContent = getModeLabel();
-    // FIX: The call to updateUndoRedoButtons was removed from here to break the circular dependency.
 }
