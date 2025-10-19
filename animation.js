@@ -3,7 +3,7 @@ import { renderAll } from './renderer.js';
 import { sleep } from './utils.js';
 
 // Defines the delay between each step of the drawing animation.
-const ANIMATION_DELAY = 2000; // Increased to 2000ms as requested.
+const ANIMATION_DELAY = 1500; // Adjusted for a smoother flow.
 
 /**
  * Adds a descriptive message to the top of the step log.
@@ -48,7 +48,7 @@ export async function animateMachineDrawing(machineToDraw) {
     addConstructionLog('Starting machine construction...', 'zap');
     
     // Start with a blank canvas.
-    let tempMachine = { type: originalType, states: [], transitions: [], alphabet: [] };
+    let tempMachine = { type: originalType, states: [], transitions: [], alphabet: machineToDraw.alphabet || [] };
     setMachine({...tempMachine});
     renderAll();
     await sleep(1000); // Brief pause before starting.
@@ -70,22 +70,28 @@ export async function animateMachineDrawing(machineToDraw) {
         await sleep(ANIMATION_DELAY);
     }
     
-    // Add all transitions for the renderer to process curves correctly.
-    tempMachine.transitions = machineToDraw.transitions;
-    setMachine({...tempMachine});
-    renderAll();
-    
-    // Animate each transition path sequentially, with logging.
-    const paths = document.querySelectorAll('#edges .transition-path');
-    for (const path of paths) {
-        const from = path.getAttribute('data-from');
-        const to = path.getAttribute('data-to');
-         addConstructionLog(`Drawing transition from <strong>${from}</strong> to <strong>${to}</strong>...`, 'git-branch');
-        path.classList.add('transition-drawing');
+    // --- FIX: Animate each transition sequentially instead of all at once ---
+    for (const transition of machineToDraw.transitions) {
+        const { from, to, symbol } = transition;
+        addConstructionLog(`Drawing transition from <strong>${from}</strong> to <strong>${to}</strong> on symbol '<strong>${symbol || 'ε'}</strong>'`, 'git-branch');
+        
+        // Add one transition at a time to the temporary machine
+        tempMachine.transitions.push(transition);
+        setMachine({...tempMachine});
+        
+        // Re-render the SVG to include the new transition
+        renderAll();
+        
+        // Find the newly drawn path and apply the animation class
+        const path = document.querySelector(`#edges .transition-path[data-from="${from}"][data-to="${to}"]`);
+        if (path) {
+            path.classList.add('transition-drawing');
+        }
+        
         await sleep(ANIMATION_DELAY);
     }
     
-    await sleep(ANIMATION_DELAY);
+    await sleep(1000);
 
     // Finalize the machine state and render.
     setMachine(machineToDraw);
