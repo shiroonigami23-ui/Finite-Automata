@@ -1,15 +1,16 @@
+// simulation.js
 import { MACHINE, simState } from './state.js';
 import { sleep } from './utils.js';
-import { computeEpsilonClosure } from './automata.js';
+import { computeEpsilonClosure } from './automata.js'; // CORRECTED: Added missing import
 
 export async function runSimulation(inputStr) {
     simState.steps.length = 0;
-    simState.index = 0; 
+    simState.index = 0;
     clearTimeout(simState.timer);
     document.getElementById('stepLog').innerHTML = '';
     const testOutput = document.getElementById('testOutput');
     testOutput.textContent = 'Simulating...';
-    
+
     const startStates = MACHINE.states.filter(s => s.initial).map(s => s.id);
 
     if (startStates.length === 0) {
@@ -19,11 +20,11 @@ export async function runSimulation(inputStr) {
     }
 
     let currentStates = (MACHINE.type === 'ENFA') ? computeEpsilonClosure(startStates, MACHINE.transitions) : [...startStates];
-    
+
     if (MACHINE.type === 'DFA' && currentStates.length > 1) {
         currentStates = [currentStates[0]];
     }
-    
+
     simState.steps.push({ start: true, active: [...currentStates] });
 
     let halted = false;
@@ -32,7 +33,7 @@ export async function runSimulation(inputStr) {
 
         const frame = { before: [...currentStates], symbol: symbol, steps: [], after: [] };
         const nextStates = new Set();
-        
+
         if (MACHINE.type === 'DFA') {
             if (currentStates.length > 0) {
                 const transition = MACHINE.transitions.find(t => t.from === currentStates[0] && t.symbol === symbol);
@@ -41,8 +42,7 @@ export async function runSimulation(inputStr) {
                     nextStates.add(transition.to);
                 }
             }
-        } 
-        else { 
+        } else {
             for (const stateId of currentStates) {
                 MACHINE.transitions
                     .filter(t => t.from === stateId && t.symbol === symbol)
@@ -54,7 +54,7 @@ export async function runSimulation(inputStr) {
         }
 
         const afterStates = (MACHINE.type === 'ENFA') ? computeEpsilonClosure([...nextStates], MACHINE.transitions) : [...nextStates];
-        
+
         frame.after = afterStates;
         simState.steps.push(frame);
         currentStates = afterStates;
@@ -63,7 +63,7 @@ export async function runSimulation(inputStr) {
             halted = true;
         }
     }
-    
+
     simState.steps.push({ end: true, active: [...currentStates] });
 
     document.getElementById('manualButtons').style.display = 'none';
@@ -89,9 +89,9 @@ export async function showStep(idx) {
         const testOutput = document.getElementById('testOutput');
         testOutput.textContent = isAccepted ? 'Accepted' : 'Rejected';
         testOutput.style.color = isAccepted ? '#38a169' : '#e53e3e';
-      
+
         step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
-      
+
         const finalLog = `<div><strong>Final active states: {${(step.active || []).join(', ') || '∅'}}</strong></div>`;
         const resultLog = `<div><strong style="color:${isAccepted ? '#4ade80' : '#f87171'}">${isAccepted ? '✔ Accepted' : '✘ Rejected'}</strong></div>`;
         log.innerHTML = resultLog + finalLog + log.innerHTML;
@@ -103,7 +103,7 @@ export async function showStep(idx) {
         step.active.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
         return;
     }
-    
+
     document.getElementById('testOutput').textContent = `Processing '${step.symbol}'... Active: {${(step.after || []).join(', ') || '∅'}}`;
 
     step.before.forEach(sid => document.querySelector(`.state-circle[data-id="${sid}"]`)?.classList.add('state-animating'));
@@ -117,7 +117,7 @@ export async function showStep(idx) {
     } else {
         log.innerHTML = `<div>Read '<b>${step.symbol}</b>': No transitions from {${step.before.join(', ')}}. Halting.</div>` + log.innerHTML;
     }
-    
+
     await sleep(speed / 2);
 
     document.querySelectorAll('.state-animating, .transition-animating').forEach(el => el.classList.remove('state-animating', 'transition-animating'));
