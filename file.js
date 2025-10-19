@@ -1,21 +1,17 @@
-import { pushUndo, setMachine } from './state.js';
+import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll } from './renderer.js';
 import { setValidationMessage } from './utils.js';
 
 export function saveMachine() {
-    // Access MACHINE via a function to ensure it's up-to-date
-    const getMachine = () => import('./state.js').then(m => m.MACHINE);
-    getMachine().then(MACHINE => {
-        const blob = new Blob([JSON.stringify(MACHINE, null, 2)], { type: "application/json" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "machine.json";
-        a.click();
-        URL.revokeObjectURL(a.href);
-    });
+    const blob = new Blob([JSON.stringify(MACHINE, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "machine.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
 
-export function loadMachine(e) {
+export function loadMachine(e, updateUIFunction) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -23,7 +19,7 @@ export function loadMachine(e) {
         try {
             const data = JSON.parse(ev.target.result);
             if (data.states && data.transitions) {
-                pushUndo();
+                pushUndo(updateUIFunction);
                 setMachine(data);
                 if (!data.type) data.type = 'DFA';
                 document.getElementById('modeSelect').value = data.type;
@@ -43,15 +39,24 @@ export function exportPng() {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
-    // Clone the SVG to avoid modifying the original
     const svgClone = svgEl.cloneNode(true);
-    // Explicitly set dimensions for rasterization
     const bbox = svgEl.getBBox();
-    const width = bbox.width + 20; // Add some padding
-    const height = bbox.height + 20;
+    const width = bbox.width + 40;
+    const height = bbox.height + 40;
     svgClone.setAttribute('width', width);
     svgClone.setAttribute('height', height);
 
+    // Apply basic styles for export
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+        .state-circle { fill: #fff; stroke: #667eea; stroke-width: 3; }
+        .state-label { font-weight: 700; fill: #0b1220; text-anchor: middle; dominant-baseline: central; font-size: 14px; }
+        .transition-path { fill: none; stroke: #667eea; stroke-width: 2; marker-end: url(#arrowhead); }
+        .transition-label { font-weight: 700; fill: #0b1220; text-anchor: middle; font-size: 13px; }
+        .initial-arrow { stroke: black !important; stroke-width: 3 !important; marker-end: url(#arrowhead); }
+        .final-ring { fill: none; stroke: #ff9800; stroke-width: 4; }
+    `;
+    svgClone.querySelector('defs').appendChild(styleEl);
 
     const svgData = new XMLSerializer().serializeToString(svgClone);
     const img = new Image();
@@ -61,17 +66,14 @@ export function exportPng() {
     img.onload = () => {
         canvas.width = width;
         canvas.height = height;
-
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
-
         const a = document.createElement("a");
         a.download = "automaton.png";
         a.href = canvas.toDataURL("image/png");
         a.click();
     };
-
     img.src = url;
 }
