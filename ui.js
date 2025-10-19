@@ -3,17 +3,16 @@ import { renderAll } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
 import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa, validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
-import { generatePractice, showSolution, resetPractice, checkAnswer, } from './practice.js';
+import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage, getModeLabel } from './utils.js';
 
-// This function is now passed to the state mutations to break the circular dependency.
+// This function is now local to the UI and is passed to state functions when needed.
 export function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
     if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
 }
-
 
 function layoutStatesLine(states) {
     if (!states || states.length === 0) return;
@@ -87,7 +86,7 @@ export function initializeUI() {
                     const circle = stateGroup.querySelector('.state-circle');
                     if (!TRANS_FROM) {
                         setTransFrom(stateId);
-                        circle.classList.add('state-selected');
+                        if(circle) circle.classList.add('state-selected');
                     } else {
                         showTransModal(TRANS_FROM, stateId);
                         document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
@@ -168,9 +167,8 @@ export function initializeUI() {
     document.getElementById('confirmClearCancel').addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'none');
     document.getElementById('confirmClearConfirm').addEventListener('click', () => {
         pushUndo(updateUndoRedoButtons);
-        initializeState();
+        initializeState(updateUndoRedoButtons);
         renderAll();
-        updateUndoRedoButtons();
         document.getElementById('confirmClearModal').style.display = 'none';
     });
 
@@ -178,7 +176,7 @@ export function initializeUI() {
     redoBtn.addEventListener('click', () => doRedo(updateUndoRedoButtons));
     saveMachineBtn.addEventListener('click', saveMachine);
     loadMachineBtn.addEventListener('click', () => document.getElementById('loadFileInput').click());
-    document.getElementById('loadFileInput').addEventListener('change', loadMachine);
+    document.getElementById('loadFileInput').addEventListener('change', (e) => loadMachine(e, updateUndoRedoButtons));
     document.getElementById('exportPngBtn').addEventListener('click', exportPng);
     clearCanvasBtn.addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
 
@@ -193,8 +191,8 @@ export function initializeUI() {
         let successMsg = '';
         let targetType = 'DFA';
         try {
-            if (validateAutomaton().type === 'error') {
-                setValidationMessage('Cannot convert invalid automaton.', 'warning');
+            if (validateAutomaton().type === 'error' && !newMode.includes('_TO_')) {
+                 setValidationMessage('Cannot convert invalid automaton.', 'warning');
             }
             if (newMode === 'ENFA_TO_NFA') {
                 convertedMachine = convertEnfaToNfa(MACHINE);
@@ -246,26 +244,25 @@ export function initializeUI() {
     });
 
     genPracticeBtn.addEventListener('click', generatePractice);
-    showSolBtn.addEventListener('click', showSolution);
+    showSolBtn.addEventListener('click', () => showSolution(updateUndoRedoButtons));
     resetPracticeBtn.addEventListener('click', resetPractice);
     checkAnswerBtn.addEventListener('click', checkAnswer);
 
     const setZoom = (pct) => {
         const wrapper = document.getElementById('svgWrapper');
-        wrapper.style.transform = `scale(${pct / 100})`;
-        wrapper.style.transformOrigin = 'top left';
-        zoomSlider.value = pct;
+        if(wrapper) {
+            wrapper.style.transform = `scale(${pct / 100})`;
+            wrapper.style.transformOrigin = 'top left';
+        }
+        if(zoomSlider) zoomSlider.value = pct;
     };
-    zoomSlider.addEventListener('input', e => setZoom(e.target.value));
-    zoomInBtn.addEventListener('click', () => setZoom(Math.min(200, Number(zoomSlider.value) + 10)));
-    zoomOutBtn.addEventListener('click', () => setZoom(Math.max(50, Number(zoomSlider.value) - 10)));
-    zoomResetBtn.addEventListener('click', () => setZoom(100));
+    if(zoomSlider) zoomSlider.addEventListener('input', e => setZoom(e.target.value));
+    if(zoomInBtn) zoomInBtn.addEventListener('click', () => setZoom(Math.min(200, Number(zoomSlider.value) + 10)));
+    if(zoomOutBtn) zoomOutBtn.addEventListener('click', () => setZoom(Math.max(50, Number(zoomSlider.value) - 10)));
+    if(zoomResetBtn) zoomResetBtn.addEventListener('click', () => setZoom(100));
     setZoom(100);
-    
-    // --- Move Tool Logic ---
-    let dragging = false;
-    let currentStateG = null;
-    let dragOffsetX = 0, dragOffsetY = 0;
+
+    let dragging = false, currentStateG = null, dragOffsetX = 0, dragOffsetY = 0;
 
     function getPoint(evt) {
         const pt = svg.createSVGPoint();
@@ -278,38 +275,27 @@ export function initializeUI() {
     function startDrag(e) {
         const stateG = e.target.closest('g[data-id]');
         if (CURRENT_MODE !== 'move' || !stateG) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-
-        const sid = stateG.getAttribute('data-id');
-        const sObj = MACHINE.states.find(x => x.id === sid);
+        e.preventDefault(); e.stopPropagation();
+        const sObj = MACHINE.states.find(x => x.id === stateG.getAttribute('data-id'));
         if (!sObj) return;
-
         pushUndo(updateUndoRedoButtons);
-        dragging = true;
-        currentStateG = stateG;
-        
+        dragging = true; currentStateG = stateG;
         const p = getPoint(e);
-        dragOffsetX = p.x - sObj.x;
-        dragOffsetY = p.y - sObj.y;
-        
+        dragOffsetX = p.x - sObj.x; dragOffsetY = p.y - sObj.y;
         stateG.querySelector('circle').classList.add('state-selected');
     }
 
     function moveDrag(e) {
         if (!dragging) return;
         e.preventDefault();
-        const sid = currentStateG.getAttribute('data-id');
-        const sObj = MACHINE.states.find(x => x.id === sid);
+        const sObj = MACHINE.states.find(x => x.id === currentStateG.getAttribute('data-id'));
         if (!sObj) return;
         const p = getPoint(e);
-        sObj.x = p.x - dragOffsetX;
-        sObj.y = p.y - dragOffsetY;
+        sObj.x = p.x - dragOffsetX; sObj.y = p.y - dragOffsetY;
         renderAll();
     }
 
-    function endDrag(e) {
+    function endDrag() {
         if (!dragging) return;
         dragging = false;
         currentStateG.querySelector('circle').classList.remove('state-selected');
@@ -325,11 +311,9 @@ export function initializeUI() {
     svg.addEventListener('touchend', endDrag);
     svg.addEventListener('touchcancel', endDrag);
 
-
     renderAll();
     updateUndoRedoButtons();
 }
-
 
 function addState(x, y) {
     let maxId = -1;
