@@ -1,4 +1,4 @@
-import { UNDO_STACK, REDO_STACK } from './state.js';
+// This module is now self-contained and has NO dependencies on other modules.
 
 export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -12,18 +12,11 @@ export function getModeLabel() {
     return option ? option.textContent : val;
 }
 
-export function updateUndoRedoButtons() {
-    const undoBtn = document.getElementById('undoBtn');
-    const redoBtn = document.getElementById('redoBtn');
-    if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
-    if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
-}
-
 export function setValidationMessage(message, type) {
     const validationLine = document.getElementById('validationLine');
     if (!validationLine) return;
     validationLine.textContent = message;
-    validationLine.className = 'validation-box'; // Reset classes
+    validationLine.className = 'validation-box';
     validationLine.classList.add(type, 'show');
-    setTimeout(() => validationLine.classList.remove('show'), 4000);
+    setTimeout(() => validationLine.classList.remove('show'), 5000);
 }
