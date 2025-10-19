@@ -505,7 +505,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 
   .control-panel.open summary {
-      width: fit-content; /* THIS is the fix for clickable area */
+      width: fit-content;
   }
   
   .control-panel.open .control-section-header,
