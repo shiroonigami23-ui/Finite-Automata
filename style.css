@@ -1,6 +1,6 @@
 :root {
   --bg1: linear-gradient(135deg, #0f172a 0%, #0b1220 100%);
-  --panel-bg: rgba(255, 255, 255, 0.98);
+  --panel-bg: rgba(255, 255, 255, 0.85); /* Slightly more transparent */
   --accent1: #667eea;
   --accent2: #764ba2;
   --muted: #94a3b8;
@@ -40,7 +40,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: relative; /* For positioning the toggle button */
+  position: relative; 
 }
 .header h1 {
   font-size: 1.2rem;
@@ -54,6 +54,7 @@ body {
   position: relative;
 }
 
+/* --- Floating Panel Base --- */
 .control-panel {
   width: 280px;
   flex-shrink: 0;
@@ -64,11 +65,16 @@ body {
   gap: 12px;
 }
 
-.control-section-wrapper, .control-panel > .control-section-wrapper {
+.control-section, .control-panel > .control-section-wrapper {
     background: var(--panel-bg);
     border-radius: 14px;
     padding: 18px;
     border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+}
+.control-section summary {
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .control-panel select,
@@ -84,13 +90,8 @@ body {
     width: 100%;
 }
 .control-panel details > div{
-    padding: 0;
-    margin-top: 12px;
+    padding-top: 12px;
 }
-.control-panel details[open] {
-    padding-bottom: 12px;
-}
-
 
 .visualization-panel {
   flex-grow: 1;
@@ -123,9 +124,13 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.06);
   background: linear-gradient(180deg, #fff, #f7fafc);
   cursor: pointer;
-  font-size: 20px;
   transition: transform 0.2s, box-shadow 0.2s;
 }
+.toolbar-icon i {
+    width: 24px;
+    height: 24px;
+}
+
 
 .toolbar-icon.active {
   background: linear-gradient(90deg, var(--accent1), var(--accent2));
@@ -133,8 +138,8 @@ body {
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.18);
   transform: translateY(-2px);
 }
-.toolbar-icon i { color: inherit; }
 .toolbar-icon.active i { color: #fff !important; }
+
 .toolbar-icon#tool-addclick i { color: #4caf50; }
 .toolbar-icon#tool-move i { color: #2196f3; }
 .toolbar-icon#tool-transition i { color: #9c27b0; }
@@ -143,6 +148,7 @@ body {
 .toolbar-icon#tool-stateprops i { color: #607d8b; }
 .toolbar-icon#clearCanvasBtn i { color: #f44336; }
 .toolbar-icon#undoBtn i, .toolbar-icon#redoBtn i { color: #607d8b; }
+
 
 
 .toolbar-icon:hover {
@@ -345,13 +351,6 @@ body {
   filter: drop-shadow(0 0 8px rgba(255, 152, 0, 0.7));
   vector-effect: non-scaling-stroke;
 }
-.control-section > summary {
-    font-weight: 600;
-    cursor: pointer;
-    padding: 12px 18px;
-    background: var(--panel-bg);
-    border-radius: 14px;
-}
 .control-row { display: flex; gap: 6px; margin: 4px 0; }
 .control-row button {
   flex: 1;
@@ -438,15 +437,20 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 @media (max-width: 1024px) {
+  .header {
+      position: sticky;
+      top: 12px;
+      z-index: 200;
+  }
   .panel-toggle-btn { display: flex; }
   .main-content { flex-direction: column; }
   .control-panel {
     position: fixed;
-    top: 75px;
+    top: 90px;
     left: 15px;
     width: 320px;
     height: auto;
-    max-height: calc(100vh - 90px);
+    max-height: calc(100vh - 110px);
     z-index: 100;
     transform: scale(0.95) translateX(-120%);
     opacity: 0;
@@ -456,6 +460,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     backdrop-filter: none;
     border: none;
     padding: 0;
+    overflow: visible;
   }
   .control-panel.open {
     transform: scale(1) translateX(0);
