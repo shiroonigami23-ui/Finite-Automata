@@ -40,7 +40,19 @@ export function validateAutomaton() {
                 symbols.add(t.symbol);
             }
         }
+    } 
+    // --- NEW LOGIC BLOCK ---
+    // Add a specific check for NFAs to ensure they don't have epsilon transitions.
+    else if (type === 'NFA') {
+        for (const t of transitions) {
+            if (t.symbol === '' || t.symbol === 'ε') {
+                return { type: 'error', message: `NFA rule violated: State ${t.from} has an ε-transition.` };
+            }
+        }
     }
+    // ε-NFA mode is handled implicitly, as it has no extra restrictions beyond the general ones.
+    // --- END OF NEW LOGIC ---
+
 
     return { type: 'success', message: 'Automaton is valid.' };
 }
