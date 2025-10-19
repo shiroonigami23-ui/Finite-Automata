@@ -1,11 +1,13 @@
 import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
 import { renderAll } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
-import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa, validateAutomaton } from './automata.js';
+import { validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
 import { checkEquivalence } from './equivalence.js';
+import { animateEnfaToNfa, animateNfaToDfa, animateDfaToMinDfa, animateNfaToMinDfa } from './conversion-animation.js';
+
 
 function customAlert(title, message) {
     const alertModal = document.getElementById('alertModal');
@@ -19,22 +21,6 @@ export function updateUndoRedoButtons() {
     const redoBtn = document.getElementById('redoBtn');
     if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
-}
-
-function layoutStatesCircular(states) {
-    if (!states || states.length === 0) return;
-    const svg = document.getElementById('dfaSVG');
-    const bbox = svg.viewBox.baseVal;
-    const centerX = bbox.width / 2;
-    const centerY = bbox.height / 2;
-    const baseRadius = Math.min(centerX, centerY) * 0.7;
-    const radius = Math.max(150, Math.min(baseRadius, states.length * 40));
-    const angleStep = (2 * Math.PI) / states.length;
-    states.forEach((s, i) => {
-        const angle = i * angleStep - (Math.PI / 2);
-        s.x = centerX + radius * Math.cos(angle);
-        s.y = centerY + radius * Math.sin(angle);
-    });
 }
 
 export function initializeUI() {
@@ -258,50 +244,49 @@ export function initializeUI() {
         });
     }
 
+    // --- CORRECTED MODE SELECT LOGIC ---
     if (modeSelect) {
-        modeSelect.addEventListener('change', () => {
+        modeSelect.addEventListener('change', async () => {
             const newMode = modeSelect.value;
-            let convertedMachine = null;
-            let successMsg = '';
-            let targetType = 'DFA';
-            try {
-                if (validateAutomaton().type === 'error' && !newMode.includes('_TO_')) {
-                     setValidationMessage('Cannot convert invalid automaton.', 'warning');
+
+            if (newMode.includes('_TO_')) {
+                if (validateAutomaton().type === 'error') {
+                    setValidationMessage('Cannot convert: the current automaton is invalid.', 'error');
+                    modeSelect.value = MACHINE.type; // Revert dropdown selection
+                    return;
                 }
-                if (newMode === 'ENFA_TO_NFA') {
-                    convertedMachine = convertEnfaToNfa(MACHINE);
-                    successMsg = 'Converted ε-NFA to NFA.';
-                    targetType = 'NFA';
-                } else if (newMode === 'NFA_TO_DFA') {
-                    convertedMachine = convertNfaToDfa(MACHINE);
-                    successMsg = 'Converted NFA to DFA.';
-                } else if (newMode === 'NFA_TO_MIN_DFA') {
-                    convertedMachine = minimizeDfa(convertNfaToDfa(MACHINE));
-                    successMsg = 'Converted NFA to Minimal DFA.';
-                } else if (newMode === 'DFA_TO_MIN_DFA') {
-                    convertedMachine = minimizeDfa(MACHINE);
-                    successMsg = 'Minimized DFA.';
+                
+                try {
+                    // Disable UI during conversion
+                    modeSelect.disabled = true;
+                    if (newMode === 'ENFA_TO_NFA') {
+                        await animateEnfaToNfa(MACHINE);
+                        modeSelect.value = 'NFA';
+                    } else if (newMode === 'NFA_TO_DFA') {
+                        await animateNfaToDfa(MACHINE);
+                        modeSelect.value = 'DFA';
+                    } else if (newMode === 'DFA_TO_MIN_DFA') {
+                        await animateDfaToMinDfa(MACHINE);
+                        modeSelect.value = 'DFA';
+                    } else if (newMode === 'NFA_TO_MIN_DFA') {
+                        await animateNfaToMinDfa(MACHINE);
+                        modeSelect.value = 'DFA';
+                    }
+                } catch (err) {
+                    customAlert('Conversion Failed', err.message);
+                    modeSelect.value = MACHINE.type; // Revert on error
+                } finally {
+                    // Re-enable UI
+                    modeSelect.disabled = false;
                 }
-            } catch (err) {
-                customAlert('Conversion Failed', err.message);
-                modeSelect.value = MACHINE.type;
-                return;
-            }
-            if (convertedMachine) {
-                pushUndo(updateUndoRedoButtons);
-                convertedMachine.type = targetType;
-                setMachine(convertedMachine);
-                modeSelect.value = targetType;
-                // --- BUG FIX: Apply layout after conversion ---
-                layoutStatesCircular(MACHINE.states); 
-                // --- END FIX ---
-                setValidationMessage(successMsg, 'success');
             } else {
+                // This is a simple mode switch, not a conversion
                 MACHINE.type = newMode;
+                renderAll();
             }
-            renderAll();
         });
     }
+    // --- END CORRECTION ---
 
     if(runTestBtn) runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
     if(genRandBtn) genRandBtn.addEventListener('click', () => {
@@ -469,7 +454,6 @@ function openPropsModal(stateId) {
     document.getElementById('propFinal').checked = st.accepting;
     modal.style.display = 'flex';
 }
-
 function showTransModal(from, to) {
     const modal = document.getElementById('transitionModal');
     document.getElementById('transFrom').value = from;
