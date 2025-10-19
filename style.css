@@ -42,16 +42,15 @@ body {
   gap: 4px;
 }
 
-/* --- KEY CHANGE: Switched from Grid to Flexbox for stability --- */
 .main-content {
-  display: flex; /* Use Flexbox */
+  display: flex;
   gap: 20px;
   align-items: flex-start;
 }
 
 .control-panel {
-  width: 280px; /* Give the control panel a fixed width */
-  flex-shrink: 0; /* Prevent it from shrinking */
+  width: 280px;
+  flex-shrink: 0;
   background: var(--panel-bg);
   border-radius: 14px;
   padding: 18px;
@@ -64,7 +63,7 @@ body {
 }
 
 .visualization-panel {
-  flex-grow: 1; /* Allow the visualization panel to take remaining space */
+  flex-grow: 1;
   background: var(--panel-bg);
   border-radius: 14px;
   padding: 16px;
@@ -81,11 +80,11 @@ body {
 
 @media(max-width:1024px) {
   .main-content {
-    flex-direction: column; /* Stack vertically on tablets */
+    flex-direction: column;
   }
 
   .control-panel {
-    width: 100%; /* Take full width when stacked */
+    width: 100%;
     position: relative;
     max-height: none;
   }
@@ -383,20 +382,24 @@ body {
   border-radius: 10px;
 }
 
+/* --- FIX: Added a glow effect to the pulseState animation --- */
 @keyframes pulseState {
   0% {
     stroke-width: 3;
     stroke: gold;
+    filter: drop-shadow(0 0 4px gold);
   }
 
   50% {
     stroke-width: 8;
     stroke: orange;
+    filter: drop-shadow(0 0 12px orange);
   }
 
   100% {
     stroke-width: 3;
     stroke: gold;
+    filter: drop-shadow(0 0 4px gold);
   }
 }
 
@@ -404,27 +407,32 @@ body {
   0% {
     stroke-width: 2;
     stroke: gold;
+    filter: drop-shadow(0 0 3px gold);
   }
 
   50% {
     stroke-width: 6;
     stroke: orange;
+    filter: drop-shadow(0 0 8px orange);
   }
 
   100% {
     stroke-width: 2;
     stroke: gold;
+    filter: drop-shadow(0 0 3px gold);
   }
 }
 
 .state-animating {
   animation-name: pulseState;
+  animation-duration: 1s; /* Give it a duration */
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
 
 .transition-animating {
   animation-name: pulseTransition;
+  animation-duration: 1s; /* Give it a duration */
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
@@ -447,12 +455,11 @@ body {
 }
 
 @keyframes drawTransition {
-  0% {
+  from {
     stroke-dashoffset: 1000;
     opacity: 0;
   }
-
-  100% {
+  to {
     stroke-dashoffset: 0;
     opacity: 1;
   }
@@ -468,6 +475,7 @@ body {
   animation: drawTransition 0.8s ease-out forwards;
 }
 
+
 .state-selected {
   stroke: yellow !important;
   stroke-width: 6 !important;
@@ -482,7 +490,6 @@ body {
 
 #zoomSlider {
   writing-mode: bt-lr;
-
   appearance: slider-vertical;
   -webkit-appearance: slider-vertical;
   width: 8px;
@@ -953,4 +960,4 @@ button:disabled {
 .mode-indicator.enfa {
   background-color: #fce7f3;
   color: #be185d;
-      }
+}
