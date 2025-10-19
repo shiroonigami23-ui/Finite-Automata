@@ -5,6 +5,27 @@ const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
 const edgesGroup = document.getElementById('edges');
 
+/**
+ * Arranges states in a circle. This is now the canonical layout function.
+ * @param {Array} states The array of states to position.
+ */
+export function layoutStatesCircular(states) {
+    if (!states || states.length === 0) return;
+    const svg = document.getElementById('dfaSVG');
+    const bbox = svg.viewBox.baseVal;
+    const centerX = bbox.width / 2;
+    const centerY = bbox.height / 2;
+    const baseRadius = Math.min(centerX, centerY) * 0.7;
+    const radius = Math.max(150, Math.min(baseRadius, states.length * 40));
+    const angleStep = (2 * Math.PI) / states.length;
+    states.forEach((s, i) => {
+        const angle = i * angleStep - (Math.PI / 2);
+        s.x = centerX + radius * Math.cos(angle);
+        s.y = centerY + radius * Math.sin(angle);
+    });
+}
+
+
 function getLoopPathAndLabel(cx, cy, r) {
     const loopRadius = 35;
     const angleOffset = -Math.PI / 2;
