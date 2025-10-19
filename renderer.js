@@ -1,3 +1,4 @@
+// renderer.js
 import { MACHINE } from './state.js';
 import { getModeLabel, updateUndoRedoButtons } from './utils.js';
 
@@ -15,6 +16,7 @@ function getLoopPathAndLabel(cx, cy, r) {
 }
 
 export function renderAll() {
+    if (!statesGroup || !edgesGroup) return;
     statesGroup.innerHTML = '';
     edgesGroup.innerHTML = '';
     document.getElementById('canvasHint').style.display = (!MACHINE.states || MACHINE.states.length === 0) ? 'block' : 'none';
@@ -41,17 +43,26 @@ export function renderAll() {
             labelX = loop.labelX;
             labelY = loop.labelY;
         } else {
-            const dx = to.x - from.x, dy = to.y - from.y;
+            const dx = to.x - from.x,
+                dy = to.y - from.y;
             const angle = Math.atan2(dy, dx);
             const r = 30;
-            const startX = from.x + r * Math.cos(angle), startY = from.y + r * Math.sin(angle);
-            const endX = to.x - r * Math.cos(angle), endY = to.y - r * Math.sin(angle);
+            const startX = from.x + r * Math.cos(angle),
+                startY = from.y + r * Math.sin(angle);
+            const endX = to.x - r * Math.cos(angle),
+                endY = to.y - r * Math.sin(angle);
+
+            const reverseKey = `${toId}->${fromId}`;
+            const reverse = processedArcs.has(reverseKey) && processedArcs.get(reverseKey).length > 0;
             
-            const reverse = processedArcs.has(`${toId}->${fromId}`);
             if (reverse) {
-                const offset = 40, midX = (startX + endX) / 2, midY = (startY + endY) / 2;
-                const normX = -dy / Math.hypot(dx, dy), normY = dx / Math.hypot(dx, dy);
-                const cpx = midX + normX * offset, cpy = midY + normY * offset;
+                const offset = 40,
+                    midX = (startX + endX) / 2,
+                    midY = (startY + endY) / 2;
+                const normX = -dy / Math.hypot(dx, dy),
+                    normY = dx / Math.hypot(dx, dy);
+                const cpx = midX + normX * offset,
+                    cpy = midY + normY * offset;
                 pathD = `M ${startX} ${startY} Q ${cpx} ${cpy} ${endX} ${endY}`;
                 labelX = cpx;
                 labelY = cpy;
