@@ -303,20 +303,19 @@
 
   <!--
     CORRECTED SCRIPT LOADING ORDER:
-    1. practice-bank.js: Defines window.PRACTICE_BANK. `defer` ensures it runs before DOMContentLoaded.
-    2. animation-fix.js: Defines global animation variables.
-    3. library_helper.js: This is a module that creates the window.loadMachineFromObject bridge function.
-       Modules are naturally deferred and will execute after classic deferred scripts.
-    4. library-loader.js: This classic script runs after the bridge is created. Its DOMContentLoaded listener
-       will correctly find the function on the window object.
-    5. main.js: The main application entry point, runs last to initialize the UI.
+    1. practice-bank.js: Defines window.PRACTICE_BANK. `defer` ensures it runs before other scripts.
+    2. library-loader.js: This classic script's event listener will now correctly find the global function.
+    3. library_helper.js: This module creates the `window.loadMachineFromObject` bridge function.
+    4. main.js: The main application entry point, runs last to initialize the UI.
   -->
   <script src="practice-bank.js" defer></script>
-  <script src="animation-fix.js" defer></script>
-  <script type="module" src="library_helper.js"></script>
   <script src="library-loader.js" defer></script>
+  
+  <script type="module" src="library_helper.js"></script>
   <script type="module" src="main.js"></script>
 
 </body>
 
 </html>
+
+
