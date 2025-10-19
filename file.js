@@ -2,44 +2,25 @@ import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll } from './renderer.js';
 import { setValidationMessage } from './utils.js';
 
-/**
- * Uses a Breadth-First Search to find some of the shortest strings accepted by the machine.
- * This provides intelligent suggestions for titles and descriptions.
- * @param {object} machine The automaton to analyze.
- * @returns {string[]} An array of short accepted strings.
- */
 function findShortestAcceptedStrings(machine) {
     const queue = [];
     const visited = new Set();
     const accepted = [];
-
     const initialStates = machine.states.filter(s => s.initial);
     if (initialStates.length === 0) return [];
-
-    // Check if the empty string is accepted
-    if (initialStates.some(s => s.accepting)) {
-        accepted.push("ε");
-    }
-
-    // Initialize the queue with all starting points
+    if (initialStates.some(s => s.accepting)) accepted.push("ε");
     for (const startState of initialStates) {
         queue.push({ state: startState.id, path: "" });
         visited.add(startState.id + ",");
     }
-
     let head = 0;
     while (head < queue.length && accepted.length < 5) {
         const { state, path } = queue[head++];
-
-        // Limit path length to avoid getting stuck in long searches
         if (path.length > 10) continue;
-
         const transitions = machine.transitions.filter(t => t.from === state);
-
         for (const t of transitions) {
-            const newPath = path + t.symbol;
+            const newPath = path + (t.symbol || '');
             const visitedKey = t.to + "," + newPath;
-
             if (!visited.has(visitedKey)) {
                 visited.add(visitedKey);
                 const nextState = machine.states.find(s => s.id === t.to);
@@ -52,63 +33,67 @@ function findShortestAcceptedStrings(machine) {
             }
         }
     }
-    // Sort by length to show the shortest ones first
     return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
 }
 
 
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
-    if (!modal) return;
+    const descInput = document.getElementById('libDescInput');
+    const alphabetDisplay = document.getElementById('libAlphabetDisplay');
+    if (!modal || !descInput || !alphabetDisplay) return;
 
-    // --- INTELLIGENT ANALYSIS ---
     const machineType = MACHINE.type || 'DFA';
     const shortestStrings = findShortestAcceptedStrings(MACHINE);
+    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
 
     let autoTitle;
     if (shortestStrings.length > 0) {
-        // Create a title based on what the machine accepts
         const examples = shortestStrings.map(s => `"${s}"`).join(', ');
         autoTitle = `${machineType} that accepts ${examples}, ...`;
     } else if (MACHINE.states.some(s => s.accepting)) {
-        // If there are accepting states but none are reachable
         autoTitle = `${machineType} with an unreachable language`;
     } else {
-        // If there are no accepting states
         autoTitle = `${machineType} that accepts nothing (empty language)`;
     }
     
-    // --- Detailed Description Generation (from before) ---
-    const stateCount = MACHINE.states.length;
-    const acceptingStates = MACHINE.states.filter(s => s.accepting);
-    const initialStates = MACHINE.states.filter(s => s.initial);
-    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s))].sort();
+    descInput.value = `Accepts short strings such as: ${shortestStrings.join(', ') || 'none'}.`;
 
-    let autoDesc = `Accepts short strings such as: ${shortestStrings.join(', ') || 'none'}. `;
-    autoDesc += `This is a ${machineType} with ${stateCount} state(s), ${acceptingStates.length} accepting state(s), and an alphabet of {${alphabet.join(', ') || '∅'}}.`;
+    if (machineType === 'DFA') {
+        alphabetDisplay.innerHTML = `<strong>Formal Alphabet (auto-detected):</strong> {${alphabet.join(', ') || '∅'}}`;
+        alphabetDisplay.style.display = 'block';
+    } else {
+        alphabetDisplay.style.display = 'none';
+    }
 
-    // Populate and show the modal
     document.getElementById('libTitleInput').value = autoTitle;
-    document.getElementById('libDescInput').value = autoDesc;
     document.getElementById('libTypeInput').value = machineType;
     modal.style.display = 'flex';
 }
 
 export function handleSaveWithMetadata() {
     const title = document.getElementById('libTitleInput').value.trim();
-    const description = document.getElementById('libDescInput').value.trim();
+    const userDescription = document.getElementById('libDescInput').value.trim();
     const type = document.getElementById('libTypeInput').value;
 
     if (!title) {
         window.customAlert("Input Required", "Please enter a title for the library entry.");
         return;
     }
+    
+    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
+    let finalDescription = userDescription;
+
+    if (type === 'DFA') {
+        const alphabetString = `The formal alphabet is {${alphabet.join(', ') || '∅'}}.`;
+        finalDescription = userDescription ? `${userDescription} ${alphabetString}` : alphabetString;
+    }
 
     const libraryEntry = {
         title: title,
-        description: description,
+        description: finalDescription,
         type: type,
-        machine: { ...MACHINE, type: type, alphabet: [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s))] }
+        machine: { ...MACHINE, type: type, alphabet: alphabet }
     };
 
     const blob = new Blob([JSON.stringify(libraryEntry, null, 2)], { type: "application/json" });
