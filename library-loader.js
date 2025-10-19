@@ -40,9 +40,10 @@ function renderEntry(entry) {
         const modeSelect = document.getElementById('modeSelect');
         if (modeSelect) {
             modeSelect.value = entry.type || 'DFA';
+            modeSelect.dispatchEvent(new Event('change'));
         }
     } else {
-        alert('No valid machine data in this library entry.');
+        customAlert('Error', 'No valid machine data in this library entry.');
     }
   };
   actions.appendChild(openBtn);
