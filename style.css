@@ -972,3 +972,37 @@ button:disabled {
   background-color: #fce7f3;
   color: #be185d;
                         }
+/* --- Append this to the bottom of your existing style.css file --- */
+
+.modal-description {
+    margin: 4px 0 12px 0;
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1.5;
+}
+
+.danger-btn {
+    background: #e53e3e !important;
+    color: #fff !important;
+}
+
+.danger-btn:hover {
+    background: #c53030 !important;
+}
+
+.modal-prop-row {
+    margin-bottom: 12px;
+}
+
+.modal-prop-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+
+.modal-prop-row input[type="checkbox"] {
+    width: 1.3em;
+    height: 1.3em;
+    accent-color: var(--accent1);
+}
