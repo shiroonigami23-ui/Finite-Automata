@@ -1,9 +1,7 @@
-import { MACHINE, CURRENT_MODE } from './state.js';
+import { MACHINE } from './state.js';
 import { getModeLabel } from './utils.js';
-import { updateUndoRedoButtons } from './ui.js';
 
-// This module is now self-contained and only pulls from state.js and utils.js.
-// It no longer creates a circular dependency.
+// FIX: Removed circular dependency by no longer importing from ui.js
 
 const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
@@ -154,5 +152,5 @@ export function renderAll() {
     });
 
     document.getElementById('modeLabel').textContent = getModeLabel();
-    updateUndoRedoButtons();
+    // FIX: The call to updateUndoRedoButtons was removed from here to break the circular dependency.
 }
