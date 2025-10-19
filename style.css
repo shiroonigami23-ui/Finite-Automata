@@ -575,19 +575,18 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .modal-prop-row label { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
 .modal-prop-row input[type="checkbox"] { width: 1.3em; height: 1.3em; accent-color: var(--accent1); }
 
-/* --- FIX: Add buzzing blue glow for initial state --- */
 @keyframes pulseInitial {
   0% {
-    filter: drop-shadow(0 0 4px rgba(102, 126, 234, 0.4));
+    filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.5));
   }
   50% {
-    filter: drop-shadow(0 0 12px rgba(102, 126, 234, 0.8));
+    filter: drop-shadow(0 0 16px rgba(129, 140, 248, 0.9));
   }
   100% {
-    filter: drop-shadow(0 0 4px rgba(102, 126, 234, 0.4));
+    filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.5));
   }
 }
 
 .initial-pulse {
-  animation: pulseInitial 2.5s infinite ease-in-out;
+  animation: pulseInitial 2s infinite ease-in-out;
 }
