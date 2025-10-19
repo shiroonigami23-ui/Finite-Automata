@@ -22,7 +22,7 @@ export function setValidationMessage(message, type) {
 }
 
 /**
- * Adds a descriptive message to the top of the step log during animations.
+ * The single, canonical function for adding messages to the step log.
  * @param {string} message The HTML-enabled text to log.
  * @param {string} icon The name of the Lucide icon to use.
  */
@@ -32,17 +32,14 @@ export function addLogMessage(message, icon) {
 
     const logEntry = document.createElement('div');
     
-    // Use innerHTML to create the icon and the message.
     logEntry.innerHTML = `<i data-lucide="${icon}"></i> <div>${message}</div>`;
     
-    // Prepend the new log to the top of the list.
     if (log.firstChild) {
         log.insertBefore(logEntry, log.firstChild);
     } else {
         log.appendChild(logEntry);
     }
 
-    // Re-render the icons to make the new one appear.
     if (typeof lucide !== 'undefined') {
         lucide.createIcons({
             nodes: [logEntry]
