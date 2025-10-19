@@ -54,6 +54,11 @@ export function initializeUI() {
     const libSaveCancel = document.getElementById('libSaveCancel');
     const libSaveConfirm = document.getElementById('libSaveConfirm');
     const saveLibraryModal = document.getElementById('saveLibraryModal');
+    const exportPngBtn = document.getElementById('exportPngBtn');
+    const exportPngModal = document.getElementById('exportPngModal');
+    const pngNameInput = document.getElementById('pngNameInput');
+    const pngExportCancel = document.getElementById('pngExportCancel');
+    const pngExportConfirm = document.getElementById('pngExportConfirm');
 
     if (libSaveCancel && saveLibraryModal) {
         libSaveCancel.addEventListener('click', () => {
@@ -242,13 +247,37 @@ export function initializeUI() {
         renderAll();
         document.getElementById('confirmClearModal').style.display = 'none';
     });
+    
+    if (exportPngBtn) {
+        exportPngBtn.addEventListener('click', () => {
+            const defaultName = `${MACHINE.type || 'automaton'}-export`;
+            pngNameInput.value = defaultName;
+            exportPngModal.style.display = 'flex';
+            pngNameInput.focus();
+            pngNameInput.select();
+        });
+    }
+
+    if (pngExportCancel) {
+        pngExportCancel.addEventListener('click', () => {
+            exportPngModal.style.display = 'none';
+        });
+    }
+
+    if (pngExportConfirm) {
+        pngExportConfirm.addEventListener('click', () => {
+            const filename = pngNameInput.value.trim();
+            exportPng(filename);
+            exportPngModal.style.display = 'none';
+        });
+    }
+
 
     if (undoBtn) undoBtn.addEventListener('click', () => doUndo(updateUndoRedoButtons));
     if (redoBtn) redoBtn.addEventListener('click', () => doRedo(updateUndoRedoButtons));
     if (saveMachineBtn) saveMachineBtn.addEventListener('click', saveMachine);
     if (loadMachineBtn) loadMachineBtn.addEventListener('click', () => document.getElementById('loadFileInput').click());
     document.getElementById('loadFileInput').addEventListener('change', (e) => loadMachine(e, updateUndoRedoButtons));
-    if (document.getElementById('exportPngBtn')) document.getElementById('exportPngBtn').addEventListener('click', exportPng);
     if (clearCanvasBtn) clearCanvasBtn.addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
 
     if (validateBtn) {
@@ -489,4 +518,4 @@ function enforceInitialStateRule() {
     if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
-        }
+}
