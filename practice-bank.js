@@ -1,4 +1,4 @@
-const PRACTICE_BANK = {
+window.PRACTICE_BANK = {
         DFA: {
           easy: [
             {
@@ -3422,4 +3422,3 @@ const PRACTICE_BANK = {
         ]
       };
 
-window.PRACTICE_BANK = PRACTICE_BANK;
