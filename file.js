@@ -135,7 +135,7 @@ export function loadMachine(e, updateUIFunction) {
     reader.readAsText(file);
 }
 
-export function exportPng() {
+export function exportPng(fileName = 'automaton') {
     const svgEl = document.getElementById("dfaSVG");
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -195,7 +195,8 @@ export function exportPng() {
         URL.revokeObjectURL(url);
 
         const a = document.createElement("a");
-        a.download = "automaton.png";
+        const finalFileName = fileName.endsWith('.png') ? fileName : `${fileName}.png`;
+        a.download = finalFileName;
         a.href = canvas.toDataURL("image/png");
         a.click();
     };
