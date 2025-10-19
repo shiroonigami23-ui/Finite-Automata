@@ -1,6 +1,6 @@
 :root {
   --bg1: linear-gradient(135deg, #0f172a 0%, #0b1220 100%);
-  --panel-bg: rgba(255, 255, 255, 0.85);
+  --panel-bg: rgba(255, 255, 255, 0.98);
   --accent1: #667eea;
   --accent2: #764ba2;
   --muted: #94a3b8;
@@ -69,12 +69,19 @@ body {
     border-radius: 14px;
     padding: 18px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
 }
-.control-section summary {
+.control-section-header, .control-section summary {
     font-weight: 600;
     cursor: pointer;
+    list-style: none; /* Hide default arrow */
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+.control-section summary::-webkit-details-marker {
+    display: none;
+}
+
 
 .control-panel select,
 .control-panel input,
@@ -88,6 +95,20 @@ body {
     padding: 10px;
     width: 100%;
 }
+#randomStringBox, #testOptionsCollapse summary {
+    margin: 6px 0; font-size: 0.9em; 
+    background: linear-gradient(90deg,#fff,#f7fafc); 
+    padding: 6px 8px; border-radius: 8px;
+}
+#bulkTestOutput, #practiceBox, .output-display {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: linear-gradient(180deg,#fff,#fbfdff);
+    border: 1px solid #eef2ff;
+    min-height: 60px;
+}
+
 .control-panel details > div{
     padding-top: 12px;
 }
@@ -125,12 +146,12 @@ body {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-
 .toolbar-icon svg {
     width: 24px;
     height: 24px;
     stroke-width: 2.5;
 }
+
 
 .toolbar-icon.active {
   background: linear-gradient(90deg, var(--accent1), var(--accent2));
@@ -138,17 +159,17 @@ body {
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.18);
   transform: translateY(-2px);
 }
-.toolbar-icon.active svg { color: #fff !important; }
+.toolbar-icon.active svg { stroke: #fff !important; }
 
-.toolbar-icon#tool-addclick svg { color: #4caf50; }
-.toolbar-icon#tool-move svg { color: #2196f3; }
-.toolbar-icon#tool-transition svg { color: #9c27b0; }
-.toolbar-icon#tool-rename svg { color: #009688; }
-.toolbar-icon#tool-delete svg { color: #f44336; }
-.toolbar-icon#tool-stateprops svg { color: #607d8b; }
-.toolbar-icon#clearCanvasBtn svg { color: #f44336; }
-.toolbar-icon#undoBtn svg, .toolbar-icon#redoBtn svg { color: #607d8b; }
-.toolbar-icon#validateBtn svg {color: #4caf50;}
+.toolbar-icon#tool-addclick svg { stroke: #4caf50; }
+.toolbar-icon#tool-move svg { stroke: #2196f3; }
+.toolbar-icon#tool-transition svg { stroke: #9c27b0; }
+.toolbar-icon#tool-rename svg { stroke: #009688; }
+.toolbar-icon#tool-delete svg { stroke: #f44336; }
+.toolbar-icon#tool-stateprops svg { stroke: #607d8b; }
+.toolbar-icon#clearCanvasBtn svg { stroke: #f44336; }
+.toolbar-icon#undoBtn svg, .toolbar-icon#redoBtn svg { stroke: #607d8b; }
+.toolbar-icon#validateBtn svg {stroke: #4caf50;}
 
 
 .toolbar-icon:hover {
@@ -226,12 +247,6 @@ body {
   font-weight: 700;
 }
 
-.output-display {
-  padding: 12px;
-  font-weight: 700;
-  text-align: center;
-}
-
 .state-circle {
   fill: #fff;
   stroke: var(--accent1);
@@ -253,20 +268,38 @@ body {
   stroke-width: 2;
   marker-end: url(#arrowhead);
 }
-.transition-label-text{
+
+/* --- FIX for Invisible Labels --- */
+/* This is the "halo" or outline text. It's drawn first. */
+.transition-label-text {
     stroke: white;
     stroke-width: 4px;
     stroke-linejoin: round;
+    fill: none; /* The halo has no fill, it's just an outline */
     pointer-events: all;
     cursor: default;
     text-anchor: middle;
     font-size: 13px;
     font-weight: 700;
-    fill: #0b1220;
 }
+
+/* This is the actual text, drawn on top of the halo. */
+.transition-label {
+    font-weight: 700;
+    fill: #0b1220; /* This provides the visible color */
+    text-anchor: middle;
+    font-size: 13px;
+    pointer-events: none; /* Clicks should go to the halo element below */
+}
+/* --- End of Fix --- */
+
 .mode-delete .transition-label-text {
     cursor: pointer;
 }
+.mode-delete .transition-label-text:hover + .transition-label {
+    fill: var(--danger);
+}
+
 
 .kv { font-size: 13px; color: var(--muted); }
 
@@ -389,7 +422,7 @@ body {
 }
 #stepLog div { padding: 4px 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; gap: 6px; }
 #stepLog div:last-child { border-bottom: none; }
-#stepLog i { color: #38bdf8; }
+#stepLog svg { color: #38bdf8; }
 
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -469,14 +502,30 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   }
   
   .control-panel.open .control-section {
-      background: rgba(15, 23, 42, 0.6); /* Dark, semi-transparent background */
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #f1f5f9; /* Light text color */
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 12px;
   }
 
-  .control-panel.open .control-section summary {
+  .control-panel.open .control-section-header,
+  .control-panel.open details {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      border-radius: 14px;
+      padding: 18px;
+  }
+
+  .control-panel.open summary {
+      width: fit-content;
+  }
+  
+  .control-panel.open .control-section-header,
+  .control-panel.open summary {
       color: #f8fafc;
+      padding: 0;
   }
     
   .control-panel.open select,
@@ -485,14 +534,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   .control-panel.open #practiceBox,
   .control-panel.open #bulkTestOutput,
   .control-panel.open #libraryList > div {
-      background: rgba(30, 41, 59, 0.7); /* Even darker for inputs */
+      background: rgba(30, 41, 59, 0.8);
       border-color: rgba(255, 255, 255, 0.3);
       color: #f8fafc;
   }
   .control-panel.open #practiceBox, .control-panel.open #bulkTestOutput {
       color: #cbd5e1;
   }
-
 
   .visualization-panel { width: 100%; height: 75vh; }
 }
