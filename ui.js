@@ -67,7 +67,7 @@ export function initializeUI() {
     // --- NEW: Logic for icon-only collapsible sections ---
     document.querySelectorAll('.control-section').forEach(detailsEl => {
         const summary = detailsEl.querySelector('summary');
-        const icon = summary.querySelector('i');
+        const icon = summary.querySelector('svg'); // Target the SVG icon directly
 
         // Prevent the default toggle behavior on the entire summary
         summary.addEventListener('click', (event) => {
@@ -75,9 +75,12 @@ export function initializeUI() {
         });
 
         // Add a click listener only to the icon to programmatically toggle the 'open' attribute
-        icon.addEventListener('click', () => {
-            detailsEl.open = !detailsEl.open;
-        });
+        if(icon) {
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent this click from reaching the summary listener
+                detailsEl.open = !detailsEl.open;
+            });
+        }
     });
     // --- END NEW LOGIC ---
 
@@ -135,9 +138,13 @@ export function initializeUI() {
             switch (CURRENT_MODE) {
                 case 'transition':
                     {
-                        const circle = stateGroup.querySelector('.state-circle');
-                        if (!TRANS_FROM) {
+                        if (TRANS_FROM === stateId) { // Self-loop logic
+                            showTransModal(TRANS_FROM, stateId);
+                            document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
+                            setTransFrom(null);
+                        } else if (!TRANS_FROM) {
                             setTransFrom(stateId);
+                            const circle = stateGroup.querySelector('.state-circle');
                             if(circle) circle.classList.add('state-selected');
                         } else {
                             showTransModal(TRANS_FROM, stateId);
