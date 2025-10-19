@@ -14,18 +14,27 @@ export function updateUndoRedoButtons() {
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
 }
 
-function layoutStatesLine(states) {
+// --- NEW: Smart circular layout function ---
+function layoutStatesCircular(states) {
     if (!states || states.length === 0) return;
-    const canvasWidth = 1400;
-    const spacing = 180;
-    const perRow = Math.floor(canvasWidth / spacing);
+    const svg = document.getElementById('dfaSVG');
+    const bbox = svg.viewBox.baseVal;
+    const centerX = bbox.width / 2;
+    const centerY = bbox.height / 2;
+    
+    // Calculate radius based on number of states to prevent overlap
+    const baseRadius = Math.min(centerX, centerY) * 0.7;
+    const radius = Math.max(150, Math.min(baseRadius, states.length * 40));
+
+    const angleStep = (2 * Math.PI) / states.length;
+
     states.forEach((s, i) => {
-        const row = Math.floor(i / perRow);
-        const col = i % perRow;
-        s.x = 150 + col * spacing;
-        s.y = 150 + row * 150;
+        const angle = i * angleStep - (Math.PI / 2); // Start from the top
+        s.x = centerX + radius * Math.cos(angle);
+        s.y = centerY + radius * Math.sin(angle);
     });
 }
+
 
 export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
@@ -58,7 +67,6 @@ export function initializeUI() {
             setCurrentMode(tool.dataset.mode);
             setTransFrom(null);
             document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
-            // --- FIX: Add a class to the SVG to indicate the current mode for styling ---
             if (svg) svg.className.baseVal = `mode-${tool.dataset.mode}`;
             renderAll();
         });
@@ -108,34 +116,23 @@ export function initializeUI() {
         }
     });
 
-    // --- NEW: Event listener for deleting transitions ---
     svg.addEventListener('click', (e) => {
         const label = e.target.closest('.transition-label-text');
         if (!label || CURRENT_MODE !== 'delete') return;
-
-        e.stopPropagation(); // Prevent other click handlers from firing
-
+        e.stopPropagation();
         const from = label.dataset.from;
         const to = label.dataset.to;
         const symbolsStr = label.dataset.symbols;
         const symbols = symbolsStr.split(',').map(s => s.trim());
-
         let symbolToDelete = null;
-
         if (symbols.length === 1) {
-            symbolToDelete = symbols[0]; // This will be 'ε' or the symbol itself
+            symbolToDelete = symbols[0];
         } else {
-            // Prompt the user to specify which symbol to delete if there are multiple
             const input = prompt(`Delete which transition from ${from} to ${to}?\nAvailable: ${symbolsStr}`, symbols[0]);
-            if (input === null) {
-                return; // User cancelled the prompt
-            }
-            
+            if (input === null) return;
             const trimmedInput = input.trim();
-            // Handle epsilon case: user can type 'e', 'epsilon', or just leave it blank
             const isEpsilon = ['e', 'epsilon', ''].includes(trimmedInput.toLowerCase());
             const symbolInArray = isEpsilon ? 'ε' : trimmedInput;
-
             if (symbols.includes(symbolInArray)) {
                 symbolToDelete = symbolInArray;
             } else {
@@ -143,7 +140,6 @@ export function initializeUI() {
                 return;
             }
         }
-
         if (symbolToDelete !== null) {
             deleteTransition(from, to, symbolToDelete);
         }
@@ -261,7 +257,8 @@ export function initializeUI() {
             convertedMachine.type = targetType;
             setMachine(convertedMachine);
             modeSelect.value = targetType;
-            layoutStatesLine(MACHINE.states);
+            // --- FIX: Use the new circular layout function ---
+            layoutStatesCircular(MACHINE.states);
             setValidationMessage(successMsg, 'success');
         } else {
             MACHINE.type = newMode;
@@ -390,24 +387,19 @@ function deleteState(id) {
     renderAll();
 }
 
-// --- NEW: Function to delete a specific transition ---
 function deleteTransition(from, to, symbol) {
     pushUndo(updateUndoRedoButtons);
-    // Convert display 'ε' to internal '' for matching
     const symbolToMatch = symbol === 'ε' ? '' : symbol;
-
     const indexToDelete = MACHINE.transitions.findIndex(t => 
         t.from === from && 
         t.to === to && 
         (t.symbol || '') === symbolToMatch
     );
-
     if (indexToDelete > -1) {
         MACHINE.transitions.splice(indexToDelete, 1);
         renderAll();
     }
 }
-
 
 function renameState(oldId) {
     const modal = document.getElementById('renameModal');
