@@ -1,7 +1,13 @@
-import { renderAll } from './renderer.js';
-import { updateUndoRedoButtons } from './utils.js';
-
+// state.js
 // --- Single Source of Truth for Application State ---
+
+// We will import the renderAll function here to break the circular dependency.
+// It will be initialized later.
+let renderAll;
+
+export function setRenderFunction(fn) {
+    renderAll = fn;
+}
 
 export let MACHINE = {};
 export let UNDO_STACK = [];
@@ -18,7 +24,6 @@ export const simState = {
 };
 
 // --- State Mutation Functions ---
-// These functions are the ONLY way other modules should modify the state.
 
 export function setMachine(newMachine) {
     MACHINE = newMachine;
@@ -32,10 +37,14 @@ export function setTransFrom(stateId) {
     TRANS_FROM = stateId;
 }
 
+export function setCurrentPractice(practice) {
+    CURRENT_PRACTICE = practice;
+}
+
 export function pushUndo() {
     UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
-    REDO_STACK.length = 0; // Clear the redo stack when a new action is taken
-    updateUndoRedoButtons();
+    REDO_STACK.length = 0;
+    if (typeof updateUndoRedoButtons !== 'undefined') updateUndoRedoButtons();
 }
 
 export function doUndo() {
@@ -43,8 +52,8 @@ export function doUndo() {
         REDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
         const prevState = UNDO_STACK.pop();
         setMachine(prevState);
-        renderAll();
-        updateUndoRedoButtons();
+        if (renderAll) renderAll();
+        if (typeof updateUndoRedoButtons !== 'undefined') updateUndoRedoButtons();
     }
 }
 
@@ -53,28 +62,37 @@ export function doRedo() {
         UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
         const nextState = REDO_STACK.pop();
         setMachine(nextState);
-        renderAll();
-        updateUndoRedoButtons();
+        if (renderAll) renderAll();
+        if (typeof updateUndoRedoButtons !== 'undefined') updateUndoRedoButtons();
     }
 }
 
 export function initializeState() {
-    MACHINE = {
+    setMachine({
         type: 'DFA',
         states: [],
         transitions: [],
         alphabet: []
-    };
+    });
     UNDO_STACK = [];
     REDO_STACK = [];
-    CURRENT_MODE = 'addclick';
-    TRANS_FROM = null;
-    CURRENT_PRACTICE = null;
+    setCurrentMode('addclick');
+    setTransFrom(null);
+    setCurrentPractice(null);
 
     simState.steps = [];
     simState.index = 0;
-    clearTimeout(simState.timer);
+    if (simState.timer) clearTimeout(simState.timer);
     simState.timer = null;
 
-    updateUndoRedoButtons();
+    if (typeof updateUndoRedoButtons !== 'undefined') updateUndoRedoButtons();
+}
+
+// This function needs to be defined here for ui.js to access it,
+// but it depends on state. We pass the state to it.
+export function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
+    if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
 }
