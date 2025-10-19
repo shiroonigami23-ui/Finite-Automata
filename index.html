@@ -312,7 +312,6 @@
             <p class="modal-description">Review the auto-generated details for your automaton. This will generate a JSON file ready for your library.</p>
             <input id="libTitleInput" class="modal-input" placeholder="Title (e.g., DFA for even number of 0s)" />
             <textarea id="libDescInput" class="modal-input" placeholder="Custom notes about the machine..." style="height: 60px; resize: vertical;"></textarea>
-            <!-- THIS IS THE NEW PART -->
             <div id="libAlphabetDisplay" style="background: #f1f5f9; padding: 8px 10px; border-radius: 8px; font-size: 0.9em; color: #475569; margin-top: 8px; display: none;"></div>
             <select id="libTypeInput" class="modal-input" style="margin-top: 12px;">
                   <option value="DFA">DFA</option>
@@ -322,6 +321,18 @@
             <div class="modal-actions">
                 <button id="libSaveCancel">Cancel</button>
                 <button id="libSaveConfirm">Save JSON</button>
+            </div>
+        </div>
+    </div>
+    <!-- NEW: Modal for exporting PNG -->
+    <div id="exportPngModal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <h3>Export as PNG</h3>
+            <p class="modal-description">Enter a name for the PNG file.</p>
+            <input id="pngNameInput" class="modal-input" placeholder="e.g., dfa-ends-with-0" />
+            <div class="modal-actions">
+                <button id="pngExportCancel">Cancel</button>
+                <button id="pngExportConfirm">Export</button>
             </div>
         </div>
     </div>
