@@ -2,7 +2,7 @@ import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, do
 import { renderAll } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
 import { validateAutomaton } from './automata.js';
-import { saveMachine, loadMachine, exportPng } from './file.js';
+import { saveMachine, loadMachine, exportPng, handleSaveWithMetadata } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
 import { areEquivalent } from './equivalence.js';
@@ -15,6 +15,7 @@ function customAlert(title, message) {
     document.getElementById('alertModalMessage').textContent = message;
     if (alertModal) alertModal.style.display = 'flex';
 }
+window.customAlert = customAlert;
 
 export function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtn');
@@ -63,11 +64,15 @@ export function initializeUI() {
         libSaveConfirm.addEventListener('click', handleSaveWithMetadata);
     }
     document.querySelectorAll('.control-section summary').forEach(summary => {
-        summary.addEventListener('click', (event) => {
-            event.preventDefault();
-            const detailsEl = summary.parentElement;
-            if (detailsEl && detailsEl.tagName === 'DETAILS') {
-                detailsEl.open = !detailsEl.open;
+        const icon = summary.querySelector('i');
+        const nodeToWatch = icon || summary;
+        nodeToWatch.addEventListener('click', (event) => {
+            if (event.target.closest('i')) {
+              event.preventDefault();
+              const detailsEl = summary.parentElement;
+              if (detailsEl && detailsEl.tagName === 'DETAILS') {
+                  detailsEl.open = !detailsEl.open;
+              }
             }
         });
     });
@@ -258,8 +263,9 @@ export function initializeUI() {
             const newMode = modeSelect.value;
 
             if (newMode.includes('_TO_')) {
-                if (validateAutomaton().type === 'error') {
-                    setValidationMessage('Cannot convert: the current automaton is invalid.', 'error');
+                const validationResult = validateAutomaton();
+                if (validationResult.type === 'error') {
+                    setValidationMessage('Cannot convert: the current automaton is invalid. Details: ' + validationResult.message, 'error');
                     modeSelect.value = MACHINE.type; 
                     return;
                 }
@@ -279,6 +285,7 @@ export function initializeUI() {
                         await animateNfaToMinDfa(MACHINE, updateUndoRedoButtons);
                         modeSelect.value = 'DFA';
                     }
+                    MACHINE.type = modeSelect.value;
                 } catch (err) {
                     customAlert('Conversion Failed', err.message);
                     modeSelect.value = MACHINE.type;
@@ -294,9 +301,10 @@ export function initializeUI() {
 
     if(runTestBtn) runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
     if(genRandBtn) genRandBtn.addEventListener('click', () => {
-        const alphabet = MACHINE.alphabet && MACHINE.alphabet.length ? MACHINE.alphabet : ['0', '1'];
+        const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s))]
+        const effectiveAlphabet = alphabet.length > 0 ? alphabet : ['0', '1'];
         const len = Math.floor(Math.random() * 8) + 3;
-        if(testInput) testInput.value = Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+        if(testInput) testInput.value = Array.from({ length: len }, () => effectiveAlphabet[Math.floor(Math.random() * effectiveAlphabet.length)]).join('');
     });
     if(stepNextBtn) stepNextBtn.addEventListener('click', () => showStep(++simState.index));
     if(stepPrevBtn) stepPrevBtn.addEventListener('click', () => showStep(--simState.index));
@@ -388,6 +396,9 @@ export function initializeUI() {
         svg.addEventListener('touchcancel', endDrag);
     }
     
+    document.querySelector('.toolbar-icon[data-mode="addclick"]').classList.add('active');
+    svg.className.baseVal = 'mode-addclick';
+    initializeState(updateUndoRedoButtons);
     renderAll();
     updateUndoRedoButtons();
     checkAnswerBtn.style.display = 'none';
@@ -404,6 +415,7 @@ function addState(x, y) {
     const newId = 'q' + (maxId + 1);
     pushUndo(updateUndoRedoButtons);
     MACHINE.states.push({ id: newId, x, y, initial: MACHINE.states.length === 0, accepting: false });
+    enforceInitialStateRule();
     renderAll();
     const stateG = document.querySelector(`g[data-id="${newId}"] circle`);
     if (stateG) {
@@ -477,4 +489,4 @@ function enforceInitialStateRule() {
     if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
-}
+        }
