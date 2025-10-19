@@ -73,7 +73,7 @@ body {
 .control-section-header, .control-section summary {
     font-weight: 600;
     cursor: pointer;
-    list-style: none; /* Hide default arrow */
+    list-style: none;
     display: flex;
     align-items: center;
     gap: 8px;
