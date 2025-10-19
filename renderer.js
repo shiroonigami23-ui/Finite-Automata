@@ -91,7 +91,6 @@ export function renderAll() {
         const textOffset = 16; 
 
         uniqueSymbols.forEach((symbol, i) => {
-            // Adjust position for multiple symbols
             const yAdjust = labelPos.y + (i - (totalSymbols - 1) / 2) * textOffset;
             
             const textHalo = document.createElementNS(svg.namespaceURI, 'text');
@@ -101,7 +100,7 @@ export function renderAll() {
             textHalo.textContent = symbol;
             textHalo.setAttribute('data-from', fromId);
             textHalo.setAttribute('data-to', toId);
-            textHalo.setAttribute('data-symbol', symbol); // Store the specific symbol
+            textHalo.setAttribute('data-symbol', symbol);
             edgesGroup.appendChild(textHalo);
 
             const text = document.createElementNS(svg.namespaceURI, 'text');
