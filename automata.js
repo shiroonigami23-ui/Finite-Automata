@@ -13,46 +13,59 @@ export function validateAutomaton() {
         return { type: 'info', message: 'Canvas is empty.' };
     }
 
+    // --- RULE: Initial State Check ---
     const initialStates = states.filter(s => s.initial);
     if (initialStates.length === 0) {
         return { type: 'error', message: 'No initial state defined.' };
     }
     if (type === 'DFA' && initialStates.length > 1) {
-        return { type: 'error', message: 'DFA cannot have multiple initial states.' };
+        return { type: 'error', message: 'DFA Rule: Must have exactly one initial state.' };
     }
 
+    // --- RULE: Transition Integrity Check ---
     for (const t of transitions) {
         if (!stateIds.has(t.from) || !stateIds.has(t.to)) {
-            return { type: 'error', message: `Transition refers to non-existent state.` };
+            return { type: 'error', message: `Transition refers to a non-existent state.` };
         }
     }
 
+    // --- DFA-SPECIFIC RULES ---
     if (type === 'DFA') {
+        // --- NEW: Determine the full alphabet from all transitions ---
+        const alphabet = [...new Set(transitions.map(t => t.symbol).filter(s => s && s !== 'ε'))];
+        
         for (const state of states) {
-            const symbols = new Set();
+            const outgoingSymbols = new Set();
             for (const t of transitions.filter(tr => tr.from === state.id)) {
+                // --- RULE: No Epsilon (ε) Transitions ---
                 if (t.symbol === '' || t.symbol === 'ε') {
-                    return { type: 'error', message: `DFA state ${state.id} has an ε-transition.` };
+                    return { type: 'error', message: `DFA Rule: State ${state.id} has an ε-transition.` };
                 }
-                if (symbols.has(t.symbol)) {
-                    return { type: 'error', message: `DFA state ${state.id} is not deterministic for symbol '${t.symbol}'.` };
+                // --- RULE: Determinism (No multiple transitions for one symbol) ---
+                if (outgoingSymbols.has(t.symbol)) {
+                    return { type: 'error', message: `DFA Rule: State ${state.id} is not deterministic for symbol '${t.symbol}'.` };
                 }
-                symbols.add(t.symbol);
+                outgoingSymbols.add(t.symbol);
+            }
+
+            // --- NEW: Total Function Rule (Must have a transition for ALL symbols) ---
+            for (const symbol of alphabet) {
+                if (!outgoingSymbols.has(symbol)) {
+                    return { type: 'error', message: `DFA Rule: State ${state.id} is missing a transition for symbol '${symbol}'.`};
+                }
             }
         }
     } 
-    // --- NEW LOGIC BLOCK ---
-    // Add a specific check for NFAs to ensure they don't have epsilon transitions.
+    // --- NFA-SPECIFIC RULES ---
     else if (type === 'NFA') {
         for (const t of transitions) {
+            // --- RULE: No Epsilon (ε) Transitions ---
             if (t.symbol === '' || t.symbol === 'ε') {
-                return { type: 'error', message: `NFA rule violated: State ${t.from} has an ε-transition.` };
+                return { type: 'error', message: `NFA Rule: State ${t.from} has an ε-transition. Use ε-NFA mode instead.` };
             }
         }
     }
-    // ε-NFA mode is handled implicitly, as it has no extra restrictions beyond the general ones.
-    // --- END OF NEW LOGIC ---
-
+    // ε-NFA mode is the most lenient and has no additional rules beyond the general ones.
 
     return { type: 'success', message: 'Automaton is valid.' };
 }
@@ -316,4 +329,4 @@ function removeUnreachableStates(dfa) {
     const reachableTransitions = dfa.transitions.filter(t => reachable.has(t.from) && reachable.has(t.to));
 
     return { ...dfa, states: reachableStates, transitions: reachableTransitions };
-}
+                        }
