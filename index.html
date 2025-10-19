@@ -108,8 +108,8 @@
                     <label>Speed:
                       <select id="testSpeed">
                         <option value="500">Fast</option>
-                        <option value="1000">Normal</option>
-                        <option value="2000" selected>Slow</option>
+                        <option value="1500" selected>Normal</option>
+                        <option value="2500">Slow</option>
                       </select>
                     </label>
                     <div id="manualButtons" style="display:none;">
@@ -305,11 +305,11 @@
             </div>
         </div>
     </div>
-    <!-- NEW: Modal for saving library entry -->
+    <!-- Modal for saving library entry -->
     <div id="saveLibraryModal" class="modal-overlay" style="display:none">
         <div class="modal-box">
-            <h3>Save to Library</h3>
-            <p class="modal-description">Enter the details of automaton. A .JSON file will be ready.</p>
+            <h3>Save to Library File</h3>
+            <p class="modal-description">Enter the details for this automaton. This will generate a JSON file ready for your library.</p>
             <input id="libTitleInput" class="modal-input" placeholder="Title (e.g., DFA for even number of 0s)" />
             <textarea id="libDescInput" class="modal-input" placeholder="Description..." style="height: 80px; resize: vertical;"></textarea>
              <select id="libTypeInput" class="modal-input">
@@ -325,7 +325,7 @@
     </div>
 
   <script src="practice-bank.js" defer></script>
-  <!-- FIX: All JS files are now modules -->
+  <!-- All JS files are now modules -->
   <script type="module" src="utils.js"></script>
   <script type="module" src="state.js"></script>
   <script type="module" src="renderer.js"></script>
@@ -343,4 +343,5 @@
 </body>
 
 </html>
+
 
