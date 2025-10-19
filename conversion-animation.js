@@ -18,7 +18,6 @@ async function animateConversion(conversionFn, initialMachine, successMessage) {
 
     const finalMachine = await conversionFn(initialMachine, stepCallback);
 
-    // --- FIX: Apply layout and set final state ---
     layoutStatesCircular(finalMachine.states);
     setMachine(finalMachine);
     renderAll();
