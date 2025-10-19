@@ -50,7 +50,18 @@ export function initializeUI() {
     const controlPanel = document.querySelector('.control-panel');
     const visualizationPanel = document.getElementById('visualization-panel');
     const alertOkBtn = document.getElementById('alertOk');
+    const libSaveCancel = document.getElementById('libSaveCancel');
+    const libSaveConfirm = document.getElementById('libSaveConfirm');
+    const saveLibraryModal = document.getElementById('saveLibraryModal');
 
+    if (libSaveCancel && saveLibraryModal) {
+        libSaveCancel.addEventListener('click', () => {
+            saveLibraryModal.style.display = 'none';
+        });
+    }
+    if (libSaveConfirm) {
+        libSaveConfirm.addEventListener('click', handleSaveWithMetadata);
+    }
     document.querySelectorAll('.control-section summary').forEach(summary => {
         summary.addEventListener('click', (event) => {
             event.preventDefault();
