@@ -1,6 +1,6 @@
 :root {
   --bg1: linear-gradient(135deg, #0f172a 0%, #0b1220 100%);
-  --panel-bg: rgba(255, 255, 255, 0.85); /* Slightly more transparent */
+  --panel-bg: rgba(255, 255, 255, 0.85);
   --accent1: #667eea;
   --accent2: #764ba2;
   --muted: #94a3b8;
@@ -54,7 +54,6 @@ body {
   position: relative;
 }
 
-/* --- Floating Panel Base --- */
 .control-panel {
   width: 280px;
   flex-shrink: 0;
@@ -65,7 +64,7 @@ body {
   gap: 12px;
 }
 
-.control-section, .control-panel > .control-section-wrapper {
+.control-section {
     background: var(--panel-bg);
     border-radius: 14px;
     padding: 18px;
@@ -126,11 +125,12 @@ body {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.toolbar-icon i {
+
+.toolbar-icon svg {
     width: 24px;
     height: 24px;
+    stroke-width: 2.5;
 }
-
 
 .toolbar-icon.active {
   background: linear-gradient(90deg, var(--accent1), var(--accent2));
@@ -138,17 +138,17 @@ body {
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.18);
   transform: translateY(-2px);
 }
-.toolbar-icon.active i { color: #fff !important; }
+.toolbar-icon.active svg { color: #fff !important; }
 
-.toolbar-icon#tool-addclick i { color: #4caf50; }
-.toolbar-icon#tool-move i { color: #2196f3; }
-.toolbar-icon#tool-transition i { color: #9c27b0; }
-.toolbar-icon#tool-rename i { color: #009688; }
-.toolbar-icon#tool-delete i { color: #f44336; }
-.toolbar-icon#tool-stateprops i { color: #607d8b; }
-.toolbar-icon#clearCanvasBtn i { color: #f44336; }
-.toolbar-icon#undoBtn i, .toolbar-icon#redoBtn i { color: #607d8b; }
-
+.toolbar-icon#tool-addclick svg { color: #4caf50; }
+.toolbar-icon#tool-move svg { color: #2196f3; }
+.toolbar-icon#tool-transition svg { color: #9c27b0; }
+.toolbar-icon#tool-rename svg { color: #009688; }
+.toolbar-icon#tool-delete svg { color: #f44336; }
+.toolbar-icon#tool-stateprops svg { color: #607d8b; }
+.toolbar-icon#clearCanvasBtn svg { color: #f44336; }
+.toolbar-icon#undoBtn svg, .toolbar-icon#redoBtn svg { color: #607d8b; }
+.toolbar-icon#validateBtn svg {color: #4caf50;}
 
 
 .toolbar-icon:hover {
@@ -457,7 +457,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     pointer-events: none;
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
     background: transparent;
-    backdrop-filter: none;
     border: none;
     padding: 0;
     overflow-y: auto;
@@ -468,12 +467,33 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     opacity: 1;
     pointer-events: auto;
   }
-  /* This is the key change for floating sections */
-  .control-panel.open .control-section,
-  .control-panel.open > .control-section-wrapper {
-      background: rgba(255, 255, 255, 0.85);
+  
+  .control-panel.open .control-section {
+      background: rgba(15, 23, 42, 0.6); /* Dark, semi-transparent background */
       backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9; /* Light text color */
   }
+
+  .control-panel.open .control-section summary {
+      color: #f8fafc;
+  }
+    
+  .control-panel.open select,
+  .control-panel.open input,
+  .control-panel.open .icon-btn,
+  .control-panel.open #practiceBox,
+  .control-panel.open #bulkTestOutput,
+  .control-panel.open #libraryList > div {
+      background: rgba(30, 41, 59, 0.7); /* Even darker for inputs */
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #f8fafc;
+  }
+  .control-panel.open #practiceBox, .control-panel.open #bulkTestOutput {
+      color: #cbd5e1;
+  }
+
+
   .visualization-panel { width: 100%; height: 75vh; }
 }
 
