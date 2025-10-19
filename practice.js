@@ -1,7 +1,7 @@
 import { MACHINE, CURRENT_PRACTICE, pushUndo, setCurrentPractice } from './state.js';
 import { animateMachineDrawing } from './animation.js';
 import { setValidationMessage, addLog } from './utils.js';
-import { areEquivalent } from './equivalence.js'; // <-- NEW IMPORT
+import { areEquivalent } from './equivalence.js';
 
 export function generatePractice() {
     const practiceBox = document.getElementById('practiceBox');
@@ -36,10 +36,26 @@ export function showSolution(updateUIFunction) {
         return;
     }
     pushUndo(updateUIFunction);
-    const solutionMachine = JSON.parse(JSON.stringify(CURRENT_PRACTICE.machine));
-    solutionMachine.type = MACHINE.type;
+
+    // --- BUG FIX STARTS HERE ---
+    // Get the correct type from the current practice mode, not the global state.
+    const modeSelect = document.getElementById('modeSelect');
+    const correctType = modeSelect ? modeSelect.value.split('_TO_')[0] : 'DFA';
+
+    // Create a new machine object that correctly combines the machine data with its true type.
+    const solutionMachine = {
+        ...JSON.parse(JSON.stringify(CURRENT_PRACTICE.machine)),
+        type: correctType 
+    };
     
+    // Animate the drawing of the correctly typed machine.
     animateMachineDrawing(solutionMachine);
+
+    // Update the UI to reflect the type of the machine that was just loaded.
+    if(modeSelect) {
+        modeSelect.value = correctType;
+    }
+    // --- BUG FIX ENDS HERE ---
 }
 
 export function resetPractice() {
@@ -48,6 +64,7 @@ export function resetPractice() {
     const checkAnswerBtn = document.getElementById('checkAnswerBtn');
     if (checkAnswerBtn) checkAnswerBtn.hidden = true; // Hide button on reset
 }
+
 
 /**
  * Checks if the user's machine on the canvas is logically equivalent to the practice solution.
@@ -64,8 +81,14 @@ export async function checkAnswer() {
     
     // The user's machine currently on the canvas
     const userMachine = MACHINE;
-    // The solution machine for the current practice problem
-    const solutionMachine = CURRENT_PRACTICE.machine;
+    
+    // The solution machine needs its type explicitly defined for the check
+    const modeSelect = document.getElementById('modeSelect');
+    const correctType = modeSelect ? modeSelect.value.split('_TO_')[0] : 'DFA';
+    const solutionMachine = {
+        ...CURRENT_PRACTICE.machine,
+        type: correctType
+    };
 
     const isCorrect = await areEquivalent(userMachine, solutionMachine);
 
