@@ -79,7 +79,8 @@
                 <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
                   <button class="icon-btn" id="showSolBtn">Show Solution</button>
                   <button class="icon-btn" id="resetPractice">Reset</button>
-                  <button class="icon-btn" id="checkAnswerBtn">Check Answer</button>
+                  <!-- Button is now hidden by default -->
+                  <button class="icon-btn" id="checkAnswerBtn" hidden>Check Answer</button>
                 </div>
                 <div id="practiceBox">No practice generated yet.</div>
               </div>
@@ -317,10 +318,11 @@
   <script type="module" src="renderer.js"></script>
   <script type="module" src="automata.js"></script>
   <script type="module" src="simulation.js"></script>
+  <!-- NEW: Script for equivalence checking -->
+  <script type="module" src="equivalence.js"></script>
   <script type="module" src="practice.js"></script>
   <script type="module" src="file.js"></script>
   <script type="module" src="animation.js"></script>
-  <!-- NEW SCRIPT for conversion animations -->
   <script type="module" src="conversion-animation.js"></script>
   <script type="module" src="ui.js"></script>
   <script type="module" src="main.js"></script>
