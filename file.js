@@ -37,9 +37,7 @@ export function handleSaveWithMetadata() {
     const type = document.getElementById('libTypeInput').value;
 
     if (!title) {
-        // Using a custom alert now to match the app's UI
-        const customAlert = window.customAlert || alert;
-        customAlert("Input Required", "Please enter a title for the library entry.");
+        window.customAlert("Input Required", "Please enter a title for the library entry.");
         return;
     }
 
