@@ -64,25 +64,27 @@ export function initializeUI() {
     const visualizationPanel = document.getElementById('visualization-panel');
     const alertOkBtn = document.getElementById('alertOk');
 
-    // --- NEW: Logic for icon-only collapsible sections ---
-    document.querySelectorAll('.control-section').forEach(detailsEl => {
-        const summary = detailsEl.querySelector('summary');
-        const icon = summary.querySelector('svg'); // Target the SVG icon directly
-
-        // Prevent the default toggle behavior on the entire summary
+    // --- DEFINITIVE FIX for icon-only collapsible sections using Event Delegation ---
+    document.querySelectorAll('.control-section summary').forEach(summary => {
         summary.addEventListener('click', (event) => {
+            // ALWAYS prevent the default toggle action of the summary itself.
             event.preventDefault();
-        });
 
-        // Add a click listener only to the icon to programmatically toggle the 'open' attribute
-        if(icon) {
-            icon.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent this click from reaching the summary listener
-                detailsEl.open = !detailsEl.open;
-            });
-        }
+            // Check if the element that was actually clicked is an SVG icon
+            // (or a child path inside an SVG). This is robust.
+            if (event.target.closest('svg')) {
+                const detailsEl = summary.parentElement;
+                // Double-check we're working with a <details> element
+                if (detailsEl && detailsEl.tagName === 'DETAILS') {
+                    // Manually toggle the 'open' property.
+                    detailsEl.open = !detailsEl.open;
+                }
+            }
+            // If the click was not on the SVG icon, do nothing.
+        });
     });
-    // --- END NEW LOGIC ---
+    // --- END FIX ---
+
 
     if (alertOkBtn) {
         alertOkBtn.addEventListener('click', () => {
@@ -443,7 +445,7 @@ function deleteTransition(from, to, symbol) {
 
     if (indexToDelete > -1) {
         MACHINE.transitions.splice(indexToDelete, 1);
-        renderAll();
+   renderAll();
     }
 }
 
