@@ -1,3 +1,4 @@
+// ui.js
 import { MACHINE, CURRENT_MODE, TRANS_FROM, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
 import { renderAll } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
@@ -21,6 +22,7 @@ function layoutStatesLine(states) {
 
 export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
+    const statesGroup = document.getElementById('states');
     const modeSelect = document.getElementById('modeSelect');
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
@@ -51,15 +53,13 @@ export function initializeUI() {
             setCurrentMode(tool.dataset.mode);
             setTransFrom(null);
             document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
-            renderAll(); // Re-render to update mode label
+            renderAll();
         });
     });
 
     // Main canvas click for adding states
     svg.addEventListener('click', (e) => {
-        // Prevent adding state if a state was clicked
         if (e.target.closest('g[data-id]')) return;
-
         if (CURRENT_MODE === 'addclick') {
             const pt = svg.createSVGPoint();
             pt.x = e.clientX;
@@ -70,7 +70,7 @@ export function initializeUI() {
     });
 
     // Event delegation for state clicks
-    svg.addEventListener('click', (e) => {
+    statesGroup.addEventListener('click', (e) => {
         const stateGroup = e.target.closest('g[data-id]');
         if (!stateGroup) return;
 
@@ -78,7 +78,7 @@ export function initializeUI() {
         const state = MACHINE.states.find(s => s.id === stateId);
         if (!state) return;
 
-        e.stopPropagation(); // Prevent canvas click from firing
+        e.stopPropagation();
 
         switch (CURRENT_MODE) {
             case 'transition':
@@ -106,6 +106,57 @@ export function initializeUI() {
         }
     });
 
+    // --- CORRECTED: Move Tool Logic ---
+    let dragging = false;
+    let selectedStateElement = null;
+    let offset = { x: 0, y: 0 };
+
+    statesGroup.addEventListener('pointerdown', (e) => {
+        if (CURRENT_MODE !== 'move') return;
+        const target = e.target.closest('g[data-id]');
+        if (target) {
+            dragging = true;
+            selectedStateElement = target;
+            const stateId = target.getAttribute('data-id');
+            const state = MACHINE.states.find(s => s.id === stateId);
+
+            const pt = svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+            offset.x = svgP.x - state.x;
+            offset.y = svgP.y - state.y;
+            
+            pushUndo();
+        }
+    });
+
+    svg.addEventListener('pointermove', (e) => {
+        if (dragging && selectedStateElement) {
+            const stateId = selectedStateElement.getAttribute('data-id');
+            const state = MACHINE.states.find(s => s.id === stateId);
+
+            const pt = svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+            state.x = svgP.x - offset.x;
+            state.y = svgP.y - offset.y;
+            renderAll();
+        }
+    });
+
+    svg.addEventListener('pointerup', () => {
+        dragging = false;
+        selectedStateElement = null;
+    });
+     svg.addEventListener('pointerleave', () => {
+        dragging = false;
+        selectedStateElement = null;
+    });
+
 
     // --- Modals ---
     document.getElementById('transCancel').addEventListener('click', hideTransModal);
@@ -115,18 +166,18 @@ export function initializeUI() {
         const symbol = document.getElementById('transSymbol').value.trim() || 'ε';
 
         if (MACHINE.type === 'DFA' && symbol === 'ε') {
-            alert('DFA rule: ε-transitions disallowed.');
+            setValidationMessage('DFA rule: ε-transitions disallowed.', 'error');
             return;
         }
 
         const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
         if (MACHINE.type === 'DFA' && conflict) {
-            alert(`DFA rule: State ${from} is already deterministic on '${symbol}'.`);
+            setValidationMessage(`DFA rule: State ${from} is already deterministic on '${symbol}'.`, 'error');
             return;
         }
 
         pushUndo();
-        MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) });
+        MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) || 'ε' });
         updateAlphabet();
         renderAll();
         hideTransModal();
@@ -139,7 +190,7 @@ export function initializeUI() {
         if (s) {
             pushUndo();
             const isInitial = document.getElementById('propInitial').checked;
-            if (isInitial && (MACHINE.type === 'DFA')) {
+            if (isInitial) { // Always enforce single initial state
                 MACHINE.states.forEach(x => x.initial = false);
             }
             s.initial = isInitial;
@@ -156,14 +207,19 @@ export function initializeUI() {
         const oldId = modal.dataset.oldId;
         const newId = document.getElementById('renameInput').value.trim();
 
-        if (!newId || newId === oldId || MACHINE.states.find(s => s.id === newId)) {
-            if (MACHINE.states.find(s => s.id === newId)) alert('State name already exists');
-            modal.style.display = 'none';
+        if (!newId || newId === oldId) {
+             modal.style.display = 'none';
+             return;
+        }
+        if (MACHINE.states.find(s => s.id === newId)) {
+            setValidationMessage('State name already exists', 'error');
             return;
         }
-
+        
         pushUndo();
-        MACHINE.states.find(s => s.id === oldId).id = newId;
+        const stateToRename = MACHINE.states.find(s => s.id === oldId);
+        if(stateToRename) stateToRename.id = newId;
+
         MACHINE.transitions.forEach(t => {
             if (t.from === oldId) t.from = newId;
             if (t.to === oldId) t.to = newId;
@@ -202,8 +258,10 @@ export function initializeUI() {
         let targetType = 'DFA';
 
         try {
-            if (validateAutomaton().type === 'error') {
-                setValidationMessage('Cannot convert invalid automaton.', 'warning');
+            if (validateAutomaton().type === 'error' && !newMode.includes('TO')) {
+                 MACHINE.type = newMode;
+                 renderAll();
+                 return;
             }
 
             if (newMode === 'ENFA_TO_NFA') {
@@ -222,7 +280,7 @@ export function initializeUI() {
             }
         } catch (err) {
             setValidationMessage('Conversion failed: ' + err.message, 'error');
-            modeSelect.value = MACHINE.type; // Revert dropdown
+            modeSelect.value = MACHINE.type;
             return;
         }
 
@@ -280,7 +338,6 @@ export function initializeUI() {
     renderAll();
 }
 
-// --- Helper Functions specific to UI actions ---
 
 function addState(x, y) {
     let maxId = -1;
@@ -346,7 +403,8 @@ function hideTransModal() {
 
 function enforceInitialStateRule() {
     if (!MACHINE || !Array.isArray(MACHINE.states)) return;
-    if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
+    const initialStates = MACHINE.states.filter(s => s.initial);
+    if (MACHINE.states.length > 0 && initialStates.length === 0) {
         MACHINE.states[0].initial = true;
     }
-}
+            }
