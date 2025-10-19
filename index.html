@@ -35,15 +35,13 @@
     <div class="app-container" role="application" aria-label="Finite Automata Practice Studio">
       <header class="header">
         <h1>Finite Automata Practice</h1>
-        <!-- MOVED: Panel Toggle Button into header for fixed positioning -->
         <button id="panel-toggle-btn" class="panel-toggle-btn" title="Toggle Controls">
           <i data-lucide="menu"></i>
         </button>
       </header>
       <main class="main-content">
         <aside class="control-panel" aria-label="Controls">
-          <!-- REMOVED: "Mode & Interaction" header -->
-          <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div class="control-section-wrapper">
             <select id="modeSelect" aria-label="Mode select">
               <option value="DFA">DFA</option>
               <option value="NFA">NFA</option>
@@ -55,8 +53,8 @@
             </select>
           </div>
           <details class="control-section" open>
-            <summary>Practice Generator</summary>
-            <div>
+            <summary>🧩 Practice Generator</summary>
+            <div class="control-section-wrapper">
               <div style="margin-bottom:12px">
                 <div style="display:flex;gap:8px">
                   <select id="practiceMode">
@@ -77,8 +75,8 @@
             </div>
           </details>
           <details class="control-section">
-            <summary>Testing</summary>
-            <div>
+            <summary>🧪 Testing</summary>
+            <div class="control-section-wrapper">
               <div class="controls-group">
                 <div class="test-panel">
                   <div class="input"><input id="testInput" placeholder="Enter string (e.g., abbab)" /></div>
@@ -108,9 +106,6 @@
                 </details>
                 <div id="testOutput" class="output-display">Ready</div>
               </div>
-            </div>
-
-            <div style="padding:8px 6px;border-top:1px solid #e6eef8;margin-top:8px;">
               <details id="bulkTestSection">
                 <summary>Bulk Testing</summary>
                 <div>
@@ -122,20 +117,22 @@
             </div>
           </details>
           <details class="control-section">
-            <summary>File</summary>
-            <div class="control-row">
-              <button id="saveMachineBtn" title="Save machine (JSON)">💾 Save</button>
-              <button id="loadMachineBtn" title="Load machine (JSON)">📂 Load</button>
+            <summary>📁 File</summary>
+            <div class="control-section-wrapper">
+              <div class="control-row">
+                <button id="saveMachineBtn" title="Save machine (JSON)">💾 Save</button>
+                <button id="loadMachineBtn" title="Load machine (JSON)">📂 Load</button>
+              </div>
+              <div class="control-row">
+                <button id="exportPngBtn" title="Export canvas as PNG">🖼️ Export PNG</button>
+              </div>
+              <input type="file" id="loadFileInput" accept=".json" style="display:none" />
             </div>
-            <div class="control-row">
-              <button id="exportPngBtn" title="Export canvas as PNG">🖼️ Export PNG</button>
-            </div>
-            <input type="file" id="loadFileInput" accept=".json" style="display:none" />
           </details>
 
           <details class="control-section" id="librarySection">
-            <summary>Library</summary>
-            <div>
+            <summary>📚 Library</summary>
+            <div class="control-section-wrapper">
               <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
                 <input id="libSearch" placeholder="Search..." />
                 <select id="libFilter">
@@ -302,4 +299,3 @@
 </html>
 
 
-  
