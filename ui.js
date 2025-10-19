@@ -6,7 +6,12 @@ import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage, getModeLabel } from './utils.js';
 
-// This function is now local to the UI and is passed to state functions when needed.
+function customAlert(title, message) {
+    document.getElementById('alertTitle').textContent = title;
+    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('alertModal').style.display = 'flex';
+}
+
 export function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
@@ -14,27 +19,21 @@ export function updateUndoRedoButtons() {
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
 }
 
-// --- NEW: Smart circular layout function ---
 function layoutStatesCircular(states) {
     if (!states || states.length === 0) return;
     const svg = document.getElementById('dfaSVG');
     const bbox = svg.viewBox.baseVal;
     const centerX = bbox.width / 2;
     const centerY = bbox.height / 2;
-    
-    // Calculate radius based on number of states to prevent overlap
     const baseRadius = Math.min(centerX, centerY) * 0.7;
     const radius = Math.max(150, Math.min(baseRadius, states.length * 40));
-
     const angleStep = (2 * Math.PI) / states.length;
-
     states.forEach((s, i) => {
-        const angle = i * angleStep - (Math.PI / 2); // Start from the top
+        const angle = i * angleStep - (Math.PI / 2);
         s.x = centerX + radius * Math.cos(angle);
         s.y = centerY + radius * Math.sin(angle);
     });
 }
-
 
 export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
@@ -60,6 +59,10 @@ export function initializeUI() {
     const resetPracticeBtn = document.getElementById('resetPractice');
     const checkAnswerBtn = document.getElementById('checkAnswerBtn');
 
+    document.getElementById('alertOk').addEventListener('click', () => {
+        document.getElementById('alertModal').style.display = 'none';
+    });
+    
     document.querySelectorAll('.toolbar-icon[data-mode]').forEach(tool => {
         tool.addEventListener('click', () => {
             document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
@@ -73,7 +76,7 @@ export function initializeUI() {
     });
 
     svg.addEventListener('click', (e) => {
-        if (e.target.closest('g[data-id]')) return;
+        if (e.target.closest('g[data-id]') || e.target.closest('.transition-label-text')) return;
         if (CURRENT_MODE === 'addclick') {
             const pt = svg.createSVGPoint();
             pt.x = e.clientX;
@@ -119,29 +122,15 @@ export function initializeUI() {
     svg.addEventListener('click', (e) => {
         const label = e.target.closest('.transition-label-text');
         if (!label || CURRENT_MODE !== 'delete') return;
-        e.stopPropagation();
+
+        e.stopPropagation(); 
+
         const from = label.dataset.from;
         const to = label.dataset.to;
-        const symbolsStr = label.dataset.symbols;
-        const symbols = symbolsStr.split(',').map(s => s.trim());
-        let symbolToDelete = null;
-        if (symbols.length === 1) {
-            symbolToDelete = symbols[0];
-        } else {
-            const input = prompt(`Delete which transition from ${from} to ${to}?\nAvailable: ${symbolsStr}`, symbols[0]);
-            if (input === null) return;
-            const trimmedInput = input.trim();
-            const isEpsilon = ['e', 'epsilon', ''].includes(trimmedInput.toLowerCase());
-            const symbolInArray = isEpsilon ? 'ε' : trimmedInput;
-            if (symbols.includes(symbolInArray)) {
-                symbolToDelete = symbolInArray;
-            } else {
-                alert(`Invalid symbol '${input}'. No transition deleted.`);
-                return;
-            }
-        }
-        if (symbolToDelete !== null) {
-            deleteTransition(from, to, symbolToDelete);
+        const symbol = label.dataset.symbol;
+
+        if (symbol !== undefined) {
+            deleteTransition(from, to, symbol);
         }
     });
 
@@ -151,12 +140,12 @@ export function initializeUI() {
         const to = document.getElementById('transTo').value;
         const symbol = document.getElementById('transSymbol').value.trim() || 'ε';
         if (MACHINE.type === 'DFA' && symbol === 'ε') {
-            alert('DFA rule: ε-transitions disallowed.');
+            customAlert('Invalid Transition', 'DFA rule: ε-transitions are not allowed.');
             return;
         }
         const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
         if (MACHINE.type === 'DFA' && conflict) {
-            alert(`DFA rule: State ${from} is already deterministic on '${symbol}'.`);
+            customAlert('Invalid Transition', `DFA rule: State ${from} is already deterministic on '${symbol}'.`);
             return;
         }
         pushUndo(updateUndoRedoButtons);
@@ -189,7 +178,9 @@ export function initializeUI() {
         const oldId = modal.dataset.oldId;
         const newId = document.getElementById('renameInput').value.trim();
         if (!newId || newId === oldId || MACHINE.states.find(s => s.id === newId)) {
-            if (MACHINE.states.find(s => s.id === newId)) alert('State name already exists');
+            if (MACHINE.states.find(s => s.id === newId)) {
+                customAlert('Rename Failed', 'A state with that name already exists.');
+            }
             modal.style.display = 'none';
             return;
         }
@@ -248,7 +239,7 @@ export function initializeUI() {
                 successMsg = 'Minimized DFA.';
             }
         } catch (err) {
-            setValidationMessage('Conversion failed: ' + err.message, 'error');
+            customAlert('Conversion Failed', err.message);
             modeSelect.value = MACHINE.type;
             return;
         }
@@ -257,7 +248,6 @@ export function initializeUI() {
             convertedMachine.type = targetType;
             setMachine(convertedMachine);
             modeSelect.value = targetType;
-            // --- FIX: Use the new circular layout function ---
             layoutStatesCircular(MACHINE.states);
             setValidationMessage(successMsg, 'success');
         } else {
@@ -390,11 +380,13 @@ function deleteState(id) {
 function deleteTransition(from, to, symbol) {
     pushUndo(updateUndoRedoButtons);
     const symbolToMatch = symbol === 'ε' ? '' : symbol;
+
     const indexToDelete = MACHINE.transitions.findIndex(t => 
         t.from === from && 
         t.to === to && 
         (t.symbol || '') === symbolToMatch
     );
+
     if (indexToDelete > -1) {
         MACHINE.transitions.splice(indexToDelete, 1);
         renderAll();
@@ -439,4 +431,4 @@ function enforceInitialStateRule() {
     if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
-}
+            }
