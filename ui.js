@@ -54,11 +54,9 @@ export function initializeUI() {
     document.querySelectorAll('.control-section summary').forEach(summary => {
         summary.addEventListener('click', (event) => {
             event.preventDefault();
-            if (event.target.closest('svg')) {
-                const detailsEl = summary.parentElement;
-                if (detailsEl && detailsEl.tagName === 'DETAILS') {
-                    detailsEl.open = !detailsEl.open;
-                }
+            const detailsEl = summary.parentElement;
+            if (detailsEl && detailsEl.tagName === 'DETAILS') {
+                detailsEl.open = !detailsEl.open;
             }
         });
     });
@@ -258,16 +256,16 @@ export function initializeUI() {
                 try {
                     modeSelect.disabled = true;
                     if (newMode === 'ENFA_TO_NFA') {
-                        await animateEnfaToNfa(MACHINE);
+                        await animateEnfaToNfa(MACHINE, updateUndoRedoButtons);
                         modeSelect.value = 'NFA';
                     } else if (newMode === 'NFA_TO_DFA') {
-                        await animateNfaToDfa(MACHINE);
+                        await animateNfaToDfa(MACHINE, updateUndoRedoButtons);
                         modeSelect.value = 'DFA';
                     } else if (newMode === 'DFA_TO_MIN_DFA') {
-                        await animateDfaToMinDfa(MACHINE);
+                        await animateDfaToMinDfa(MACHINE, updateUndoRedoButtons);
                         modeSelect.value = 'DFA';
                     } else if (newMode === 'NFA_TO_MIN_DFA') {
-                        await animateNfaToMinDfa(MACHINE);
+                        await animateNfaToMinDfa(MACHINE, updateUndoRedoButtons);
                         modeSelect.value = 'DFA';
                     }
                 } catch (err) {
