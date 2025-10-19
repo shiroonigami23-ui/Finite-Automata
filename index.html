@@ -21,7 +21,7 @@
         style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); cursor:pointer; font-weight:700; transition: background 0.3s;">
         Finite Automata
       </button>
-      <button class="splash-nav-btn" data-target="PDA" disabled
+       <button class="splash-nav-btn" data-target="PDA" disabled
         style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.05); cursor:not-allowed; opacity:0.6; font-weight:700;">
         PDA (Coming Soon)
       </button>
@@ -301,16 +301,8 @@
     </div>
   </div>
 
-  <!--
-    CORRECTED SCRIPT LOADING ORDER:
-    1. practice-bank.js: Defines window.PRACTICE_BANK. `defer` ensures it runs before other scripts.
-    2. library-loader.js: This classic script's event listener will now correctly find the global function.
-    3. library_helper.js: This module creates the `window.loadMachineFromObject` bridge function.
-    4. main.js: The main application entry point, runs last to initialize the UI.
-  -->
   <script src="practice-bank.js" defer></script>
   <script src="library-loader.js" defer></script>
-  
   <script type="module" src="library_helper.js"></script>
   <script type="module" src="main.js"></script>
 
@@ -319,4 +311,3 @@
 </html>
 
 
-          
