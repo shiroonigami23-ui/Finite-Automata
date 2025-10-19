@@ -70,17 +70,39 @@ body {
     padding: 18px;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.control-section-header, .control-section summary {
-    font-weight: 600;
-    cursor: pointer;
+
+/* --- FIX: Floating headers and icon-only toggle --- */
+.control-section summary {
     list-style: none; /* Hide default arrow */
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 600;
+    color: #4a5568; /* Darker text */
+    padding: 4px;
 }
 .control-section summary::-webkit-details-marker {
     display: none;
 }
+.control-section summary .icon-toggle {
+    cursor: pointer;
+    display: inline-flex;
+    padding: 4px; /* Clickable area */
+}
+.control-section summary span {
+    pointer-events: none; /* Make text non-clickable for toggle */
+}
+details.control-section {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+details.control-section[open] {
+    background: var(--panel-bg);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 18px;
+}
+/* --- End of Fix --- */
 
 
 .control-panel select,
@@ -172,7 +194,7 @@ body {
 .toolbar-icon#undoBtn svg, .toolbar-icon#redoBtn svg { stroke: #607d8b; }
 .toolbar-icon#validateBtn svg {stroke: #4caf50;}
 
-/* --- FIX: Colorful Control Panel Section Icons --- */
+/* --- Colorful Control Panel Section Icons --- */
 .control-section-header [data-lucide='sliders-horizontal'],
 .control-section summary [data-lucide='sliders-horizontal'] {
     stroke: #2196f3;
@@ -193,7 +215,7 @@ body {
 .control-section summary [data-lucide='library'] {
     stroke: #e91e63;
 }
-/* --- End of Fix --- */
+
 
 
 .toolbar-icon:hover {
