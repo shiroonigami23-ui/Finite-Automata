@@ -1,8 +1,7 @@
-import { MACHINE, CURRENT_PRACTICE, pushUndo, setMachine } from './state.js';
+// practice.js
+import { MACHINE, CURRENT_PRACTICE, pushUndo, setMachine, setCurrentPractice } from './state.js';
 import { renderAll } from './renderer.js';
-import { sleep, setValidationMessage } from './utils.js';
-
-let practiceModule = { CURRENT_PRACTICE: null };
+import { setValidationMessage } from './utils.js';
 
 export function generatePractice() {
     const practiceBox = document.getElementById('practiceBox');
@@ -14,30 +13,31 @@ export function generatePractice() {
         practiceBox.textContent = "No questions available for this mode/level.";
         return;
     }
-    practiceModule.CURRENT_PRACTICE = bank[Math.floor(Math.random() * bank.length)];
-    practiceBox.innerHTML = `<strong>${mode} | ${level}</strong><div style="margin-top:8px">${practiceModule.CURRENT_PRACTICE.q}</div>`;
+    const newPractice = bank[Math.floor(Math.random() * bank.length)];
+    setCurrentPractice(newPractice); // CORRECTED: Use a function to set state
+    practiceBox.innerHTML = `<strong>${mode} | ${level}</strong><div style="margin-top:8px">${newPractice.q}</div>`;
 }
 
 export async function showSolution() {
-    if (!practiceModule.CURRENT_PRACTICE || !practiceModule.CURRENT_PRACTICE.machine) {
+    if (!CURRENT_PRACTICE || !CURRENT_PRACTICE.machine) {
         setValidationMessage('No practice generated or missing solution data.', 'error');
         return;
     }
 
     pushUndo();
-    const solutionMachine = JSON.parse(JSON.stringify(practiceModule.CURRENT_PRACTICE.machine));
+    const solutionMachine = JSON.parse(JSON.stringify(CURRENT_PRACTICE.machine));
     solutionMachine.type = MACHINE.type;
     setMachine(solutionMachine);
     renderAll();
 }
 
 export function resetPractice() {
-    practiceModule.CURRENT_PRACTICE = null;
+    setCurrentPractice(null); // CORRECTED: Use a function to set state
     document.getElementById('practiceBox').textContent = 'No practice generated yet.';
 }
 
 export function checkAnswer() {
-    if (!practiceModule.CURRENT_PRACTICE) {
+    if (!CURRENT_PRACTICE) {
         setValidationMessage('No practice generated yet.', 'error');
         return;
     }
