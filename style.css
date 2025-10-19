@@ -360,6 +360,18 @@ body {
   font-size: 13px;
 }
 
+/* --- NEW: Style for the clickable halo around transition text --- */
+.transition-label-text {
+  fill: transparent; /* Make the text itself invisible */
+  stroke: transparent; /* Make the halo invisible by default */
+}
+
+/* --- NEW: Change cursor to a delete icon in delete mode --- */
+.mode-delete .state-circle:hover,
+.mode-delete .transition-label-text {
+    cursor: crosshair;
+}
+
 .kv {
   font-size: 13px;
   color: var(--muted);
@@ -382,7 +394,6 @@ body {
   border-radius: 10px;
 }
 
-/* --- FIX: Added a glow effect to the pulseState animation --- */
 @keyframes pulseState {
   0% {
     stroke-width: 3;
@@ -425,14 +436,14 @@ body {
 
 .state-animating {
   animation-name: pulseState;
-  animation-duration: 1s; /* Give it a duration */
+  animation-duration: 1s;
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
 
 .transition-animating {
   animation-name: pulseTransition;
-  animation-duration: 1s; /* Give it a duration */
+  animation-duration: 1s;
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
@@ -960,4 +971,4 @@ button:disabled {
 .mode-indicator.enfa {
   background-color: #fce7f3;
   color: #be185d;
-}
+                        }
