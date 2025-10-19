@@ -1,8 +1,8 @@
 import { setMachine } from './state.js';
 import { renderAll } from './renderer.js';
-import { sleep, addLogMessage } from './utils.js'; // FIX: Import the centralized logger
+import { sleep, addLogMessage } from './utils.js';
 
-const ANIMATION_DELAY = 1000; // Standardized delay
+const ANIMATION_DELAY = 1500; // Changed from 1000 to 1500 for a slower animation
 
 /**
  * Animates the drawing of a finite automaton, logging each step.
@@ -24,7 +24,7 @@ export async function animateMachineDrawing(machineToDraw) {
         let message = `Adding state <strong>${state.id}</strong>`;
         if (state.initial) message += " (Initial)";
         if (state.accepting) message += " (Final)";
-        addLogMessage(message, 'plus-circle'); // FIX: Use centralized logger
+        addLogMessage(message, 'plus-circle');
 
         tempMachine.states.push(state);
         setMachine({...tempMachine});
@@ -38,7 +38,7 @@ export async function animateMachineDrawing(machineToDraw) {
     
     for (const transition of machineToDraw.transitions) {
         const { from, to, symbol } = transition;
-        addLogMessage(`Drawing transition from <strong>${from}</strong> to <strong>${to}</strong> on symbol '<strong>${symbol || 'ε'}</strong>'`, 'git-branch'); // FIX: Use centralized logger
+        addLogMessage(`Drawing transition from <strong>${from}</strong> to <strong>${to}</strong> on symbol '<strong>${symbol || 'ε'}</strong>'`, 'git-branch');
         
         tempMachine.transitions.push(transition);
         setMachine({...tempMachine});
@@ -56,5 +56,5 @@ export async function animateMachineDrawing(machineToDraw) {
 
     setMachine(machineToDraw);
     renderAll(); 
-    addLogMessage('Construction complete!', 'check-circle'); // FIX: Use centralized logger
+    addLogMessage('Construction complete!', 'check-circle');
 }
