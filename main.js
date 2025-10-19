@@ -8,14 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const mainApp = document.getElementById('mainApp');
     const faButton = document.querySelector('.splash-nav-btn[data-target="Automata"]');
 
-    // Pass the main render function to the state module.
-    // This breaks the circular dependency, as the state module no longer needs to import it.
     setRenderFunction(renderAll);
 
     const startApp = () => {
         if (mainApp) mainApp.style.display = 'block';
         
-        // CRITICAL FIX: Render icons BEFORE initializing UI that depends on them.
+        // CRITICAL FIX: Render icons BEFORE initializing the UI that adds listeners to them.
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
