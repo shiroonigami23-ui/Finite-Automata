@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 800);
         });
     } else {
+        // Fallback if splash screen is missing, for development
         if (mainApp) mainApp.style.display = 'block';
         initializeState();
         initializeUI();
