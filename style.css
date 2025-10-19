@@ -1006,3 +1006,77 @@ button:disabled {
     height: 1.3em;
     accent-color: var(--accent1);
 }
+/* --- Append this to the bottom of your existing style.css file --- */
+
+.panel-toggle-btn {
+  display: none; /* Hidden by default on large screens */
+  position: fixed;
+  top: 85px;
+  left: 15px;
+  z-index: 150;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 1024px) {
+  .panel-toggle-btn {
+    display: flex;
+  }
+
+  .main-content {
+    flex-direction: row; /* Keep it as a row */
+    align-items: stretch;
+  }
+
+  .control-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 320px;
+    height: 100vh;
+    max-height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px) saturate(150%);
+    border-right: 1px solid rgba(255,255,255,0.2);
+    border-radius: 0 14px 14px 0;
+  }
+
+  .control-panel.open {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0,0,0,0.3);
+  }
+
+  .visualization-panel {
+    width: 100%;
+    position: relative;
+    top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .control-panel {
+    width: calc(100% - 40px);
+  }
+   .panel-toggle-btn {
+    top: 75px;
+  }
+}
+
+/* Make transition labels clickable in delete mode */
+.mode-delete .transition-label-text {
+    cursor: pointer;
+}
