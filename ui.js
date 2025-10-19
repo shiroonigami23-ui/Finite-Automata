@@ -262,6 +262,7 @@ export function initializeUI() {
     if(zoomResetBtn) zoomResetBtn.addEventListener('click', () => setZoom(100));
     setZoom(100);
 
+    // --- FIX: Enhanced Dragging Logic for Touch and Mouse ---
     let dragging = false, currentStateG = null, dragOffsetX = 0, dragOffsetY = 0;
 
     function getPoint(evt) {
@@ -275,13 +276,16 @@ export function initializeUI() {
     function startDrag(e) {
         const stateG = e.target.closest('g[data-id]');
         if (CURRENT_MODE !== 'move' || !stateG) return;
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault(); 
+        e.stopPropagation();
         const sObj = MACHINE.states.find(x => x.id === stateG.getAttribute('data-id'));
         if (!sObj) return;
         pushUndo(updateUndoRedoButtons);
-        dragging = true; currentStateG = stateG;
+        dragging = true; 
+        currentStateG = stateG;
         const p = getPoint(e);
-        dragOffsetX = p.x - sObj.x; dragOffsetY = p.y - sObj.y;
+        dragOffsetX = p.x - sObj.x; 
+        dragOffsetY = p.y - sObj.y;
         stateG.querySelector('circle').classList.add('state-selected');
     }
 
@@ -291,26 +295,32 @@ export function initializeUI() {
         const sObj = MACHINE.states.find(x => x.id === currentStateG.getAttribute('data-id'));
         if (!sObj) return;
         const p = getPoint(e);
-        sObj.x = p.x - dragOffsetX; sObj.y = p.y - dragOffsetY;
+        sObj.x = p.x - dragOffsetX; 
+        sObj.y = p.y - dragOffsetY;
         renderAll();
     }
 
     function endDrag() {
         if (!dragging) return;
         dragging = false;
-        currentStateG.querySelector('circle').classList.remove('state-selected');
+        if (currentStateG) {
+            currentStateG.querySelector('circle').classList.remove('state-selected');
+        }
         currentStateG = null;
     }
 
+    // Mouse events
     svg.addEventListener('mousedown', startDrag);
     svg.addEventListener('mousemove', moveDrag);
     svg.addEventListener('mouseup', endDrag);
     svg.addEventListener('mouseleave', endDrag);
+
+    // Touch events for mobile devices
     svg.addEventListener('touchstart', startDrag);
     svg.addEventListener('touchmove', moveDrag);
     svg.addEventListener('touchend', endDrag);
     svg.addEventListener('touchcancel', endDrag);
-
+    
     renderAll();
     updateUndoRedoButtons();
 }
