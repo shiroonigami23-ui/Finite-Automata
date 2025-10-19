@@ -161,6 +161,7 @@ body {
 }
 .toolbar-icon.active svg { stroke: #fff !important; }
 
+/* --- FIX FOR COLORFUL ICONS --- */
 .toolbar-icon#tool-addclick svg { stroke: #4caf50; }
 .toolbar-icon#tool-move svg { stroke: #2196f3; }
 .toolbar-icon#tool-transition svg { stroke: #9c27b0; }
@@ -170,6 +171,7 @@ body {
 .toolbar-icon#clearCanvasBtn svg { stroke: #f44336; }
 .toolbar-icon#undoBtn svg, .toolbar-icon#redoBtn svg { stroke: #607d8b; }
 .toolbar-icon#validateBtn svg {stroke: #4caf50;}
+/* --- End of Fix --- */
 
 
 .toolbar-icon:hover {
@@ -269,13 +271,11 @@ body {
   marker-end: url(#arrowhead);
 }
 
-/* --- FIX for Invisible Labels --- */
-/* This is the "halo" or outline text. It's drawn first. */
 .transition-label-text {
     stroke: white;
     stroke-width: 4px;
     stroke-linejoin: round;
-    fill: none; /* The halo has no fill, it's just an outline */
+    fill: none; 
     pointer-events: all;
     cursor: default;
     text-anchor: middle;
@@ -283,15 +283,13 @@ body {
     font-weight: 700;
 }
 
-/* This is the actual text, drawn on top of the halo. */
 .transition-label {
     font-weight: 700;
-    fill: #0b1220; /* This provides the visible color */
+    fill: #0b1220; 
     text-anchor: middle;
     font-size: 13px;
-    pointer-events: none; /* Clicks should go to the halo element below */
+    pointer-events: none; 
 }
-/* --- End of Fix --- */
 
 .mode-delete .transition-label-text {
     cursor: pointer;
