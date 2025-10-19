@@ -1,9 +1,6 @@
 import { MACHINE } from './state.js';
 import { getModeLabel } from './utils.js';
 
-// This module is now self-contained and only pulls from state.js and utils.js.
-// It no longer creates a circular dependency.
-
 const svg = document.getElementById('dfaSVG');
 const statesGroup = document.getElementById('states');
 const edgesGroup = document.getElementById('edges');
@@ -50,13 +47,12 @@ export function renderAll() {
         const to = MACHINE.states.find(s => s.id === toId);
         if (!from || !to) return;
 
-        let pathD, labelX, labelY;
+        let pathD, labelPos;
 
         if (fromId === toId) {
             const loop = getLoopPathAndLabel(from.x, from.y, 30);
             pathD = loop.pathData;
-            labelX = loop.labelX;
-            labelY = loop.labelY;
+            labelPos = { x: loop.labelX, y: loop.labelY };
         } else {
             const reverse = processedArcs.has(`${toId}->${fromId}`);
             const dx = to.x - from.x, dy = to.y - from.y;
@@ -76,12 +72,10 @@ export function renderAll() {
                 const cpx = midX + normX * offset;
                 const cpy = midY + normY * offset;
                 pathD = `M ${startX} ${startY} Q ${cpx} ${cpy} ${endX} ${endY}`;
-                labelX = cpx;
-                labelY = cpy;
+                labelPos = { x: cpx, y: cpy };
             } else {
                 pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
-                labelX = (startX + endX) / 2;
-                labelY = (startY + endY) / 2;
+                labelPos = { x: (startX + endX) / 2, y: (startY + endY) / 2 };
             }
         }
         
@@ -92,30 +86,31 @@ export function renderAll() {
         path.setAttribute('data-to', toId);
         edgesGroup.appendChild(path);
 
-        const labelText = [...new Set(symbols.map(s => s || 'ε'))].join(', ');
-        
-        // --- FIX: Add data attributes and a class to the label text elements ---
-        const textHalo = document.createElementNS(svg.namespaceURI, 'text');
-        textHalo.setAttribute('class', 'transition-label-text'); // Use a specific class for clicking
-        textHalo.setAttribute('x', labelX);
-        textHalo.setAttribute('y', labelY);
-        textHalo.style.stroke = 'white';
-        textHalo.style.strokeWidth = '6px'; // Make halo thicker for easier clicking
-        textHalo.style.strokeLinejoin = 'round';
-        textHalo.style.pointerEvents = 'bounding-box'; // Make the entire box clickable
-        textHalo.textContent = labelText;
-        textHalo.setAttribute('data-from', fromId);
-        textHalo.setAttribute('data-to', toId);
-        textHalo.setAttribute('data-symbols', labelText);
-        edgesGroup.appendChild(textHalo);
+        const uniqueSymbols = [...new Set(symbols.map(s => s || 'ε'))];
+        const totalSymbols = uniqueSymbols.length;
+        const textOffset = 16; 
 
-        const text = document.createElementNS(svg.namespaceURI, 'text');
-        text.setAttribute('class', 'transition-label');
-        text.setAttribute('x', labelX);
-        text.setAttribute('y', labelY);
-        text.style.pointerEvents = 'none'; // The text itself doesn't need to be clickable
-        text.textContent = labelText;
-        edgesGroup.appendChild(text);
+        uniqueSymbols.forEach((symbol, i) => {
+            // Adjust position for multiple symbols
+            const yAdjust = labelPos.y + (i - (totalSymbols - 1) / 2) * textOffset;
+            
+            const textHalo = document.createElementNS(svg.namespaceURI, 'text');
+            textHalo.setAttribute('class', 'transition-label-text');
+            textHalo.setAttribute('x', labelPos.x);
+            textHalo.setAttribute('y', yAdjust);
+            textHalo.textContent = symbol;
+            textHalo.setAttribute('data-from', fromId);
+            textHalo.setAttribute('data-to', toId);
+            textHalo.setAttribute('data-symbol', symbol); // Store the specific symbol
+            edgesGroup.appendChild(textHalo);
+
+            const text = document.createElementNS(svg.namespaceURI, 'text');
+            text.setAttribute('class', 'transition-label');
+            text.setAttribute('x', labelPos.x);
+            text.setAttribute('y', yAdjust);
+            text.textContent = symbol;
+            edgesGroup.appendChild(text);
+        });
     });
 
     MACHINE.states.forEach(state => {
