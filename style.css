@@ -70,7 +70,7 @@ body {
     padding: 18px;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.control-section summary {
+.control-section-header, .control-section summary {
     font-weight: 600;
     cursor: pointer;
     list-style: none; /* Hide default arrow */
@@ -95,6 +95,20 @@ body {
     padding: 10px;
     width: 100%;
 }
+#randomStringBox, #testOptionsCollapse summary {
+    margin: 6px 0; font-size: 0.9em; 
+    background: linear-gradient(90deg,#fff,#f7fafc); 
+    padding: 6px 8px; border-radius: 8px;
+}
+#bulkTestOutput, #practiceBox, .output-display {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: linear-gradient(180deg,#fff,#fbfdff);
+    border: 1px solid #eef2ff;
+    min-height: 60px;
+}
+
 .control-panel details > div{
     padding-top: 12px;
 }
@@ -233,12 +247,6 @@ body {
   font-weight: 700;
 }
 
-.output-display {
-  padding: 12px;
-  font-weight: 700;
-  text-align: center;
-}
-
 .state-circle {
   fill: #fff;
   stroke: var(--accent1);
@@ -273,6 +281,10 @@ body {
 }
 .mode-delete .transition-label-text {
     cursor: pointer;
+}
+.mode-delete .transition-label-text:hover {
+    fill: var(--danger);
+    stroke: #fef2f2;
 }
 
 .kv { font-size: 13px; color: var(--muted); }
@@ -476,15 +488,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   }
   
   .control-panel.open .control-section {
-      background: transparent;
-      backdrop-filter: none;
-      border: none;
-      padding: 0;
-      margin-bottom: 12px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 12px;
   }
 
-  .control-panel.open details,
-  .control-panel.open .control-section-wrapper {
+  .control-panel.open .control-section-header,
+  .control-panel.open details {
       background: rgba(15, 23, 42, 0.75);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -492,7 +503,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
       border-radius: 14px;
       padding: 18px;
   }
+
+  .control-panel.open summary {
+      width: fit-content; /* THIS is the fix for clickable area */
+  }
   
+  .control-panel.open .control-section-header,
   .control-panel.open summary {
       color: #f8fafc;
       padding: 0;
