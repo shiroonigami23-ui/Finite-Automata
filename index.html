@@ -35,29 +35,39 @@
     <div class="app-container" role="application" aria-label="Finite Automata Practice Studio">
       <header class="header">
         <h1>Finite Automata Practice</h1>
-        <button id="panel-toggle-btn" class="panel-toggle-btn" title="Toggle Controls">
-          <i data-lucide="menu"></i>
+        <button id="panelToggleBtn" class="panel-toggle-btn">
+            <i data-lucide="menu"></i>
         </button>
       </header>
       <main class="main-content">
-        <aside class="control-panel" aria-label="Controls">
-          <div class="control-section-wrapper">
-            <select id="modeSelect" aria-label="Mode select">
-              <option value="DFA">DFA</option>
-              <option value="NFA">NFA</option>
-              <option value="ENFA">ε-NFA</option>
-              <option value="ENFA_TO_NFA">ε-NFA → NFA</option>
-              <option value="NFA_TO_DFA">NFA → DFA</option>
-              <option value="NFA_TO_MIN_DFA">NFA → Minimal DFA</option>
-              <option value="DFA_TO_MIN_DFA">DFA → Minimal DFA</option>
-            </select>
+        <aside id="controlPanel" class="control-panel" aria-label="Controls">
+          <div class="control-section">
+            <div class="control-section-header">
+                <i data-lucide="sliders-horizontal"></i>
+                <span>Mode & Interaction</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <select id="modeSelect" aria-label="Mode select"
+                style="flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef8">
+                <option value="DFA">DFA</option>
+                <option value="NFA">NFA</option>
+                <option value="ENFA">ε-NFA</option>
+                <option value="ENFA_TO_NFA">ε-NFA → NFA</option>
+                <option value="NFA_TO_DFA">NFA → DFA</option>
+                <option value="NFA_TO_MIN_DFA">NFA → Minimal DFA</option>
+                <option value="DFA_TO_MIN_DFA">DFA → Minimal DFA</option>
+              </select>
+            </div>
           </div>
           <details class="control-section" open>
-            <summary>🧩 Practice Generator</summary>
-            <div class="control-section-wrapper">
+            <summary>
+                <i data-lucide="puzzle"></i>
+                <span>Practice Generator</span>
+            </summary>
+            <div>
               <div style="margin-bottom:12px">
                 <div style="display:flex;gap:8px">
-                  <select id="practiceMode">
+                  <select id="practiceMode" style="flex:1;">
                     <option value="basic">Basic</option>
                     <option value="medium">Medium</option>
                     <option value="easy">Easy</option>
@@ -75,8 +85,11 @@
             </div>
           </details>
           <details class="control-section">
-            <summary>🧪 Testing</summary>
-            <div class="control-section-wrapper">
+            <summary>
+                <i data-lucide="flask-conical"></i>
+                <span>Testing</span>
+            </summary>
+            <div>
               <div class="controls-group">
                 <div class="test-panel">
                   <div class="input"><input id="testInput" placeholder="Enter string (e.g., abbab)" /></div>
@@ -85,54 +98,67 @@
                 <div id="randomStringBox">
                   🎲 <button id="genRandBtn" class="icon-btn">Random</button>
                 </div>
-                <details id="testOptionsCollapse">
-                  <summary>Simulation Options</summary>
-                  <div id="testOptions">
-                    <label><input type="radio" name="simMode" value="auto" checked> Auto</label>
-                    <label><input type="radio" name="simMode" value="manual"> Manual</label>
-                    <label>Speed:
-                      <select id="testSpeed">
+                <details id="testOptionsCollapse" style="margin:6px 0; font-size:0.9em;">
+                  <summary>
+                    ⚙️ Simulation Options</summary>
+                  <div id="testOptions" style="padding:8px 6px;">
+                    <label style="margin-right:8px;"><input type="radio" name="simMode" value="auto" checked>
+                      Auto</label>
+                    <label style="margin-right:8px;"><input type="radio" name="simMode" value="manual"> Manual</label>
+                    <label style="display:inline-flex;align-items:center;gap:6px;">Speed:
+                      <select id="testSpeed"
+                        style="margin-left:6px;padding:6px;border-radius:6px;border:1px solid #e6eef8">
                         <option value="500">Fast</option>
                         <option value="1000">Normal</option>
                         <option value="2000" selected>Slow</option>
                       </select>
                     </label>
-                    <div id="manualButtons" style="display:none;">
+                    <div id="manualButtons" style="display:none;margin-top:8px;display:flex;gap:6px;">
                       <button id="stepPrev" class="icon-btn">◀ Prev</button>
                       <button id="stepNext" class="icon-btn">Next ▶</button>
                       <button id="stepReset" class="icon-btn">⟲ Reset</button>
                     </div>
                   </div>
                 </details>
-                <div id="testOutput" class="output-display">Ready</div>
+                <div style="margin-top:8px" id="testOutput" class="output-display">Ready</div>
               </div>
+            </div>
+
+            <div style="padding:8px 6px;border-top:1px solid #e6eef8;margin-top:8px;">
               <details id="bulkTestSection">
-                <summary>Bulk Testing</summary>
-                <div>
+                <summary>
+                  Bulk Testing</summary>
+                <div style="padding:8px 4px;">
                   <textarea id="bulkTestInput" placeholder="Enter test strings (one per line)..."></textarea>
-                  <button id="bulkRunBtn" class="icon-btn">Run Bulk Test</button>
-                  <div id="bulkTestOutput"></div>
+                  <button id="bulkRunBtn" class="icon-btn" style="margin-top:8px;width:100%;">Run Bulk Test</button>
+                  <div id="bulkTestOutput">
+                  </div>
                 </div>
               </details>
             </div>
           </details>
           <details class="control-section">
-            <summary>📁 File</summary>
-            <div class="control-section-wrapper">
-              <div class="control-row">
-                <button id="saveMachineBtn" title="Save machine (JSON)">💾 Save</button>
-                <button id="loadMachineBtn" title="Load machine (JSON)">📂 Load</button>
-              </div>
-              <div class="control-row">
-                <button id="exportPngBtn" title="Export canvas as PNG">🖼️ Export PNG</button>
-              </div>
-              <input type="file" id="loadFileInput" accept=".json" style="display:none" />
+            <summary>
+                <i data-lucide="folder"></i>
+                <span>File</span>
+            </summary>
+            <div class="control-row">
+              <button id="saveMachineBtn" title="Save machine (JSON)">💾 Save</button>
+              <button id="loadMachineBtn" title="Load machine (JSON)">📂 Load</button>
             </div>
+            <div class="control-row">
+              <button id="exportPngBtn" title="Export canvas as PNG">🖼️ Export PNG</button>
+            </div>
+            <input type="file" id="loadFileInput" accept=".json" style="display:none" />
           </details>
 
+
           <details class="control-section" id="librarySection">
-            <summary>📚 Library</summary>
-            <div class="control-section-wrapper">
+            <summary>
+                <i data-lucide="library"></i>
+                <span>Library</span>
+            </summary>
+            <div style="padding:8px;">
               <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
                 <input id="libSearch" placeholder="Search..." />
                 <select id="libFilter">
@@ -144,7 +170,7 @@
                 <button id="libRefresh" class="icon-btn" title="Refresh library">Refresh</button>
               </div>
               <div id="libraryList">
-                <div>Library empty — click Refresh to load.</div>
+                <div>Library empty — click Refresh to load library.json</div>
               </div>
               <div style="margin-top:8px;display:flex;gap:8px">
                 <button id="openLibJson" class="icon-btn">Open library.json</button>
@@ -153,9 +179,9 @@
             </div>
           </details>
         </aside>
-        <section class="visualization-panel" id="visualization-panel" aria-label="Visualization">
-          <div class="visualization-header">
-            <div><strong>Automata Visualization</strong>
+        <section class="visualization-panel" aria-label="Visualization" style="position: relative;">
+          <div class="visualization-header" style="display:flex;align-items:center;gap:12px;">
+            <div style="flex:1"><strong>Automata Visualization</strong>
               <div class="kv">Mode: <span id="modeLabel">DFA</span></div>
             </div>
           </div>
@@ -164,7 +190,8 @@
               <div class="canvas-toolbar" role="toolbar" aria-label="Canvas toolbar">
                 <div class="toolbar-icon" id="tool-addclick" title="Add state on canvas click" data-mode="addclick"><i
                     data-lucide="plus-circle"></i></div>
-                <div class="toolbar-icon" id="tool-move" title="Move states" data-mode="move"><i data-lucide="move"></i></div>
+                <div class="toolbar-icon" id="tool-move" title="Move states" data-mode="move"><i data-lucide="move"
+                    ></i></div>
                 <div class="toolbar-icon" id="tool-transition" title="Add transition" data-mode="transition"><i
                     data-lucide="git-branch"></i></div>
                 <div class="toolbar-icon" id="tool-rename" title="Rename state" data-mode="rename"><i
@@ -174,14 +201,14 @@
                 <div class="toolbar-icon" id="tool-stateprops" title="Set state properties" data-mode="stateprops"><i
                     data-lucide="settings"></i></div>
 
-                <button id="validateBtn" class="toolbar-icon" title="Validate Automaton"><i
+                <button id="validateBtn" class="toolbar-icon" title="Validate Automaton" style="margin-left:8px"><i
                     data-lucide="check-circle"></i></button>
 
                 <div class="toolbar-icon" id="clearCanvasBtn" title="Clear Canvas"><i data-lucide="file-x"></i></div>
 
                 <div id="validationLine" class="validation-box"></div>
 
-                <button id="undoBtn" class="toolbar-icon" title="Undo"><i
+                <button id="undoBtn" class="toolbar-icon" title="Undo" style="margin-left:auto;"><i
                     data-lucide="corner-up-left"></i></button>
                 <button id="redoBtn" class="toolbar-icon" title="Redo"><i data-lucide="corner-up-right"></i></button>
               </div>
@@ -207,7 +234,7 @@
             </div>
           </div>
 
-          <div class="zoom-controls">
+          <div class="zoom-controls" style="position: absolute; right: 30px; top: 150px; z-index: 50;">
             <button id="zoomInBtn" class="toolbar-icon" title="Zoom In"><i data-lucide="zoom-in"></i></button>
             <input id="zoomSlider" type="range" min="50" max="200" value="100" />
             <button id="zoomOutBtn" class="toolbar-icon" title="Zoom Out"><i data-lucide="zoom-out"></i></button>
@@ -222,36 +249,42 @@
       </div>
     </div>
 
-    <!-- MODALS -->
+    <!-- Modals -->
     <div id="transitionModal" class="modal-overlay" style="display:none">
-      <div class="modal-box">
-        <h3>Add Transition</h3>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input id="transFrom" class="modal-input" placeholder="from (q0)" readonly />
-          <input id="transTo" class="modal-input" placeholder="to (q1)" readonly />
+        <div class="modal-box">
+            <h3>Add Transition</h3>
+            <p class="modal-description">Enter the symbol for the transition. Use a blank input for an epsilon (ε) transition in an NFA.</p>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+                <input id="transFrom" class="modal-input" readonly />
+                <input id="transTo" class="modal-input" readonly />
+            </div>
+            <input id="transSymbol" class="modal-input" placeholder="Symbol (blank for ε)" />
+            <div class="modal-actions">
+                <button id="transCancel">Cancel</button>
+                <button id="transSave">Save</button>
+            </div>
         </div>
-        <input id="transSymbol" class="modal-input" placeholder="symbol (blank for ε)" />
-        <div class="modal-actions">
-          <button id="transCancel">Cancel</button>
-          <button id="transSave">Save</button>
-        </div>
-      </div>
     </div>
     <div id="statePropsModal" class="modal-overlay" style="display:none">
-      <div class="modal-box">
-        <h3>State Properties</h3>
-        <div class="modal-prop-row"><label><input type="checkbox" id="propInitial"> Initial State</label></div>
-        <div class="modal-prop-row"><label><input type="checkbox" id="propFinal"> Final State</label></div>
-        <div class="modal-actions">
-          <button id="propCancel">Cancel</button>
-          <button id="propSave">Save</button>
+        <div class="modal-box">
+            <h3>State Properties</h3>
+            <p class="modal-description">Set whether this state is an initial or a final (accepting) state.</p>
+            <div class="modal-prop-row">
+                <label><input type="checkbox" id="propInitial"> Initial State</label>
+            </div>
+            <div class="modal-prop-row">
+                <label><input type="checkbox" id="propFinal"> Final State</label>
+            </div>
+            <div class="modal-actions">
+                <button id="propCancel">Cancel</button>
+                <button id="propSave">Save</button>
+            </div>
         </div>
-      </div>
     </div>
     <div id="renameModal" class="modal-overlay" style="display:none">
         <div class="modal-box">
             <h3>Rename State</h3>
-            <p class="modal-description">Enter the new name for the state.</p>
+            <p class="modal-description">Enter the new name for the state. It must be unique.</p>
             <input id="renameInput" class="modal-input" placeholder="New state name" />
             <div class="modal-actions">
                 <button id="renameCancel">Cancel</button>
@@ -271,28 +304,27 @@
     </div>
     <div id="alertModal" class="modal-overlay" style="display:none">
         <div class="modal-box">
-            <h3 id="alertTitle">Alert</h3>
-            <p id="alertMessage" class="modal-description"></p>
+            <h3 id="alertModalTitle">Alert</h3>
+            <p id="alertModalMessage" class="modal-description"></p>
             <div class="modal-actions">
-                <button id="alertOk">OK</button>
+                <button id="alertModalClose">OK</button>
             </div>
         </div>
     </div>
-  </div>
 
   <script src="practice-bank.js" defer></script>
   <script src="library-loader.js" defer></script>
-  <script type="module" src="library_helper.js"></script>
-  <script type="module" src="main.js"></script>
+  <script type="module" src="utils.js"></script>
   <script type="module" src="state.js"></script>
   <script type="module" src="renderer.js"></script>
   <script type="module" src="automata.js"></script>
   <script type="module" src="simulation.js"></script>
-  <script type="module" src="file.js"></script>
   <script type="module" src="practice.js"></script>
+  <script type="module" src="file.js"></script>
   <script type="module" src="animation.js"></script>
-  <script type="module" src="utils.js"></script>
+  <script type="module" src="library_helper.js"></script>
   <script type="module" src="ui.js"></script>
+  <script type="module" src="main.js"></script>
 
 </body>
 
