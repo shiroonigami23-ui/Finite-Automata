@@ -1,12 +1,11 @@
 import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
 import { renderAll } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
-import { validateAutomaton } from './automata.js';
+import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa, validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
-import { animateEnfaToNfa, animateNfaToDfa, animateMinimizeDfa } from './conversion-animation.js';
-
+import { checkEquivalence } from './equivalence.js';
 
 function customAlert(title, message) {
     const alertModal = document.getElementById('alertModal');
@@ -20,6 +19,22 @@ export function updateUndoRedoButtons() {
     const redoBtn = document.getElementById('redoBtn');
     if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
+}
+
+function layoutStatesCircular(states) {
+    if (!states || states.length === 0) return;
+    const svg = document.getElementById('dfaSVG');
+    const bbox = svg.viewBox.baseVal;
+    const centerX = bbox.width / 2;
+    const centerY = bbox.height / 2;
+    const baseRadius = Math.min(centerX, centerY) * 0.7;
+    const radius = Math.max(150, Math.min(baseRadius, states.length * 40));
+    const angleStep = (2 * Math.PI) / states.length;
+    states.forEach((s, i) => {
+        const angle = i * angleStep - (Math.PI / 2);
+        s.x = centerX + radius * Math.cos(angle);
+        s.y = centerY + radius * Math.sin(angle);
+    });
 }
 
 export function initializeUI() {
@@ -49,9 +64,6 @@ export function initializeUI() {
     const controlPanel = document.querySelector('.control-panel');
     const visualizationPanel = document.getElementById('visualization-panel');
     const alertOkBtn = document.getElementById('alertOk');
-
-    // Hide check answer button initially
-    if(checkAnswerBtn) checkAnswerBtn.hidden = true;
 
     document.querySelectorAll('.control-section summary').forEach(summary => {
         summary.addEventListener('click', (event) => {
@@ -149,11 +161,16 @@ export function initializeUI() {
         svg.addEventListener('click', (e) => {
             const label = e.target.closest('.transition-label-text');
             if (!label || CURRENT_MODE !== 'delete') return;
+
             e.stopPropagation(); 
+
             const from = label.dataset.from;
             const to = label.dataset.to;
             const symbol = label.dataset.symbol;
-            if (symbol !== undefined) deleteTransition(from, to, symbol);
+
+            if (symbol !== undefined) {
+                deleteTransition(from, to, symbol);
+            }
         });
     }
     
@@ -202,7 +219,10 @@ export function initializeUI() {
         const oldId = modal.dataset.oldId;
         const newId = document.getElementById('renameInput').value.trim();
         if (!newId || newId === oldId || MACHINE.states.find(s => s.id === newId)) {
-            if (MACHINE.states.find(s => s.id === newId)) customAlert('Rename Failed', 'A state with that name already exists.');
+            if (MACHINE.states.find(s => s.id === newId)) {
+                customAlert('Rename Failed', 'A state with that name already exists.');
+            }
+            modal.style.display = 'none';
             return;
         }
         pushUndo(updateUndoRedoButtons);
@@ -230,51 +250,56 @@ export function initializeUI() {
     document.getElementById('loadFileInput').addEventListener('change', (e) => loadMachine(e, updateUndoRedoButtons));
     if (document.getElementById('exportPngBtn')) document.getElementById('exportPngBtn').addEventListener('click', exportPng);
     if (clearCanvasBtn) clearCanvasBtn.addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
-    if (validateBtn) validateBtn.addEventListener('click', () => setValidationMessage(validateAutomaton().message, validateAutomaton().type));
+
+    if (validateBtn) {
+        validateBtn.addEventListener('click', () => {
+            const result = validateAutomaton();
+            setValidationMessage(result.message, result.type);
+        });
+    }
 
     if (modeSelect) {
-        modeSelect.addEventListener('change', async () => {
+        modeSelect.addEventListener('change', () => {
             const newMode = modeSelect.value;
-            const originalType = MACHINE.type;
-
-            if (validateAutomaton().type === 'error' && newMode.includes('_TO_')) {
-                customAlert('Conversion Error', 'Cannot convert an invalid automaton. Please fix the errors first.');
-                modeSelect.value = originalType;
-                return;
-            }
-            
-            pushUndo(updateUndoRedoButtons);
-
+            let convertedMachine = null;
+            let successMsg = '';
+            let targetType = 'DFA';
             try {
-                switch (newMode) {
-                    case 'ENFA_TO_NFA':
-                        await animateEnfaToNfa(MACHINE);
-                        modeSelect.value = 'NFA';
-                        break;
-                    case 'NFA_TO_DFA':
-                        await animateNfaToDfa(MACHINE);
-                        modeSelect.value = 'DFA';
-                        break;
-                    case 'NFA_TO_MIN_DFA':
-                         const dfa = await convertNfaToDfa(MACHINE, async () => {});
-                         await animateMinimizeDfa(dfa);
-                         modeSelect.value = 'DFA';
-                        break;
-                    case 'DFA_TO_MIN_DFA':
-                        await animateMinimizeDfa(MACHINE);
-                        modeSelect.value = 'DFA';
-                        break;
-                    default:
-                        MACHINE.type = newMode;
-                        renderAll();
-                        break;
+                if (validateAutomaton().type === 'error' && !newMode.includes('_TO_')) {
+                     setValidationMessage('Cannot convert invalid automaton.', 'warning');
+                }
+                if (newMode === 'ENFA_TO_NFA') {
+                    convertedMachine = convertEnfaToNfa(MACHINE);
+                    successMsg = 'Converted ε-NFA to NFA.';
+                    targetType = 'NFA';
+                } else if (newMode === 'NFA_TO_DFA') {
+                    convertedMachine = convertNfaToDfa(MACHINE);
+                    successMsg = 'Converted NFA to DFA.';
+                } else if (newMode === 'NFA_TO_MIN_DFA') {
+                    convertedMachine = minimizeDfa(convertNfaToDfa(MACHINE));
+                    successMsg = 'Converted NFA to Minimal DFA.';
+                } else if (newMode === 'DFA_TO_MIN_DFA') {
+                    convertedMachine = minimizeDfa(MACHINE);
+                    successMsg = 'Minimized DFA.';
                 }
             } catch (err) {
                 customAlert('Conversion Failed', err.message);
-                console.error(err);
-                doUndo(updateUndoRedoButtons); 
-                modeSelect.value = originalType;
+                modeSelect.value = MACHINE.type;
+                return;
             }
+            if (convertedMachine) {
+                pushUndo(updateUndoRedoButtons);
+                convertedMachine.type = targetType;
+                setMachine(convertedMachine);
+                modeSelect.value = targetType;
+                // --- BUG FIX: Apply layout after conversion ---
+                layoutStatesCircular(MACHINE.states); 
+                // --- END FIX ---
+                setValidationMessage(successMsg, 'success');
+            } else {
+                MACHINE.type = newMode;
+            }
+            renderAll();
         });
     }
 
@@ -287,16 +312,25 @@ export function initializeUI() {
     if(stepNextBtn) stepNextBtn.addEventListener('click', () => showStep(++simState.index));
     if(stepPrevBtn) stepPrevBtn.addEventListener('click', () => showStep(--simState.index));
     if(stepResetBtn) stepResetBtn.addEventListener('click', () => {
-        simState.index = 0; simState.steps.length = 0; clearTimeout(simState.timer);
+        simState.index = 0;
+        simState.steps.length = 0;
+        clearTimeout(simState.timer);
         document.getElementById('stepLog').innerHTML = '';
         document.getElementById('testOutput').textContent = 'Ready';
         renderAll();
     });
 
-    if(genPracticeBtn) genPracticeBtn.addEventListener('click', generatePractice);
+    if(genPracticeBtn) genPracticeBtn.addEventListener('click', () => {
+        generatePractice();
+        checkAnswerBtn.style.display = 'inline-flex';
+    });
     if(showSolBtn) showSolBtn.addEventListener('click', () => showSolution(updateUndoRedoButtons));
-    if(resetPracticeBtn) resetPracticeBtn.addEventListener('click', resetPractice);
+    if(resetPracticeBtn) resetPracticeBtn.addEventListener('click', () => {
+        resetPractice();
+        checkAnswerBtn.style.display = 'none';
+    });
     if(checkAnswerBtn) checkAnswerBtn.addEventListener('click', checkAnswer);
+
 
     const setZoom = (pct) => {
         const wrapper = document.getElementById('svgWrapper');
@@ -348,7 +382,9 @@ export function initializeUI() {
     function endDrag() {
         if (!dragging) return;
         dragging = false;
-        if(currentStateG) currentStateG.querySelector('circle').classList.remove('state-selected');
+        if(currentStateG) {
+            currentStateG.querySelector('circle').classList.remove('state-selected');
+        }
         currentStateG = null;
     }
 
@@ -365,6 +401,7 @@ export function initializeUI() {
     
     renderAll();
     updateUndoRedoButtons();
+    checkAnswerBtn.style.display = 'none';
 }
 
 function addState(x, y) {
@@ -400,7 +437,13 @@ function deleteState(id) {
 function deleteTransition(from, to, symbol) {
     pushUndo(updateUndoRedoButtons);
     const symbolToMatch = symbol === 'ε' ? '' : symbol;
-    const indexToDelete = MACHINE.transitions.findIndex(t => t.from === from && t.to === to && (t.symbol || '') === symbolToMatch);
+
+    const indexToDelete = MACHINE.transitions.findIndex(t => 
+        t.from === from && 
+        t.to === to && 
+        (t.symbol || '') === symbolToMatch
+    );
+
     if (indexToDelete > -1) {
         MACHINE.transitions.splice(indexToDelete, 1);
         renderAll();
