@@ -301,13 +301,25 @@
     </div>
   </div>
 
+  <!-- FIX: Added all necessary modules and corrected script loading order -->
   <script src="practice-bank.js" defer></script>
   <script src="library-loader.js" defer></script>
+  
+  <script type="module" src="utils.js"></script>
+  <script type="module" src="state.js"></script>
+  <script type="module" src="renderer.js"></script>
+  <script type="module" src="automata.js"></script>
+  <script type="module" src="simulation.js"></script>
+  <script type="module" src="file.js"></script>
+  <script type="module" src="animation.js"></script>
+  <script type="module" src="practice.js"></script>
+  <script type="module" src="ui.js"></script>
   <script type="module" src="library_helper.js"></script>
+  
+  <!-- Main entry point should be last -->
   <script type="module" src="main.js"></script>
 
 </body>
 
 </html>
-
 
