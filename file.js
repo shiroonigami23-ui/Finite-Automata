@@ -2,35 +2,98 @@ import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll } from './renderer.js';
 import { setValidationMessage } from './utils.js';
 
-// --- UPGRADED: This function now analyzes the machine and auto-generates details ---
+/**
+ * Uses a Breadth-First Search to find some of the shortest strings accepted by the machine.
+ * This provides intelligent suggestions for titles and descriptions.
+ * @param {object} machine The automaton to analyze.
+ * @returns {string[]} An array of short accepted strings.
+ */
+function findShortestAcceptedStrings(machine) {
+    const queue = [];
+    const visited = new Set();
+    const accepted = [];
+
+    const initialStates = machine.states.filter(s => s.initial);
+    if (initialStates.length === 0) return [];
+
+    // Check if the empty string is accepted
+    if (initialStates.some(s => s.accepting)) {
+        accepted.push("ε");
+    }
+
+    // Initialize the queue with all starting points
+    for (const startState of initialStates) {
+        queue.push({ state: startState.id, path: "" });
+        visited.add(startState.id + ",");
+    }
+
+    let head = 0;
+    while (head < queue.length && accepted.length < 5) {
+        const { state, path } = queue[head++];
+
+        // Limit path length to avoid getting stuck in long searches
+        if (path.length > 10) continue;
+
+        const transitions = machine.transitions.filter(t => t.from === state);
+
+        for (const t of transitions) {
+            const newPath = path + t.symbol;
+            const visitedKey = t.to + "," + newPath;
+
+            if (!visited.has(visitedKey)) {
+                visited.add(visitedKey);
+                const nextState = machine.states.find(s => s.id === t.to);
+                if (nextState) {
+                    if (nextState.accepting && !accepted.includes(newPath)) {
+                        accepted.push(newPath);
+                    }
+                    queue.push({ state: t.to, path: newPath });
+                }
+            }
+        }
+    }
+    // Sort by length to show the shortest ones first
+    return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
+}
+
+
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
     if (!modal) return;
 
-    // 1. Analyze the current machine
+    // --- INTELLIGENT ANALYSIS ---
     const machineType = MACHINE.type || 'DFA';
+    const shortestStrings = findShortestAcceptedStrings(MACHINE);
+
+    let autoTitle;
+    if (shortestStrings.length > 0) {
+        // Create a title based on what the machine accepts
+        const examples = shortestStrings.map(s => `"${s}"`).join(', ');
+        autoTitle = `${machineType} that accepts ${examples}, ...`;
+    } else if (MACHINE.states.some(s => s.accepting)) {
+        // If there are accepting states but none are reachable
+        autoTitle = `${machineType} with an unreachable language`;
+    } else {
+        // If there are no accepting states
+        autoTitle = `${machineType} that accepts nothing (empty language)`;
+    }
+    
+    // --- Detailed Description Generation (from before) ---
     const stateCount = MACHINE.states.length;
     const acceptingStates = MACHINE.states.filter(s => s.accepting);
     const initialStates = MACHINE.states.filter(s => s.initial);
     const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s))].sort();
 
-    // 2. Auto-generate a title
-    const autoTitle = `${machineType} with ${stateCount} state${stateCount === 1 ? '' : 's'}`;
-    
-    // 3. Auto-generate a detailed description
-    let autoDesc = `A ${machineType} with ${stateCount} state(s) (${MACHINE.states.map(s => s.id).join(', ')}). `;
-    autoDesc += `It has ${initialStates.length} initial state(s) (${initialStates.map(s => s.id).join(', ') || 'none'}) `;
-    autoDesc += `and ${acceptingStates.length} accepting state(s) (${acceptingStates.map(s => s.id).join(', ') || 'none'}). `;
-    autoDesc += `The alphabet is {${alphabet.join(', ') || '∅'}}.`;
+    let autoDesc = `Accepts short strings such as: ${shortestStrings.join(', ') || 'none'}. `;
+    autoDesc += `This is a ${machineType} with ${stateCount} state(s), ${acceptingStates.length} accepting state(s), and an alphabet of {${alphabet.join(', ') || '∅'}}.`;
 
-    // 4. Populate and show the modal
+    // Populate and show the modal
     document.getElementById('libTitleInput').value = autoTitle;
     document.getElementById('libDescInput').value = autoDesc;
     document.getElementById('libTypeInput').value = machineType;
     modal.style.display = 'flex';
 }
 
-// This function is called by the modal to perform the save
 export function handleSaveWithMetadata() {
     const title = document.getElementById('libTitleInput').value.trim();
     const description = document.getElementById('libDescInput').value.trim();
@@ -41,7 +104,6 @@ export function handleSaveWithMetadata() {
         return;
     }
 
-    // Create a library-ready object
     const libraryEntry = {
         title: title,
         description: description,
@@ -76,7 +138,7 @@ export function loadMachine(e, updateUIFunction) {
                 const machineType = machineData.type || data.type || 'DFA';
                 setMachine(machineData);
                 document.getElementById('modeSelect').value = machineType;
-                MACHINE.type = machineType; // Ensure global state is also updated
+                MACHINE.type = machineType;
                 renderAll();
             } else {
                 setValidationMessage("Invalid machine file format.", 'error');
@@ -88,9 +150,6 @@ export function loadMachine(e, updateUIFunction) {
     reader.readAsText(file);
 }
 
-/**
- * Exports the current SVG canvas to a high-resolution PNG file.
- */
 export function exportPng() {
     const svgEl = document.getElementById("dfaSVG");
     const canvas = document.createElement("canvas");
