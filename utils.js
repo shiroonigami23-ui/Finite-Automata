@@ -5,15 +5,11 @@ export function sleep(ms) {
 }
 
 export function getModeLabel() {
-    const val = document.getElementById('modeSelect').value;
-    const labels = {
-        'DFA': 'DFA', 'NFA': 'NFA', 'ENFA': 'ε-NFA',
-        'ENFA_TO_NFA': 'ε-NFA → NFA (Conversion)',
-        'NFA_TO_DFA': 'NFA → DFA (Conversion)',
-        'NFA_TO_MIN_DFA': 'NFA → Minimal DFA (Conversion)',
-        'DFA_TO_MIN_DFA': 'DFA → Minimal DFA (Conversion)'
-    };
-    return labels[val] || val;
+    const select = document.getElementById('modeSelect');
+    if (!select) return 'N/A';
+    const val = select.value;
+    const option = select.querySelector(`option[value="${val}"]`);
+    return option ? option.textContent : val;
 }
 
 export function updateUndoRedoButtons() {
@@ -21,4 +17,13 @@ export function updateUndoRedoButtons() {
     const redoBtn = document.getElementById('redoBtn');
     if (undoBtn) undoBtn.disabled = UNDO_STACK.length === 0;
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
+}
+
+export function setValidationMessage(message, type) {
+    const validationLine = document.getElementById('validationLine');
+    if (!validationLine) return;
+    validationLine.textContent = message;
+    validationLine.className = 'validation-box'; // Reset classes
+    validationLine.classList.add(type, 'show');
+    setTimeout(() => validationLine.classList.remove('show'), 4000);
 }
