@@ -148,80 +148,104 @@ export async function convertNfaToDfa(nfa, stepCallback = async () => {}) {
     return newMachine;
 }
 
+// --- REWRITTEN AND CORRECTED MINIMIZATION FUNCTION ---
 export async function minimizeDfa(dfa, stepCallback = async () => {}) {
+    // Step 1: Remove unreachable states. This is a prerequisite.
     const dfaClean = removeUnreachableStates(dfa);
     await stepCallback(dfaClean, "Step 1: Removed unreachable states.");
     
-    if (dfaClean.states.length === 0) return dfaClean;
+    if (dfaClean.states.length === 0) {
+        await stepCallback(dfaClean, "Automaton is empty after removing unreachable states.");
+        return dfaClean;
+    }
 
-    const alph = dfaClean.alphabet;
-    let P = [
-        dfaClean.states.filter(s => s.accepting).map(s => s.id),
-        dfaClean.states.filter(s => !s.accepting).map(s => s.id)
-    ].filter(g => g.length > 0);
+    const alphabet = dfaClean.alphabet || Array.from(new Set(dfaClean.transitions.map(t => t.symbol)));
+    
+    // Step 2: Initial Partition (Accepting vs. Non-Accepting)
+    let P = [];
+    const acceptingStates = dfaClean.states.filter(s => s.accepting).map(s => s.id);
+    const nonAcceptingStates = dfaClean.states.filter(s => !s.accepting).map(s => s.id);
+    if (acceptingStates.length > 0) P.push(acceptingStates);
+    if (nonAcceptingStates.length > 0) P.push(nonAcceptingStates);
 
     await stepCallback(dfaClean, `Step 2: Initial partition. Groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
 
-    let W = [...P];
+    // Step 3: Refine Partitions (Hopcroft's Algorithm)
+    let W = [...P.filter(g => g.length > 0)];
     while (W.length > 0) {
         const A = W.shift();
-        for (const symbol of alph) {
-            const X = dfaClean.transitions.filter(t => t.symbol === symbol && A.includes(t.to)).map(t => t.from);
-            if (X.length === 0) continue;
+        for (const symbol of alphabet) {
+            // Find all states that transition into A on the current symbol
+            const leaders = dfaClean.transitions
+                .filter(t => t.symbol === symbol && A.includes(t.to))
+                .map(t => t.from);
             
+            if (leaders.length === 0) continue;
+
             const newP = [];
-            let changed = false;
+            let partitionChanged = false;
             for (const Y of P) {
-                const intersection = Y.filter(s => X.includes(s));
-                const difference = Y.filter(s => !X.includes(s));
+                const intersection = Y.filter(s => leaders.includes(s));
+                const difference = Y.filter(s => !leaders.includes(s));
 
                 if (intersection.length > 0 && difference.length > 0) {
                     newP.push(intersection, difference);
-                    changed = true;
-                    const wIndex = W.findIndex(g => g.every(s => Y.includes(s)) && g.length === Y.length);
-                    if (wIndex > -1) {
-                        W.splice(wIndex, 1, intersection, difference);
+                    partitionChanged = true;
+                    
+                    const Y_in_W_index = W.findIndex(g => g.length === Y.length && g.every(s => Y.includes(s)));
+                    if (Y_in_W_index > -1) {
+                        W.splice(Y_in_W_index, 1, intersection, difference);
                     } else {
-                        W.push(intersection.length <= difference.length ? intersection : difference);
+                        if (intersection.length <= difference.length) {
+                            W.push(intersection);
+                        } else {
+                            W.push(difference);
+                        }
                     }
                 } else {
                     newP.push(Y);
                 }
             }
-             if(changed) {
-                P = newP;
-                await stepCallback(dfaClean, `Refining partition on '<strong>${symbol}</strong>'. New groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
+            if (partitionChanged) {
+                 P = newP;
+                 await stepCallback(dfaClean, `Refining partition on '<strong>${symbol}</strong>'. New groups: ${P.map(g => `{${g.join(',')}}`).join(', ')}`);
             }
         }
     }
+
+    // Step 4: Construct the new minimized DFA from the final partitions
+    await stepCallback(dfaClean, `Step 3: Final partitions found. Building minimized DFA.`);
     
-    const repMap = {};
+    const repMap = new Map(); // Map old state ID to its new representative ID
     P.forEach(group => {
-        const rep = group.sort()[0];
-        group.forEach(s => repMap[s] = rep);
+        const representative = group.sort()[0];
+        group.forEach(stateId => repMap.set(stateId, representative));
     });
 
-    const finalMachine = { type: 'DFA', alphabet: alph, states: [], transitions: [] };
+    const finalMachine = { type: 'DFA', alphabet, states: [], transitions: [] };
 
-    await stepCallback(dfaClean, `Step 3: Final partitions found. Building minimized DFA.`);
-
+    // Create the new states
     for (const group of P) {
-        const rep = group.sort()[0];
-        const oldState = dfaClean.states.find(s => s.id === rep);
-        const isInitial = dfaClean.states.some(s => s.initial && group.includes(s.id));
-        finalMachine.states.push({ id: rep, initial: isInitial, accepting: oldState.accepting });
+        const rep = repMap.get(group[0]);
+        const originalState = dfaClean.states.find(s => s.id === group[0]);
+        const isInitial = group.some(id => dfaClean.states.find(s => s.id === id)?.initial);
+        finalMachine.states.push({ id: rep, initial: isInitial, accepting: originalState.accepting });
         await stepCallback(finalMachine, `Creating new state for group {${group.join(',')}}, represented by <strong>${rep}</strong>.`);
     }
 
-    for (const state of finalMachine.states) {
-        const originalStateId = state.id;
-        for (const symbol of alph) {
-            const t = dfaClean.transitions.find(tr => tr.from === originalStateId && tr.symbol === symbol);
-            if (t) {
-                const toRep = repMap[t.to];
-                if (!finalMachine.transitions.some(ft => ft.from === state.id && ft.to === toRep && ft.symbol === symbol)) {
-                     finalMachine.transitions.push({ from: state.id, to: toRep, symbol });
-                     await stepCallback(finalMachine, `Adding transition: δ(<strong>${state.id}</strong>, '<strong>${symbol}</strong>') = <strong>${toRep}</strong>.`);
+    // Create the new transitions
+    const addedTransitions = new Set();
+    for (const group of P) {
+        const fromRep = repMap.get(group[0]);
+        for (const symbol of alphabet) {
+            const originalTransition = dfaClean.transitions.find(t => t.from === group[0] && t.symbol === symbol);
+            if (originalTransition) {
+                const toRep = repMap.get(originalTransition.to);
+                const transKey = `${fromRep},${symbol},${toRep}`;
+                if (!addedTransitions.has(transKey)) {
+                    finalMachine.transitions.push({ from: fromRep, to: toRep, symbol });
+                    addedTransitions.add(transKey);
+                    await stepCallback(finalMachine, `Adding transition: δ(<strong>${fromRep}</strong>, '<strong>${symbol}</strong>') = <strong>${toRep}</strong>.`);
                 }
             }
         }
@@ -229,6 +253,7 @@ export async function minimizeDfa(dfa, stepCallback = async () => {}) {
     
     return finalMachine;
 }
+// --- END OF REWRITTEN FUNCTION ---
 
 
 export function computeEpsilonClosure(states, transitions) {
@@ -252,6 +277,8 @@ export function computeEpsilonClosure(states, transitions) {
 }
 
 function removeUnreachableStates(dfa) {
+    if (!dfa.states || dfa.states.length === 0) return dfa;
+
     const reachable = new Set();
     const initialState = dfa.states.find(s => s.initial);
     if (!initialState) {
@@ -266,7 +293,7 @@ function removeUnreachableStates(dfa) {
         dfa.transitions
             .filter(t => t.from === currentId)
             .forEach(t => {
-                if (!reachable.has(t.to)) {
+                if (t.to && !reachable.has(t.to)) {
                     reachable.add(t.to);
                     stack.push(t.to);
                 }
