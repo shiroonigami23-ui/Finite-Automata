@@ -244,7 +244,6 @@ export function initializeUI() {
         });
     }
 
-    // --- CORRECTED MODE SELECT LOGIC ---
     if (modeSelect) {
         modeSelect.addEventListener('change', async () => {
             const newMode = modeSelect.value;
@@ -252,12 +251,11 @@ export function initializeUI() {
             if (newMode.includes('_TO_')) {
                 if (validateAutomaton().type === 'error') {
                     setValidationMessage('Cannot convert: the current automaton is invalid.', 'error');
-                    modeSelect.value = MACHINE.type; // Revert dropdown selection
+                    modeSelect.value = MACHINE.type; 
                     return;
                 }
                 
                 try {
-                    // Disable UI during conversion
                     modeSelect.disabled = true;
                     if (newMode === 'ENFA_TO_NFA') {
                         await animateEnfaToNfa(MACHINE);
@@ -274,19 +272,16 @@ export function initializeUI() {
                     }
                 } catch (err) {
                     customAlert('Conversion Failed', err.message);
-                    modeSelect.value = MACHINE.type; // Revert on error
+                    modeSelect.value = MACHINE.type;
                 } finally {
-                    // Re-enable UI
                     modeSelect.disabled = false;
                 }
             } else {
-                // This is a simple mode switch, not a conversion
                 MACHINE.type = newMode;
                 renderAll();
             }
         });
     }
-    // --- END CORRECTION ---
 
     if(runTestBtn) runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
     if(genRandBtn) genRandBtn.addEventListener('click', () => {
@@ -454,6 +449,7 @@ function openPropsModal(stateId) {
     document.getElementById('propFinal').checked = st.accepting;
     modal.style.display = 'flex';
 }
+
 function showTransModal(from, to) {
     const modal = document.getElementById('transitionModal');
     document.getElementById('transFrom').value = from;
