@@ -1,5 +1,5 @@
-// This module is the single source of truth and has NO outgoing dependencies,
-// which is crucial for preventing circular imports.
+// --- Single Source of Truth for Application State ---
+// This module now has ZERO outgoing dependencies, which is critical.
 
 export let MACHINE = {};
 export let UNDO_STACK = [];
@@ -14,8 +14,13 @@ export const simState = {
     timer: null,
 };
 
-let renderFunction = () => {};
+// This will hold the renderAll function from renderer.js, passed in from main.js.
+let renderFunction = () => { console.error("Render function not set!"); };
 
+/**
+ * Injects the main render function into the state module to avoid circular dependencies.
+ * @param {function} fn The renderAll function.
+ */
 export function setRenderFunction(fn) {
     renderFunction = fn;
 }
@@ -41,7 +46,7 @@ export function setCurrentPractice(practice) {
 export function pushUndo(updateUIFunction) {
     UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
     REDO_STACK.length = 0;
-    updateUIFunction();
+    updateUIFunction(); // This function (e.g., updateUndoRedoButtons) is passed in from the UI module.
 }
 
 export function doUndo(updateUIFunction) {
@@ -62,7 +67,7 @@ export function doRedo(updateUIFunction) {
     }
 }
 
-export function initializeState() {
+export function initializeState(updateUIFunction) {
     setMachine({
         type: 'DFA',
         states: [],
@@ -78,4 +83,6 @@ export function initializeState() {
     simState.index = 0;
     if (simState.timer) clearTimeout(simState.timer);
     simState.timer = null;
+
+    if (updateUIFunction) updateUIFunction();
 }
