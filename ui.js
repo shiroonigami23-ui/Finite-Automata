@@ -4,14 +4,22 @@ import { runSimulation, showStep } from './simulation.js';
 import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa, validateAutomaton } from './automata.js';
 import { saveMachine, loadMachine, exportPng } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
-import { setValidationMessage, getModeLabel } from './utils.js';
+import { setValidationMessage } from './utils.js';
 
+/**
+ * Displays a custom modal alert.
+ * @param {string} title - The title of the alert.
+ * @param {string} message - The message content of the alert.
+ */
 function customAlert(title, message) {
-    document.getElementById('alertTitle').textContent = title;
-    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('alertModalTitle').textContent = title;
+    document.getElementById('alertModalMessage').textContent = message;
     document.getElementById('alertModal').style.display = 'flex';
 }
 
+/**
+ * Updates the disabled state of the Undo and Redo buttons.
+ */
 export function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
@@ -19,6 +27,10 @@ export function updateUndoRedoButtons() {
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
 }
 
+/**
+ * Arranges states in a circular layout. Used after conversions.
+ * @param {Array} states - The array of state objects to lay out.
+ */
 function layoutStatesCircular(states) {
     if (!states || states.length === 0) return;
     const svg = document.getElementById('dfaSVG');
@@ -35,60 +47,46 @@ function layoutStatesCircular(states) {
     });
 }
 
+/**
+ * Initializes all user interface elements and event listeners.
+ */
 export function initializeUI() {
     const svg = document.getElementById('dfaSVG');
     const modeSelect = document.getElementById('modeSelect');
-    const undoBtn = document.getElementById('undoBtn');
-    const redoBtn = document.getElementById('redoBtn');
-    const zoomSlider = document.getElementById('zoomSlider');
-    const zoomInBtn = document.getElementById('zoomInBtn');
-    const zoomOutBtn = document.getElementById('zoomOutBtn');
-    const zoomResetBtn = document.getElementById('zoomResetBtn');
-    const genRandBtn = document.getElementById("genRandBtn");
-    const stepNextBtn = document.getElementById("stepNext");
-    const stepPrevBtn = document.getElementById("stepPrev");
-    const stepResetBtn = document.getElementById("stepReset");
-    const saveMachineBtn = document.getElementById("saveMachineBtn");
-    const loadMachineBtn = document.getElementById("loadMachineBtn");
-    const validateBtn = document.getElementById('validateBtn');
-    const clearCanvasBtn = document.getElementById('clearCanvasBtn');
-    const runTestBtn = document.getElementById('runTestBtn');
-    const testInput = document.getElementById('testInput');
-    const genPracticeBtn = document.getElementById('genPracticeBtn');
-    const showSolBtn = document.getElementById('showSolBtn');
-    const resetPracticeBtn = document.getElementById('resetPractice');
-    const checkAnswerBtn = document.getElementById('checkAnswerBtn');
-    const panelToggleBtn = document.getElementById('panel-toggle-btn');
-    const controlPanel = document.querySelector('.control-panel');
-    const visualizationPanel = document.getElementById('visualization-panel');
 
-    document.getElementById('alertOk').addEventListener('click', () => {
+    // FIX: Changed 'alertOk' to 'alertModalClose' to match the ID in index.html.
+    document.getElementById('alertModalClose').addEventListener('click', () => {
         document.getElementById('alertModal').style.display = 'none';
     });
     
-    panelToggleBtn.addEventListener('click', (e) => {
+    // Toggle for the control panel on mobile
+    document.getElementById('panelToggleBtn').addEventListener('click', (e) => {
         e.stopPropagation();
-        controlPanel.classList.toggle('open');
+        document.getElementById('controlPanel').classList.toggle('open');
     });
 
-    visualizationPanel.addEventListener('click', () => {
-        controlPanel.classList.remove('open');
+    document.getElementById('visualization-panel').addEventListener('click', () => {
+        document.getElementById('controlPanel').classList.remove('open');
     });
 
+    // Toolbar mode switching
     document.querySelectorAll('.toolbar-icon[data-mode]').forEach(tool => {
         tool.addEventListener('click', () => {
             document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
             tool.classList.add('active');
             setCurrentMode(tool.dataset.mode);
-            setTransFrom(null);
+            setTransFrom(null); // Reset transition start state
             document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
             if (svg) svg.className.baseVal = `mode-${tool.dataset.mode}`;
             renderAll();
         });
     });
 
+    // Canvas click handlers
     svg.addEventListener('click', (e) => {
+        // Ignore clicks on states or transitions
         if (e.target.closest('g[data-id]') || e.target.closest('.transition-label-text')) return;
+        
         if (CURRENT_MODE === 'addclick') {
             const pt = svg.createSVGPoint();
             pt.x = e.clientX;
@@ -98,13 +96,13 @@ export function initializeUI() {
         }
     });
 
+    // State click handler (delegated to SVG)
     svg.addEventListener('click', (e) => {
         const stateGroup = e.target.closest('g[data-id]');
         if (!stateGroup) return;
         const stateId = stateGroup.dataset.id;
-        const state = MACHINE.states.find(s => s.id === stateId);
-        if (!state) return;
-        e.stopPropagation();
+        
+        e.stopPropagation(); // Prevent canvas click from firing
         switch (CURRENT_MODE) {
             case 'transition':
                 {
@@ -112,8 +110,11 @@ export function initializeUI() {
                     if (!TRANS_FROM) {
                         setTransFrom(stateId);
                         if(circle) circle.classList.add('state-selected');
-                    } else {
+                    } else if (TRANS_FROM !== stateId) {
                         showTransModal(TRANS_FROM, stateId);
+                        document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
+                        setTransFrom(null);
+                    } else { // Clicked the same state twice
                         document.querySelectorAll('.state-circle.state-selected').forEach(c => c.classList.remove('state-selected'));
                         setTransFrom(null);
                     }
@@ -131,37 +132,38 @@ export function initializeUI() {
         }
     });
 
+    // Transition label click handler for deletion
     svg.addEventListener('click', (e) => {
         const label = e.target.closest('.transition-label-text');
         if (!label || CURRENT_MODE !== 'delete') return;
 
         e.stopPropagation(); 
-
-        const from = label.dataset.from;
-        const to = label.dataset.to;
-        const symbol = label.dataset.symbol;
-
+        const { from, to, symbol } = label.dataset;
         if (symbol !== undefined) {
             deleteTransition(from, to, symbol);
         }
     });
-
+    
+    // Modal confirmation/cancellation listeners
     document.getElementById('transCancel').addEventListener('click', hideTransModal);
     document.getElementById('transSave').addEventListener('click', () => {
         const from = document.getElementById('transFrom').value;
         const to = document.getElementById('transTo').value;
-        const symbol = document.getElementById('transSymbol').value.trim() || 'ε';
-        if (MACHINE.type === 'DFA' && symbol === 'ε') {
+        // FIX: Standardize epsilon to an empty string on save. The renderer will display it as 'ε'.
+        const symbol = document.getElementById('transSymbol').value.trim(); 
+        
+        if (MACHINE.type === 'DFA' && symbol === '') {
             customAlert('Invalid Transition', 'DFA rule: ε-transitions are not allowed.');
             return;
         }
+        
         const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
         if (MACHINE.type === 'DFA' && conflict) {
             customAlert('Invalid Transition', `DFA rule: State ${from} is already deterministic on '${symbol}'.`);
             return;
         }
         pushUndo(updateUndoRedoButtons);
-        MACHINE.transitions.push({ from, to, symbol: (symbol === 'ε' ? '' : symbol.charAt(0)) });
+        MACHINE.transitions.push({ from, to, symbol: symbol.charAt(0) });
         renderAll();
         hideTransModal();
     });
@@ -209,32 +211,35 @@ export function initializeUI() {
     document.getElementById('confirmClearCancel').addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'none');
     document.getElementById('confirmClearConfirm').addEventListener('click', () => {
         pushUndo(updateUndoRedoButtons);
-        initializeState(updateUndoRedoButtons);
+        initializeState(updateUndoRedoButtons); // Re-initialize state
         renderAll();
         document.getElementById('confirmClearModal').style.display = 'none';
     });
-
-    undoBtn.addEventListener('click', () => doUndo(updateUndoRedoButtons));
-    redoBtn.addEventListener('click', () => doRedo(updateUndoRedoButtons));
-    saveMachineBtn.addEventListener('click', saveMachine);
-    loadMachineBtn.addEventListener('click', () => document.getElementById('loadFileInput').click());
+    
+    // File, Undo/Redo, and Canvas Control Buttons
+    document.getElementById('undoBtn').addEventListener('click', () => doUndo(updateUndoRedoButtons));
+    document.getElementById('redoBtn').addEventListener('click', () => doRedo(updateUndoRedoButtons));
+    document.getElementById('saveMachineBtn').addEventListener('click', saveMachine);
+    document.getElementById('loadMachineBtn').addEventListener('click', () => document.getElementById('loadFileInput').click());
     document.getElementById('loadFileInput').addEventListener('change', (e) => loadMachine(e, updateUndoRedoButtons));
     document.getElementById('exportPngBtn').addEventListener('click', exportPng);
-    clearCanvasBtn.addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
-
-    validateBtn.addEventListener('click', () => {
+    document.getElementById('clearCanvasBtn').addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
+    document.getElementById('validateBtn').addEventListener('click', () => {
         const result = validateAutomaton();
         setValidationMessage(result.message, result.type);
     });
 
+    // Mode Conversion Logic
     modeSelect.addEventListener('change', () => {
         const newMode = modeSelect.value;
         let convertedMachine = null;
         let successMsg = '';
         let targetType = 'DFA';
         try {
-            if (validateAutomaton().type === 'error' && !newMode.includes('_TO_')) {
-                 setValidationMessage('Cannot convert invalid automaton.', 'warning');
+            if (newMode.includes('_TO_') && validateAutomaton().type === 'error') {
+                 setValidationMessage('Cannot convert: current automaton is invalid.', 'error');
+                 modeSelect.value = MACHINE.type;
+                 return;
             }
             if (newMode === 'ENFA_TO_NFA') {
                 convertedMachine = convertEnfaToNfa(MACHINE);
@@ -255,12 +260,13 @@ export function initializeUI() {
             modeSelect.value = MACHINE.type;
             return;
         }
+        
+        pushUndo(updateUndoRedoButtons);
         if (convertedMachine) {
-            pushUndo(updateUndoRedoButtons);
             convertedMachine.type = targetType;
             setMachine(convertedMachine);
             modeSelect.value = targetType;
-            layoutStatesCircular(MACHINE.states);
+            layoutStatesCircular(MACHINE.states); // Re-layout the new states
             setValidationMessage(successMsg, 'success');
         } else {
             MACHINE.type = newMode;
@@ -268,42 +274,44 @@ export function initializeUI() {
         renderAll();
     });
 
-    runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
-    genRandBtn.addEventListener('click', () => {
-        const alphabet = MACHINE.alphabet.length ? MACHINE.alphabet : ['0', '1'];
+    // Test Panel Buttons
+    const testInput = document.getElementById('testInput');
+    document.getElementById('runTestBtn').addEventListener('click', () => runSimulation(testInput.value));
+    document.getElementById('genRandBtn').addEventListener('click', () => {
+        const alphabet = (MACHINE.alphabet && MACHINE.alphabet.length) ? MACHINE.alphabet : ['0', '1'];
         const len = Math.floor(Math.random() * 8) + 3;
         testInput.value = Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
     });
-    stepNextBtn.addEventListener('click', () => showStep(++simState.index));
-    stepPrevBtn.addEventListener('click', () => showStep(--simState.index));
-    stepResetBtn.addEventListener('click', () => {
+    document.getElementById('stepNext').addEventListener('click', () => showStep(++simState.index));
+    document.getElementById('stepPrev').addEventListener('click', () => showStep(--simState.index));
+    document.getElementById('stepReset').addEventListener('click', () => {
         simState.index = 0;
         simState.steps.length = 0;
-        clearTimeout(simState.timer);
+        if(simState.timer) clearTimeout(simState.timer);
         document.getElementById('stepLog').innerHTML = '';
         document.getElementById('testOutput').textContent = 'Ready';
-        renderAll();
+        renderAll(); // Clear highlights
     });
 
-    genPracticeBtn.addEventListener('click', generatePractice);
-    showSolBtn.addEventListener('click', () => showSolution(updateUndoRedoButtons));
-    resetPracticeBtn.addEventListener('click', resetPractice);
-    checkAnswerBtn.addEventListener('click', checkAnswer);
+    // Practice Panel Buttons
+    document.getElementById('genPracticeBtn').addEventListener('click', generatePractice);
+    document.getElementById('showSolBtn').addEventListener('click', () => showSolution(updateUndoRedoButtons));
+    document.getElementById('resetPractice').addEventListener('click', resetPractice);
+    document.getElementById('checkAnswerBtn').addEventListener('click', checkAnswer);
 
+    // Zoom Controls
+    const zoomSlider = document.getElementById('zoomSlider');
     const setZoom = (pct) => {
-        const wrapper = document.getElementById('svgWrapper');
-        if(wrapper) {
-            wrapper.style.transform = `scale(${pct / 100})`;
-            wrapper.style.transformOrigin = 'top left';
-        }
+        document.getElementById('svgWrapper').style.transform = `scale(${pct / 100})`;
         if(zoomSlider) zoomSlider.value = pct;
     };
     if(zoomSlider) zoomSlider.addEventListener('input', e => setZoom(e.target.value));
-    if(zoomInBtn) zoomInBtn.addEventListener('click', () => setZoom(Math.min(200, Number(zoomSlider.value) + 10)));
-    if(zoomOutBtn) zoomOutBtn.addEventListener('click', () => setZoom(Math.max(50, Number(zoomSlider.value) - 10)));
-    if(zoomResetBtn) zoomResetBtn.addEventListener('click', () => setZoom(100));
+    document.getElementById('zoomInBtn').addEventListener('click', () => setZoom(Math.min(200, Number(zoomSlider.value) + 10)));
+    document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom(Math.max(50, Number(zoomSlider.value) - 10)));
+    document.getElementById('zoomResetBtn').addEventListener('click', () => setZoom(100));
     setZoom(100);
 
+    // Drag and Drop Logic for States
     let dragging = false, currentStateG = null, dragOffsetX = 0, dragOffsetY = 0;
 
     function getPoint(evt) {
@@ -320,6 +328,7 @@ export function initializeUI() {
         e.preventDefault(); e.stopPropagation();
         const sObj = MACHINE.states.find(x => x.id === stateG.getAttribute('data-id'));
         if (!sObj) return;
+        
         pushUndo(updateUndoRedoButtons);
         dragging = true; currentStateG = stateG;
         const p = getPoint(e);
@@ -354,10 +363,13 @@ export function initializeUI() {
     svg.addEventListener('touchmove', moveDrag);
     svg.addEventListener('touchend', endDrag);
     svg.addEventListener('touchcancel', endDrag);
-
+    
+    // Initial render and UI update
     renderAll();
     updateUndoRedoButtons();
 }
+
+// --- Helper Functions for UI Actions ---
 
 function addState(x, y) {
     let maxId = -1;
@@ -371,6 +383,7 @@ function addState(x, y) {
     pushUndo(updateUndoRedoButtons);
     MACHINE.states.push({ id: newId, x, y, initial: MACHINE.states.length === 0, accepting: false });
     renderAll();
+    
     const stateG = document.querySelector(`g[data-id="${newId}"] circle`);
     if (stateG) {
         stateG.classList.add('state-drawing');
@@ -391,6 +404,7 @@ function deleteState(id) {
 
 function deleteTransition(from, to, symbol) {
     pushUndo(updateUndoRedoButtons);
+    // The renderer always displays empty string as ε, so we match against that
     const symbolToMatch = symbol === 'ε' ? '' : symbol;
 
     const indexToDelete = MACHINE.transitions.findIndex(t => 
@@ -440,6 +454,7 @@ function hideTransModal() {
 
 function enforceInitialStateRule() {
     if (!MACHINE || !Array.isArray(MACHINE.states)) return;
+    // If there are states but no initial state, make the first one initial.
     if (MACHINE.states.length > 0 && !MACHINE.states.some(s => s.initial)) {
         MACHINE.states[0].initial = true;
     }
