@@ -41,7 +41,6 @@
       </header>
       <main class="main-content">
         <aside id="controlPanel" class="control-panel" aria-label="Controls">
-          <!-- FIX: Made this section collapsible -->
           <details class="control-section" open>
             <summary>
                 <i data-lucide="sliders-horizontal"></i>
@@ -178,7 +177,7 @@
             </div>
           </details>
         </aside>
-        <section class="visualization-panel" aria-label="Visualization" style="position: relative;">
+        <section id="visualization-panel" class="visualization-panel" aria-label="Visualization" style="position: relative;">
           <div class="visualization-header" style="display:flex;align-items:center;gap:12px;">
             <div style="flex:1"><strong>Automata Visualization</strong>
               <div class="kv">Mode: <span id="modeLabel">DFA</span></div>
@@ -306,14 +305,14 @@
             <h3 id="alertModalTitle">Alert</h3>
             <p id="alertModalMessage" class="modal-description"></p>
             <div class="modal-actions">
-                <button id="alertModalClose">OK</button>
+                <!-- FIX: Changed ID to match ui.js -->
+                <button id="alertOk">OK</button>
             </div>
         </div>
     </div>
 
-  <script type="module" src="practice-bank.js" defer></script>
-  <script type="module" src="library-loader.js" defer></script>
-  <script type="module" src="library_helper.js" defer></script>
+  <script src="practice-bank.js" defer></script>
+  <script src="library-loader.js" defer></script>
   <script type="module" src="utils.js"></script>
   <script type="module" src="state.js"></script>
   <script type="module" src="renderer.js"></script>
@@ -322,6 +321,7 @@
   <script type="module" src="practice.js"></script>
   <script type="module" src="file.js"></script>
   <script type="module" src="animation.js"></script>
+  <script type="module" src="library_helper.js"></script>
   <script type="module" src="ui.js"></script>
   <script type="module" src="main.js"></script>
 
