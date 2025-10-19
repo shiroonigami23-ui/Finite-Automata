@@ -1,50 +1,48 @@
 // automata.js
 import { MACHINE } from './state.js';
 
-/**
- * Validates the current automaton against the rules of its type (DFA, NFA, etc.).
- * @returns {{message: string, type: 'success'|'error'|'warning'}} Validation result.
- */
 export function validateAutomaton() {
-    const { states, transitions, type, alphabet } = MACHINE;
-    if (!states || states.length === 0) {
-        return { message: 'Automaton is empty.', type: 'warning' };
+    if (!MACHINE || !Array.isArray(MACHINE.states) || !Array.isArray(MACHINE.transitions)) {
+        return { type: 'error', message: 'Invalid machine structure.' };
+    }
+
+    const { states, transitions, type } = MACHINE;
+    const stateIds = new Set(states.map(s => s.id));
+    
+    if (states.length === 0) {
+        return { type: 'info', message: 'Canvas is empty.' };
     }
 
     const initialStates = states.filter(s => s.initial);
     if (initialStates.length === 0) {
-        return { message: 'Error: No initial state defined.', type: 'error' };
+        return { type: 'error', message: 'No initial state defined.' };
+    }
+    if (type === 'DFA' && initialStates.length > 1) {
+        return { type: 'error', message: 'DFA cannot have multiple initial states.' };
+    }
+
+    for (const t of transitions) {
+        if (!stateIds.has(t.from) || !stateIds.has(t.to)) {
+            return { type: 'error', message: `Transition refers to non-existent state.` };
+        }
     }
 
     if (type === 'DFA') {
-        if (initialStates.length > 1) {
-            return { message: 'DFA Error: Multiple initial states found.', type: 'error' };
-        }
         for (const state of states) {
             const symbols = new Set();
             for (const t of transitions.filter(tr => tr.from === state.id)) {
                 if (t.symbol === '' || t.symbol === 'ε') {
-                    return { message: `DFA Error: State ${state.id} has an ε-transition.`, type: 'error' };
+                    return { type: 'error', message: `DFA state ${state.id} has an ε-transition.` };
                 }
                 if (symbols.has(t.symbol)) {
-                    return { message: `DFA Error: State ${state.id} is not deterministic for symbol '${t.symbol}'.`, type: 'error' };
+                    return { type: 'error', message: `DFA state ${state.id} is not deterministic for symbol '${t.symbol}'.` };
                 }
                 symbols.add(t.symbol);
             }
         }
     }
-    
-    // Check if all transition symbols are in the alphabet if alphabet is defined
-    if (alphabet && alphabet.length > 0) {
-        for (const t of transitions) {
-            if (t.symbol && t.symbol !== 'ε' && !alphabet.includes(t.symbol)) {
-                return { message: `Warning: Transition symbol '${t.symbol}' not in alphabet {${alphabet.join(', ')}}.`, type: 'warning' };
-            }
-        }
-    }
 
-
-    return { message: 'Automaton is valid.', type: 'success' };
+    return { type: 'success', message: 'Automaton is valid.' };
 }
 
 
@@ -81,6 +79,8 @@ export function convertEnfaToNfa(machine) {
     }
     m.transitions = newTrans.filter(t => t.symbol !== '' && t.symbol !== 'ε');
     m.type = 'NFA';
+    // Remove position data as it will be recalculated
+    m.states.forEach(s => { delete s.x; delete s.y; });
     return m;
 }
 
@@ -153,23 +153,19 @@ export function convertNfaToDfa(nfa) {
         });
     }
 
-    let i = 0;
     const keyToNewId = new Map();
     Array.from(dfaStatesData.keys()).forEach((key, index) => {
         keyToNewId.set(key, `q${index}`);
     });
 
-
     for (const [key, data] of dfaStatesData.entries()) {
         const newId = keyToNewId.get(key);
+        // --- FIX: Remove hardcoded x and y coordinates ---
         newMachine.states.push({
             id: newId,
             initial: key === initialKey,
-            accepting: data.isAccepting,
-            x: 200 + (i % 5) * 180,
-            y: 150 + Math.floor(i / 5) * 150
+            accepting: data.isAccepting
         });
-        i++;
     }
 
     for (const [key, data] of dfaStatesData.entries()) {
@@ -243,17 +239,16 @@ export function minimizeDfa(dfa) {
         group.forEach(s => repMap[s] = rep);
     });
 
-    const finalStates = P.map((group, i) => {
+    const finalStates = P.map((group) => {
         const rep = group.sort()[0];
         const oldState = reachableDfa.states.find(s => s.id === rep);
         const isInitial = reachableDfa.states.some(s => s.initial && group.includes(s.id));
 
+        // --- FIX: Remove hardcoded x and y coordinates ---
         return {
             id: rep,
             initial: isInitial,
-            accepting: oldState.accepting,
-            x: 200 + (i % 5) * 180,
-            y: 150 + Math.floor(i / 5) * 150
+            accepting: oldState.accepting
         };
     });
 
