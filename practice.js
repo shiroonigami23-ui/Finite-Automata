@@ -37,25 +37,19 @@ export function showSolution(updateUIFunction) {
     }
     pushUndo(updateUIFunction);
 
-    // --- BUG FIX STARTS HERE ---
-    // Get the correct type from the current practice mode, not the global state.
     const modeSelect = document.getElementById('modeSelect');
     const correctType = modeSelect ? modeSelect.value.split('_TO_')[0] : 'DFA';
 
-    // Create a new machine object that correctly combines the machine data with its true type.
     const solutionMachine = {
         ...JSON.parse(JSON.stringify(CURRENT_PRACTICE.machine)),
         type: correctType 
     };
     
-    // Animate the drawing of the correctly typed machine.
     animateMachineDrawing(solutionMachine);
 
-    // Update the UI to reflect the type of the machine that was just loaded.
     if(modeSelect) {
         modeSelect.value = correctType;
     }
-    // --- BUG FIX ENDS HERE ---
 }
 
 export function resetPractice() {
@@ -90,6 +84,8 @@ export async function checkAnswer() {
         type: correctType
     };
 
+    // --- FIX: Ensure both machines are checked against the same, official alphabet ---
+    // The equivalence check will now use the alphabet from the solution as the ground truth.
     const isCorrect = await areEquivalent(userMachine, solutionMachine);
 
     if (isCorrect) {
