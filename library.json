@@ -1,165 +1,56 @@
 [
   {
-    "type": "DFA",
-    "title": "DFA: Binary Divisible by 3",
-    "description": "Accepts binary strings representing numbers divisible by 3 using modular arithmetic. States track remainders when dividing by 3.",
-    "alphabet": [
-      "0",
-      "1"
-    ],
-    "states": [
-      {
-        "id": "q0",
-        "x": 200,
-        "y": 300,
-        "initial": true,
-        "accepting": true
-      },
-      {
-        "id": "q1",
-        "x": 450,
-        "y": 200,
-        "initial": false,
-        "accepting": false
-      },
-      {
-        "id": "q2",
-        "x": 450,
-        "y": 400,
-        "initial": false,
-        "accepting": false
-      }
-    ],
-    "transitions": [
-      {
-        "from": "q0",
-        "to": "q0",
-        "symbol": "0"
-      },
-      {
-        "from": "q0",
-        "to": "q1",
-        "symbol": "1"
-      },
-      {
-        "from": "q1",
-        "to": "q2",
-        "symbol": "0"
-      },
-      {
-        "from": "q1",
-        "to": "q0",
-        "symbol": "1"
-      },
-      {
-        "from": "q2",
-        "to": "q1",
-        "symbol": "0"
-      },
-      {
-        "from": "q2",
-        "to": "q2",
-        "symbol": "1"
-      }
-    ],
-    "tags": [
-      "modular-arithmetic",
-      "divisibility",
-      "binary",
-      "number-theory"
-    ],
-    "difficulty": "medium",
-    "category": "number-recognition",
-    "author": "CS Theory Course"
-  },
-  {
-    "type": "DFA",
-    "title": "DFA: contains substring '010'",
-    "description": "Accepts binary strings that contain '010' as a substring. Uses state memory to track partial matches.",
-    "alphabet": [
-      "0",
-      "1"
-    ],
-    "states": [
-      {
-        "id": "q0",
-        "x": 150,
-        "y": 300,
-        "initial": true,
-        "accepting": false
-      },
-      {
-        "id": "q1",
-        "x": 350,
-        "y": 300,
-        "initial": false,
-        "accepting": false
-      },
-      {
-        "id": "q2",
-        "x": 550,
-        "y": 300,
-        "initial": false,
-        "accepting": false
-      },
-      {
-        "id": "q3",
-        "x": 750,
-        "y": 300,
-        "initial": false,
-        "accepting": true
-      }
-    ],
-    "transitions": [
-      {
-        "from": "q0",
-        "to": "q0",
-        "symbol": "1"
-      },
-      {
-        "from": "q0",
-        "to": "q1",
-        "symbol": "0"
-      },
-      {
-        "from": "q1",
-        "to": "q1",
-        "symbol": "0"
-      },
-      {
-        "from": "q1",
-        "to": "q2",
-        "symbol": "1"
-      },
-      {
-        "from": "q2",
-        "to": "q3",
-        "symbol": "0"
-      },
-      {
-        "from": "q2",
-        "to": "q0",
-        "symbol": "1"
-      },
-      {
-        "from": "q3",
-        "to": "q3",
-        "symbol": "0"
-      },
-      {
-        "from": "q3",
-        "to": "q3",
-        "symbol": "1"
-      }
-    ],
-    "tags": [
-      "substring",
-      "pattern-matching",
-      "finite-memory"
-    ],
-    "difficulty": "medium",
-    "category": "string-matching",
-    "author": "Algorithms Course"
+    "id": "nfa_ends_with_01",
+    "title": "NFA for strings ending in 01",
+    "type": "NFA",
+    "description": "Accepts any string from the alphabet {0, 1} that ends with the substring '01'.",
+    "machine": {
+      "states": [
+        {
+          "id": "q0",
+          "initial": true,
+          "x": 150,
+          "y": 200
+        },
+        {
+          "id": "q1",
+          "x": 350,
+          "y": 200
+        },
+        {
+          "id": "q2",
+          "accepting": true,
+          "x": 550,
+          "y": 200
+        }
+      ],
+      "transitions": [
+        {
+          "from": "q0",
+          "to": "q0",
+          "symbol": "0"
+        },
+        {
+          "from": "q0",
+          "to": "q0",
+          "symbol": "1"
+        },
+        {
+          "from": "q0",
+          "to": "q1",
+          "symbol": "0"
+        },
+        {
+          "from": "q1",
+          "to": "q2",
+          "symbol": "1"
+        }
+      ],
+      "alphabet": [
+        "0",
+        "1"
+      ]
+    }
   },
   {
     "id": "nfa_second_to_last_is_a",
@@ -293,56 +184,232 @@
     }
   },
   {
-    "id": "nfa_ends_with_01",
-    "title": "NFA for strings ending in 01",
-    "type": "NFA",
-    "description": "Accepts any string from the alphabet {0, 1} that ends with the substring '01'.",
+    "type": "DFA",
+    "title": "DFA: Binary Divisible by 3",
+    "description": "Accepts binary strings representing numbers divisible by 3 using modular arithmetic. States track remainders when dividing by 3.",
+    "alphabet": [
+      "0",
+      "1"
+    ],
+    "states": [
+      {
+        "id": "q0",
+        "x": 200,
+        "y": 300,
+        "initial": true,
+        "accepting": true
+      },
+      {
+        "id": "q1",
+        "x": 450,
+        "y": 200,
+        "initial": false,
+        "accepting": false
+      },
+      {
+        "id": "q2",
+        "x": 450,
+        "y": 400,
+        "initial": false,
+        "accepting": false
+      }
+    ],
+    "transitions": [
+      {
+        "from": "q0",
+        "to": "q0",
+        "symbol": "0"
+      },
+      {
+        "from": "q0",
+        "to": "q1",
+        "symbol": "1"
+      },
+      {
+        "from": "q1",
+        "to": "q2",
+        "symbol": "0"
+      },
+      {
+        "from": "q1",
+        "to": "q0",
+        "symbol": "1"
+      },
+      {
+        "from": "q2",
+        "to": "q1",
+        "symbol": "0"
+      },
+      {
+        "from": "q2",
+        "to": "q2",
+        "symbol": "1"
+      }
+    ],
+    "tags": [
+      "modular-arithmetic",
+      "divisibility",
+      "binary",
+      "number-theory"
+    ],
+    "difficulty": "medium",
+    "category": "number-recognition",
+    "author": "CS Theory Course"
+  },
+  {
+    "title": "DFA that accepts \"RR\"",
+    "description": "Accepts short strings such as: RR, PRR, PPRR. The formal alphabet is {P, R}.",
+    "type": "DFA",
     "machine": {
+      "type": "DFA",
       "states": [
         {
           "id": "q0",
           "initial": true,
-          "x": 150,
-          "y": 200
+          "accepting": false,
+          "x": 700,
+          "y": 300
         },
         {
           "id": "q1",
-          "x": 350,
-          "y": 200
+          "initial": false,
+          "accepting": false,
+          "x": 829.9038105676658,
+          "y": 525
         },
         {
           "id": "q2",
+          "initial": false,
           "accepting": true,
-          "x": 550,
-          "y": 200
+          "x": 570.0961894323342,
+          "y": 525
         }
       ],
       "transitions": [
         {
           "from": "q0",
           "to": "q0",
-          "symbol": "0"
-        },
-        {
-          "from": "q0",
-          "to": "q0",
-          "symbol": "1"
+          "symbol": "P"
         },
         {
           "from": "q0",
           "to": "q1",
-          "symbol": "0"
+          "symbol": "P"
+        },
+        {
+          "from": "q0",
+          "to": "q2",
+          "symbol": "P"
+        },
+        {
+          "from": "q1",
+          "to": "q0",
+          "symbol": "R"
         },
         {
           "from": "q1",
           "to": "q2",
-          "symbol": "1"
+          "symbol": "R"
+        },
+        {
+          "from": "q2",
+          "to": "q2",
+          "symbol": "R"
         }
       ],
       "alphabet": [
-        "0",
-        "1"
+        "P",
+        "R"
       ]
     }
+  },
+  {
+    "type": "DFA",
+    "title": "DFA: contains substring '010'",
+    "description": "Accepts binary strings that contain '010' as a substring. Uses state memory to track partial matches.",
+    "alphabet": [
+      "0",
+      "1"
+    ],
+    "states": [
+      {
+        "id": "q0",
+        "x": 150,
+        "y": 300,
+        "initial": true,
+        "accepting": false
+      },
+      {
+        "id": "q1",
+        "x": 350,
+        "y": 300,
+        "initial": false,
+        "accepting": false
+      },
+      {
+        "id": "q2",
+        "x": 550,
+        "y": 300,
+        "initial": false,
+        "accepting": false
+      },
+      {
+        "id": "q3",
+        "x": 750,
+        "y": 300,
+        "initial": false,
+        "accepting": true
+      }
+    ],
+    "transitions": [
+      {
+        "from": "q0",
+        "to": "q0",
+        "symbol": "1"
+      },
+      {
+        "from": "q0",
+        "to": "q1",
+        "symbol": "0"
+      },
+      {
+        "from": "q1",
+        "to": "q1",
+        "symbol": "0"
+      },
+      {
+        "from": "q1",
+        "to": "q2",
+        "symbol": "1"
+      },
+      {
+        "from": "q2",
+        "to": "q3",
+        "symbol": "0"
+      },
+      {
+        "from": "q2",
+        "to": "q0",
+        "symbol": "1"
+      },
+      {
+        "from": "q3",
+        "to": "q3",
+        "symbol": "0"
+      },
+      {
+        "from": "q3",
+        "to": "q3",
+        "symbol": "1"
+      }
+    ],
+    "tags": [
+      "substring",
+      "pattern-matching",
+      "finite-memory"
+    ],
+    "difficulty": "medium",
+    "category": "string-matching",
+    "author": "Algorithms Course"
   }
 ]
