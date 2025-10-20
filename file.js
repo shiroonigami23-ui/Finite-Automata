@@ -12,7 +12,7 @@ import { animateMachineDrawing } from './animation.js';
  * @param {number} minLength The minimum length of the path to find.
  * @returns {string|null} The shortest accepted string or null.
  */
-function findShortestPathToAccept(machine, minLength = 0) {
+function findShortestPathToAcceptStrings(machine, minLength = 0) {
     const queue = [];
     const visited = new Set();
     const initialStates = machine.states.filter(s => s.initial);
