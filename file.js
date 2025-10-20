@@ -1,7 +1,6 @@
 import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll, layoutStatesCircular } from './renderer.js';
 import { setValidationMessage } from './utils.js';
-// NEW: Import the animation function to use it for loading/importing
 import { animateMachineDrawing } from './animation.js';
 
 // --- Machine Analysis Helpers for Smart Save ---
@@ -12,7 +11,7 @@ import { animateMachineDrawing } from './animation.js';
  * @param {number} minLength The minimum length of the path to find.
  * @returns {string|null} The shortest accepted string or null.
  */
-function findShortestAcceptedStrings(machine, minLength = 0) {
+function findShortestPathToAccept(machine, minLength = 0) {
     const queue = [];
     const visited = new Set();
     const initialStates = machine.states.filter(s => s.initial);
@@ -31,7 +30,7 @@ function findShortestAcceptedStrings(machine, minLength = 0) {
 
         const outgoing = machine.transitions.filter(t => t.from === stateId);
         for (const t of outgoing) {
-            if (!t.symbol) continue; // Ignore epsilon transitions for this analysis
+            if (!t.symbol && t.symbol !== "") continue; // Ignore epsilon for path strings
             const newPath = path + t.symbol;
             const nextState = machine.states.find(s => s.id === t.to);
 
@@ -74,7 +73,7 @@ function findShortestPathToState(machine, targetStateId) {
 
         const outgoing = machine.transitions.filter(t => t.from === stateId);
         for (const t of outgoing) {
-             if (!t.symbol) continue;
+             if (!t.symbol && t.symbol !== "") continue;
             const newPath = path + t.symbol;
             if (t.to === targetStateId) {
                 return newPath;
@@ -98,7 +97,7 @@ function findShortestPathToState(machine, targetStateId) {
  */
 function analyzeMachineStructure(machine) {
     const { states, transitions } = machine;
-    if (states.length === 0) return null;
+    if (states.length < 1) return null;
 
     const alphabet = [...new Set(transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
     if (alphabet.length === 0) return null;
@@ -110,6 +109,7 @@ function analyzeMachineStructure(machine) {
     const trapStates = new Set(states.filter(s => {
         if (s.accepting) return false;
         const outgoing = transitions.filter(t => t.from === s.id);
+        // It's a trap state if all symbols in the alphabet loop back to itself
         return alphabet.every(symbol => {
             const transForSymbol = outgoing.filter(t => t.symbol === symbol);
             return transForSymbol.length > 0 && transForSymbol.every(t => t.to === s.id);
@@ -121,7 +121,7 @@ function analyzeMachineStructure(machine) {
     const pathsToTrap = initialTransitions.filter(t => trapStates.has(t.to));
     if (pathsToTrap.length > 0 && pathsToTrap.length < initialTransitions.length) {
         const path = findShortestPathToAccept(machine, 1);
-        if (path) return `Starts with '${path}'`;
+        if (path) return `Starts with '${path.charAt(0)}'`;
     }
 
     // --- Heuristic 2: Contains Substring ---
@@ -140,6 +140,7 @@ function analyzeMachineStructure(machine) {
 
     // --- Heuristic 3: Ends With ---
     const acceptingStates = states.filter(s => s.accepting);
+    // This pattern is common for 'ends with': an accepting state that isn't a sink.
     if (acceptingStates.length > 0 && !acceptingStates.every(s => acceptingSinks.some(as => as.id === s.id))) {
        const path = findShortestPathToAccept(machine, 1);
        if(path) return `Ends with '${path}'`;
@@ -148,6 +149,44 @@ function analyzeMachineStructure(machine) {
     return null; // No specific pattern found
 }
 
+/**
+ * The original, correct function to find a few short accepted strings for display.
+ * @param {object} machine The automaton to analyze.
+ * @returns {string[]} A list of up to 3 shortest accepted strings.
+ */
+function findShortestAcceptedStrings(machine) {
+    const queue = [];
+    const visited = new Set();
+    const accepted = [];
+    const initialStates = machine.states.filter(s => s.initial);
+    if (initialStates.length === 0) return [];
+    if (initialStates.some(s => s.accepting)) accepted.push("ε");
+    for (const startState of initialStates) {
+        queue.push({ state: startState.id, path: "" });
+        visited.add(startState.id + ",");
+    }
+    let head = 0;
+    while (head < queue.length && accepted.length < 5) {
+        const { state, path } = queue[head++];
+        if (path.length > 10) continue;
+        const transitions = machine.transitions.filter(t => t.from === state);
+        for (const t of transitions) {
+            const newPath = path + (t.symbol || '');
+            const visitedKey = t.to + "," + newPath;
+            if (!visited.has(visitedKey)) {
+                visited.add(visitedKey);
+                const nextState = machine.states.find(s => s.id === t.to);
+                if (nextState) {
+                    if (nextState.accepting && !accepted.includes(newPath)) {
+                        accepted.push(newPath);
+                    }
+                    queue.push({ state: t.to, path: newPath });
+                }
+            }
+        }
+    }
+    return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
+}
 
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
@@ -234,9 +273,6 @@ export function handleSaveWithMetadata() {
 }
 
 
-/**
- * MODIFIED: This function now uses the drawing animation.
- */
 export function loadMachine(e, updateUIFunction) {
     const file = e.target.files[0];
     if (!file) return;
@@ -251,13 +287,11 @@ export function loadMachine(e, updateUIFunction) {
                 const machineType = machineData.type || data.type || 'DFA';
                 document.getElementById('modeSelect').value = machineType;
                 
-                // Construct the full machine object to be animated
                 const machineToAnimate = {
                     ...machineData,
                     type: machineType
                 };
 
-                // CHANGE: Instead of setting the machine directly, we animate it
                 animateMachineDrawing(machineToAnimate);
                 
             } else {
@@ -266,7 +300,6 @@ export function loadMachine(e, updateUIFunction) {
         } catch (err) {
             setValidationMessage("Invalid JSON file: " + err.message, 'error');
         } finally {
-            // Clear input to allow re-uploading the same file
             e.target.value = '';
         }
     };
@@ -343,9 +376,6 @@ export function exportPng(fileName = 'automaton') {
 }
 
 
-/**
- * MODIFIED: This function now uses the drawing animation after getting the AI result.
- */
 export async function handleImageUpload(e, updateUIFunction, showLoading, hideLoading) {
     const file = e.target.files[0];
     if (!file) return;
@@ -402,7 +432,6 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
             if (parsedJson.states && parsedJson.transitions) {
                 pushUndo(updateUIFunction);
                 
-                // First, add coordinates to the states since the AI doesn't provide them
                 layoutStatesCircular(parsedJson.states); 
                 
                 const machineToAnimate = {
@@ -413,10 +442,7 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
                 
                 document.getElementById('modeSelect').value = 'DFA';
 
-                // Animate the newly created machine
                 animateMachineDrawing(machineToAnimate);
-                
-                // The success alert is now removed, as requested.
                 
             } else {
                 throw new Error("Response did not contain valid 'states' or 'transitions'.");
@@ -435,4 +461,4 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
         window.customAlert('File Error', 'Could not read the selected image file. Please try another.');
         hideLoading();
     };
-}
+        }
