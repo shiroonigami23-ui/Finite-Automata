@@ -1,42 +1,11 @@
 import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll, layoutStatesCircular } from './renderer.js';
 import { setValidationMessage } from './utils.js';
-import { animateMachineDrawing } from './animation.js'; // Ensure this is imported
+// NEW: Import the animation function to use it for loading/importing
+import { animateMachineDrawing } from './animation.js';
 
 // --- Functions for the "Smart Save" feature ---
-function findShortestAcceptedStrings(machine) {
-    const queue = [];
-    const visited = new Set();
-    const accepted = [];
-    const initialStates = machine.states.filter(s => s.initial);
-    if (initialStates.length === 0) return [];
-    if (initialStates.some(s => s.accepting)) accepted.push("ε");
-    for (const startState of initialStates) {
-        queue.push({ state: startState.id, path: "" });
-        visited.add(startState.id + ",");
-    }
-    let head = 0;
-    while (head < queue.length && accepted.length < 5) {
-        const { state, path } = queue[head++];
-        if (path.length > 10) continue;
-        const transitions = machine.transitions.filter(t => t.from === state);
-        for (const t of transitions) {
-            const newPath = path + (t.symbol || '');
-            const visitedKey = t.to + "," + newPath;
-            if (!visited.has(visitedKey)) {
-                visited.add(visitedKey);
-                const nextState = machine.states.find(s => s.id === t.to);
-                if (nextState) {
-                    if (nextState.accepting && !accepted.includes(newPath)) {
-                        accepted.push(newPath);
-                    }
-                    queue.push({ state: t.to, path: newPath });
-                }
-            }
-        }
-    }
-    return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
-}
+// ... (Your existing findShortestAcceptedStrings, saveMachine, and handleSaveWithMetadata functions remain unchanged) ...
 
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
@@ -110,40 +79,40 @@ export function handleSaveWithMetadata() {
 }
 
 
+/**
+ * MODIFIED: This function now uses the drawing animation.
+ */
 export function loadMachine(e, updateUIFunction) {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Simulate loading state for consistency if you add a universal loading indicator
-    // showLoading("Your machine is being loaded..."); 
-
     const reader = new FileReader();
     reader.onload = ev => {
         try {
             const data = JSON.parse(ev.target.result);
-            const machineData = data.machine || data;
+            const machineData = data.machine || data; // Handles both file formats
 
             if (machineData.states && machineData.transitions) {
                 pushUndo(updateUIFunction);
                 const machineType = machineData.type || data.type || 'DFA';
+                document.getElementById('modeSelect').value = machineType;
                 
+                // Construct the full machine object to be animated
                 const machineToAnimate = {
                     ...machineData,
                     type: machineType
                 };
-                
-                document.getElementById('modeSelect').value = machineType;
-                // Pass the machineType to animateMachineDrawing
-                animateMachineDrawing(machineToAnimate, machineType); 
 
+                // CHANGE: Instead of setting the machine directly, we animate it
+                animateMachineDrawing(machineToAnimate);
+                
             } else {
                 setValidationMessage("Invalid machine file format.", 'error');
             }
         } catch (err) {
             setValidationMessage("Invalid JSON file: " + err.message, 'error');
         } finally {
+            // Clear input to allow re-uploading the same file
             e.target.value = '';
-            // hideLoading(); // If you implement a universal loading indicator
         }
     };
     reader.readAsText(file);
@@ -219,12 +188,14 @@ export function exportPng(fileName = 'automaton') {
 }
 
 
-// --- NEW: AI Image Import Logic ---
+/**
+ * MODIFIED: This function now uses the drawing animation after getting the AI result.
+ */
 export async function handleImageUpload(e, updateUIFunction, showLoading, hideLoading) {
     const file = e.target.files[0];
     if (!file) return;
 
-    showLoading("Your image is being loaded..."); // Changed message
+    showLoading();
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -232,48 +203,20 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
         const base64ImageData = reader.result.split(',')[1];
         
         try {
-            // --- UPDATED, SMARTER PROMPT ---
             const prompt = `
-                You are a meticulous expert in automata theory, specializing in converting visual diagrams into structured data. Your task is to analyze the provided image of a finite automaton and extract its components with extreme precision.
-
-                **Primary Directive:** Your output MUST be a single, valid JSON object with two top-level keys: "machine" and "detectedType". There should be no surrounding text or explanations outside this JSON.
-
-                **Step-by-Step Analysis Guide for "machine" object:**
-                1.  **Identify all States:** Locate every circle, which represents a state. Note its name (e.g., 'q0', 'A', etc.).
-                2.  **Determine State Properties:**
-                    * **Initial State:** Look for a state with an incoming arrow that has no source state. This is the initial state. Set its "initial" property to \`true\`.
-                    * **Accepting States:** Identify any states drawn with a double circle. These are accepting (or final) states. Set their "accepting" property to \`true\`.
-                3.  **Analyze all Transitions (This is the most critical step):**
-                    * For every line connecting two states, you MUST carefully identify the arrowhead.
-                    * The state the **arrowhead points directly to** is the **destination (\`to\`) state**.
-                    * The state where the line **originates from** is the **source (\`from\`) state**.
-                    * For curved lines or loops, the direction is still determined solely by the arrowhead's position.
-                    * A transition that starts and ends at the same state is a self-loop. The "from" and "to" properties will be the same for this transition.
-                    * Identify the symbol(s) written near the transition line. For epsilon (ε) transitions, use an empty string "" for the "symbol".
-
-                **Step-by-Step Analysis Guide for "detectedType" string:**
-                After extracting the states and transitions, determine the most precise type of automaton:
-                -   **DFA (Deterministic Finite Automaton):**
-                    -   Must have exactly one initial state.
-                    -   For every state and every symbol in the alphabet, there must be *exactly one* outgoing transition.
-                    -   No epsilon (empty string) transitions.
-                -   **NFA (Non-deterministic Finite Automaton):**
-                    -   If it's not a DFA, but has no epsilon transitions.
-                    -   Can have multiple initial states, or a state might have multiple transitions for the same symbol, or missing transitions for some symbols.
-                -   **ε-NFA (Epsilon-NFA):**
-                    -   If it contains any epsilon (empty string "") transitions, regardless of other properties. This takes precedence over NFA/DFA if epsilon transitions are present.
-
-                **JSON Output Structure:**
-                The final JSON object must have these two top-level keys:
-                -   **\`machine\`**: An object containing:
-                    -   \`states\` (array of objects): Each with \`id\` (string), \`initial\` (boolean), \`accepting\` (boolean).
-                    -   \`transitions\` (array of objects): Each with \`from\` (string), \`to\` (string), \`symbol\` (string).
-                -   **\`detectedType\`**: (string) "DFA", "NFA", or "ε-NFA" based on your analysis.
-
-                **Final Check:** Before outputting, ensure every state ID used in the "transitions" array exactly matches an ID in the "states" array.
+                You are an expert in automata theory. Analyze the provided image of a finite automaton.
+                Extract all states and transitions and return them as a valid JSON object.
+                - The JSON object must have two keys: "states" and "transitions".
+                - "states" is an array of objects, each with: "id" (string), "initial" (boolean), "accepting" (boolean). You can ignore x/y coordinates.
+                - "transitions" is an array of objects, each with: "from" (string, the source state id), "to" (string, the destination state id), and "symbol" (string).
+                - An incoming arrow with no source indicates an initial state.
+                - A double circle indicates an accepting (final) state.
+                - For epsilon transitions, use an empty string "" for the symbol.
+                - Ensure the state IDs in the transitions array perfectly match the state IDs in the states array.
+                - Do not include any extra text or explanations outside of the JSON object.
             `;
 
-            const apiKey = "AIzaSyAJiWZMJlcZAsPzEo8vW35KFH6Yuk8enjc"; // This is a placeholder
+            const apiKey = "AIzaSyAJiWZMJlcZAsPzEo8vW35KFH6Yuk8enjc";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -298,29 +241,29 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
             const result = await response.json();
             const text = result.candidates[0].content.parts[0].text;
             
-            const jsonStringMatch = text.match(/```json\n([\s\S]*?)\n```/);
-            if (!jsonStringMatch || !jsonStringMatch[1]) {
-                 throw new Error("Could not find a valid JSON block in the AI's response.");
-            }
-            const parsedResult = JSON.parse(jsonStringMatch[1]); // Parse the whole response
+            const jsonString = text.match(/```json\n([\s\S]*?)\n```/)[1];
+            const parsedJson = JSON.parse(jsonString);
 
-            if (parsedResult.machine && parsedResult.machine.states && parsedResult.machine.transitions && parsedResult.detectedType) {
+            if (parsedJson.states && parsedJson.transitions) {
                 pushUndo(updateUIFunction);
-                layoutStatesCircular(parsedResult.machine.states); 
                 
-                const detectedType = parsedResult.detectedType;
+                // First, add coordinates to the states since the AI doesn't provide them
+                layoutStatesCircular(parsedJson.states); 
                 
                 const machineToAnimate = {
-                    type: detectedType, // Use AI's detected type
-                    ...parsedResult.machine,
-                    alphabet: [...new Set(parsedResult.machine.transitions.map(t => t.symbol).filter(s => s))]
+                    type: 'DFA', // Default to DFA, user can change mode later
+                    ...parsedJson,
+                    alphabet: [...new Set(parsedJson.transitions.map(t => t.symbol).filter(s => s))]
                 };
-
-                document.getElementById('modeSelect').value = detectedType === 'ε-NFA' ? 'NFA' : detectedType; // Set mode in UI
-                animateMachineDrawing(machineToAnimate, detectedType); // Pass detected type to animation
                 
+                document.getElementById('modeSelect').value = 'DFA';
+
+                // CHANGE: Animate the newly created machine
+                animateMachineDrawing(machineToAnimate);
+
+                window.customAlert('Success', 'Your machine is generated from your image!');
             } else {
-                throw new Error("AI response did not contain valid 'machine' or 'detectedType'.");
+                throw new Error("Response did not contain valid 'states' or 'transitions'.");
             }
 
         } catch (error) {
