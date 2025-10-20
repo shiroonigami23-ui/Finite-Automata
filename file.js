@@ -4,40 +4,150 @@ import { setValidationMessage } from './utils.js';
 // NEW: Import the animation function to use it for loading/importing
 import { animateMachineDrawing } from './animation.js';
 
-// --- Functions for the "Smart Save" feature ---
-function findShortestAcceptedStrings(machine) {
+// --- Machine Analysis Helpers for Smart Save ---
+
+/**
+ * Finds the shortest path from the initial state to the first accepting state.
+ * @param {object} machine The automaton to analyze.
+ * @param {number} minLength The minimum length of the path to find.
+ * @returns {string|null} The shortest accepted string or null.
+ */
+function findShortestPathToAccept(machine, minLength = 0) {
     const queue = [];
     const visited = new Set();
-    const accepted = [];
     const initialStates = machine.states.filter(s => s.initial);
-    if (initialStates.length === 0) return [];
-    if (initialStates.some(s => s.accepting)) accepted.push("ε");
+    if (initialStates.length === 0) return null;
+
     for (const startState of initialStates) {
-        queue.push({ state: startState.id, path: "" });
-        visited.add(startState.id + ",");
+        if (startState.accepting && minLength === 0) return "ε";
+        queue.push({ stateId: startState.id, path: "" });
+        visited.add(startState.id);
     }
+
     let head = 0;
-    while (head < queue.length && accepted.length < 5) {
-        const { state, path } = queue[head++];
-        if (path.length > 10) continue;
-        const transitions = machine.transitions.filter(t => t.from === state);
-        for (const t of transitions) {
-            const newPath = path + (t.symbol || '');
+    while (head < queue.length) {
+        const { stateId, path } = queue[head++];
+        if (path.length > 5) continue; // Performance guard
+
+        const outgoing = machine.transitions.filter(t => t.from === stateId);
+        for (const t of outgoing) {
+            if (!t.symbol) continue; // Ignore epsilon transitions for this analysis
+            const newPath = path + t.symbol;
+            const nextState = machine.states.find(s => s.id === t.to);
+
+            if (nextState && nextState.accepting && newPath.length >= minLength) {
+                return newPath; // Found the shortest valid path
+            }
+
             const visitedKey = t.to + "," + newPath;
-            if (!visited.has(visitedKey)) {
+            if (nextState && !visited.has(visitedKey)) {
                 visited.add(visitedKey);
-                const nextState = machine.states.find(s => s.id === t.to);
-                if (nextState) {
-                    if (nextState.accepting && !accepted.includes(newPath)) {
-                        accepted.push(newPath);
-                    }
-                    queue.push({ state: t.to, path: newPath });
-                }
+                queue.push({ stateId: t.to, path: newPath });
             }
         }
     }
-    return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
+    return null;
 }
+
+/**
+ * Finds the shortest path from the initial state to a specific target state.
+ * @param {object} machine The automaton to analyze.
+ * @param {string} targetStateId The ID of the state to find a path to.
+ * @returns {string|null} The shortest path string or null.
+ */
+function findShortestPathToState(machine, targetStateId) {
+    const queue = [];
+    const visited = new Set();
+    const initialStates = machine.states.filter(s => s.initial);
+    if (initialStates.length === 0) return null;
+
+    for (const startState of initialStates) {
+        if (startState.id === targetStateId) return "";
+        queue.push({ stateId: startState.id, path: "" });
+        visited.add(startState.id);
+    }
+
+    let head = 0;
+    while (head < queue.length) {
+        const { stateId, path } = queue[head++];
+        if (path.length > 5) continue;
+
+        const outgoing = machine.transitions.filter(t => t.from === stateId);
+        for (const t of outgoing) {
+             if (!t.symbol) continue;
+            const newPath = path + t.symbol;
+            if (t.to === targetStateId) {
+                return newPath;
+            }
+
+            const visitedKey = t.to + "," + newPath;
+            if (!visited.has(visitedKey)) {
+                visited.add(visitedKey);
+                queue.push({ stateId: t.to, path: newPath });
+            }
+        }
+    }
+    return null;
+}
+
+
+/**
+ * Analyzes the machine's structure to guess its purpose (e.g., "starts with", "ends with").
+ * @param {object} machine The automaton to analyze.
+ * @returns {string|null} A descriptive title or null if no pattern is found.
+ */
+function analyzeMachineStructure(machine) {
+    const { states, transitions } = machine;
+    if (states.length === 0) return null;
+
+    const alphabet = [...new Set(transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
+    if (alphabet.length === 0) return null;
+
+    const initialState = states.find(s => s.initial);
+    if (!initialState) return null;
+
+    // --- Helper to find trap states ---
+    const trapStates = new Set(states.filter(s => {
+        if (s.accepting) return false;
+        const outgoing = transitions.filter(t => t.from === s.id);
+        return alphabet.every(symbol => {
+            const transForSymbol = outgoing.filter(t => t.symbol === symbol);
+            return transForSymbol.length > 0 && transForSymbol.every(t => t.to === s.id);
+        });
+    }).map(s => s.id));
+
+    // --- Heuristic 1: Starts With ---
+    const initialTransitions = transitions.filter(t => t.from === initialState.id);
+    const pathsToTrap = initialTransitions.filter(t => trapStates.has(t.to));
+    if (pathsToTrap.length > 0 && pathsToTrap.length < initialTransitions.length) {
+        const path = findShortestPathToAccept(machine, 1);
+        if (path) return `Starts with '${path}'`;
+    }
+
+    // --- Heuristic 2: Contains Substring ---
+    const acceptingSinks = states.filter(s => {
+        if (!s.accepting) return false;
+        const outgoing = transitions.filter(t => t.from === s.id);
+        return alphabet.every(symbol => {
+            const transForSymbol = outgoing.filter(t => t.symbol === symbol);
+            return transForSymbol.length > 0 && transForSymbol.every(t => t.to === s.id);
+        });
+    });
+    if (acceptingSinks.length > 0) {
+        const path = findShortestPathToState(machine, acceptingSinks[0].id);
+        if (path) return `Contains substring '${path}'`;
+    }
+
+    // --- Heuristic 3: Ends With ---
+    const acceptingStates = states.filter(s => s.accepting);
+    if (acceptingStates.length > 0 && !acceptingStates.every(s => acceptingSinks.some(as => as.id === s.id))) {
+       const path = findShortestPathToAccept(machine, 1);
+       if(path) return `Ends with '${path}'`;
+    }
+
+    return null; // No specific pattern found
+}
+
 
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
@@ -46,20 +156,34 @@ export function saveMachine() {
     if (!modal || !descInput || !alphabetDisplay) return;
 
     const machineType = MACHINE.type || 'DFA';
-    const shortestStrings = findShortestAcceptedStrings(MACHINE);
-    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
 
-    let autoTitle;
-    if (shortestStrings.length > 0) {
-        const examples = shortestStrings.map(s => `"${s}"`).join(', ');
-        autoTitle = `${machineType} that accepts ${examples}, ...`;
-    } else if (MACHINE.states.some(s => s.accepting)) {
-        autoTitle = `${machineType} with an unreachable language`;
-    } else {
-        autoTitle = `${machineType} that accepts nothing (empty language)`;
+    // --- NEW: Smart Title Generation ---
+    let autoTitle = analyzeMachineStructure(MACHINE);
+    
+    // Fallback to the old logic if analysis returns nothing
+    if (!autoTitle) {
+        const shortestStrings = findShortestAcceptedStrings(MACHINE);
+        if (shortestStrings.length > 0 && shortestStrings[0] !== "ε") {
+            const examples = shortestStrings.map(s => `"${s}"`).join(', ');
+            autoTitle = `Accepts ${examples}, ...`;
+        } else if (shortestStrings.length > 0) {
+             autoTitle = `Accepts ε and other strings`;
+        } else if (MACHINE.states.some(s => s.accepting)) {
+            autoTitle = `Has an unreachable language`;
+        } else {
+            autoTitle = `Accepts nothing (empty language)`;
+        }
     }
     
-    descInput.value = `Accepts short strings such as: ${shortestStrings.join(', ') || 'none'}.`;
+    // Prepend the machine type to the generated title
+    const finalTitle = `${machineType}: ${autoTitle}`;
+    document.getElementById('libTitleInput').value = finalTitle;
+    
+    // --- End of New Logic ---
+
+    const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
+    
+    descInput.value = `Accepts short strings such as: ${findShortestAcceptedStrings(MACHINE).join(', ') || 'none'}.`;
 
     if (machineType === 'DFA') {
         alphabetDisplay.innerHTML = `<strong>Formal Alphabet (auto-detected):</strong> {${alphabet.join(', ') || '∅'}}`;
@@ -68,7 +192,6 @@ export function saveMachine() {
         alphabetDisplay.style.display = 'none';
     }
 
-    document.getElementById('libTitleInput').value = autoTitle;
     document.getElementById('libTypeInput').value = machineType;
     modal.style.display = 'flex';
 }
