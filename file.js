@@ -5,7 +5,39 @@ import { setValidationMessage } from './utils.js';
 import { animateMachineDrawing } from './animation.js';
 
 // --- Functions for the "Smart Save" feature ---
-// ... (Your existing findShortestAcceptedStrings, saveMachine, and handleSaveWithMetadata functions remain unchanged) ...
+function findShortestAcceptedStrings(machine) {
+    const queue = [];
+    const visited = new Set();
+    const accepted = [];
+    const initialStates = machine.states.filter(s => s.initial);
+    if (initialStates.length === 0) return [];
+    if (initialStates.some(s => s.accepting)) accepted.push("ε");
+    for (const startState of initialStates) {
+        queue.push({ state: startState.id, path: "" });
+        visited.add(startState.id + ",");
+    }
+    let head = 0;
+    while (head < queue.length && accepted.length < 5) {
+        const { state, path } = queue[head++];
+        if (path.length > 10) continue;
+        const transitions = machine.transitions.filter(t => t.from === state);
+        for (const t of transitions) {
+            const newPath = path + (t.symbol || '');
+            const visitedKey = t.to + "," + newPath;
+            if (!visited.has(visitedKey)) {
+                visited.add(visitedKey);
+                const nextState = machine.states.find(s => s.id === t.to);
+                if (nextState) {
+                    if (nextState.accepting && !accepted.includes(newPath)) {
+                        accepted.push(newPath);
+                    }
+                    queue.push({ state: t.to, path: newPath });
+                }
+            }
+        }
+    }
+    return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
+}
 
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
@@ -258,10 +290,11 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
                 
                 document.getElementById('modeSelect').value = 'DFA';
 
-                // CHANGE: Animate the newly created machine
+                // Animate the newly created machine
                 animateMachineDrawing(machineToAnimate);
-
-                window.customAlert('Success', 'Your machine is generated from your image!');
+                
+                // The success alert is now removed, as requested.
+                
             } else {
                 throw new Error("Response did not contain valid 'states' or 'transitions'.");
             }
