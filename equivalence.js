@@ -4,19 +4,26 @@ import { convertEnfaToNfa, convertNfaToDfa, minimizeDfa } from './automata.js';
  * A helper function to get a machine into a DFA format, ready for minimization.
  * This is an async function because the underlying conversions are now async.
  * @param {object} machine The machine to convert.
+ * @param {string[]} [forcedAlphabet] - An optional alphabet to enforce.
  * @returns {Promise<object>} A DFA representation of the machine.
  */
-async function toDfa(machine) {
-    // A silent step callback that does nothing, to satisfy the async conversion functions.
+async function toDfa(machine, forcedAlphabet = null) {
     const silentStep = async () => {};
     
+    // Ensure the machine object has the alphabet for the conversion functions to use
+    const machineWithAlphabet = { ...machine, alphabet: forcedAlphabet || machine.alphabet };
+
     switch(machine.type) {
         case 'DFA':
-            return machine;
+            // Even if it's a DFA, we might need to complete it over a larger alphabet
+            // The easiest way is to just run it through the NFA->DFA conversion
+            return await convertNfaToDfa(machineWithAlphabet, silentStep);
         case 'NFA':
-            return await convertNfaToDfa(machine, silentStep);
+            return await convertNfaToDfa(machineWithAlphabet, silentStep);
         case 'ENFA':
-            const nfa = await convertEnfaToNfa(machine, silentStep);
+            const nfa = await convertEnfaToNfa(machineWithAlphabet, silentStep);
+            // Pass the alphabet along to the next conversion step
+            nfa.alphabet = machineWithAlphabet.alphabet;
             return await convertNfaToDfa(nfa, silentStep);
         default:
             throw new Error(`Unknown machine type for conversion: ${machine.type}`);
@@ -25,7 +32,17 @@ async function toDfa(machine) {
 
 function areIsomorphic(dfaA, dfaB) {
     if (dfaA.states.length !== dfaB.states.length) return false;
-    if (dfaA.alphabet.sort().join(',') !== dfaB.alphabet.sort().join(',')) return false;
+    
+    // --- FIX: Make alphabet check more robust and use a combined alphabet for the loop ---
+    const alphabetA = new Set(dfaA.alphabet || []);
+    const alphabetB = new Set(dfaB.alphabet || []);
+    if (alphabetA.size !== alphabetB.size || ![...alphabetA].every(symbol => alphabetB.has(symbol))) {
+        // This can happen if one machine is fundamentally different. It's a valid early exit.
+        console.warn("Isomorphism check failed: Alphabets do not match.", dfaA.alphabet, dfaB.alphabet);
+        return false;
+    }
+    const alphabet = [...alphabetA]; // Use one of the now-guaranteed-to-be-identical alphabets.
+
     if (dfaA.states.filter(s => s.accepting).length !== dfaB.states.filter(s => s.accepting).length) return false;
 
     const initialA = dfaA.states.find(s => s.initial);
@@ -47,23 +64,26 @@ function areIsomorphic(dfaA, dfaB) {
 
         if (stateA.accepting !== stateB.accepting) return false;
 
-        for (const symbol of dfaA.alphabet) {
+        for (const symbol of alphabet) {
             const transA = dfaA.transitions.find(t => t.from === idA && t.symbol === symbol);
             const transB = dfaB.transitions.find(t => t.from === idB && t.symbol === symbol);
 
-            if (!transA || !transB) return false; 
+            // If one has a transition for the symbol and the other doesn't, they are not isomorphic.
+            if (!transA !== !transB) return false;
+            
+            if (transA && transB) {
+                 const nextIdA = transA.to;
+                const nextIdB = transB.to;
 
-            const nextIdA = transA.to;
-            const nextIdB = transB.to;
-
-            if (mapAtoB.has(nextIdA)) {
-                if (mapAtoB.get(nextIdA) !== nextIdB) {
-                    return false; // Inconsistent mapping
+                if (mapAtoB.has(nextIdA)) {
+                    if (mapAtoB.get(nextIdA) !== nextIdB) {
+                        return false; // Inconsistent mapping
+                    }
+                } else {
+                    mapAtoB.set(nextIdA, nextIdB);
+                    visitedA.add(nextIdA);
+                    queue.push([nextIdA, nextIdB]);
                 }
-            } else {
-                mapAtoB.set(nextIdA, nextIdB);
-                visitedA.add(nextIdA);
-                queue.push([nextIdA, nextIdB]);
             }
         }
     }
@@ -80,12 +100,16 @@ function areIsomorphic(dfaA, dfaB) {
  */
 export async function areEquivalent(machineA, machineB) {
     try {
-        // A silent step callback that does nothing, to satisfy the async minimization functions.
         const silentStep = async () => {};
 
-        // Convert both machines to DFA format.
-        const dfaA = await toDfa(machineA);
-        const dfaB = await toDfa(machineB);
+        // --- FIX: Establish a single, master alphabet from the solution (machineB) or a union ---
+        const alphabetA = Array.from(new Set(machineA.transitions.map(t => t.symbol).filter(Boolean)));
+        const alphabetB = machineB.alphabet || Array.from(new Set(machineB.transitions.map(t => t.symbol).filter(Boolean)));
+        const combinedAlphabet = [...new Set([...alphabetA, ...alphabetB])];
+
+        // Convert both machines to DFA format, forcing them to be complete over the combined alphabet
+        const dfaA = await toDfa(machineA, combinedAlphabet);
+        const dfaB = await toDfa(machineB, combinedAlphabet);
 
         // Minimize both DFAs.
         const minDfaA = await minimizeDfa(dfaA, silentStep);
