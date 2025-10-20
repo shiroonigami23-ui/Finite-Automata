@@ -1,5 +1,5 @@
 {
-  "title": "DFA that accepts \"RR\"",
+  "title": "DFA that accepts ending with \"R\"",
   "description": "Accepts short strings such as: RR, PRR, PPRR. The formal alphabet is {P, R}.",
   "type": "DFA",
   "machine": {
