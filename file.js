@@ -1,7 +1,8 @@
 import { MACHINE, setMachine, pushUndo } from './state.js';
-import { renderAll } from './renderer.js';
+import { renderAll, layoutStatesCircular } from './renderer.js';
 import { setValidationMessage } from './utils.js';
 
+// --- Functions for the "Smart Save" feature ---
 function findShortestAcceptedStrings(machine) {
     const queue = [];
     const visited = new Set();
@@ -35,7 +36,6 @@ function findShortestAcceptedStrings(machine) {
     }
     return accepted.sort((a, b) => a.length - b.length).slice(0, 3);
 }
-
 
 export function saveMachine() {
     const modal = document.getElementById('saveLibraryModal');
@@ -203,3 +203,90 @@ export function exportPng(fileName = 'automaton') {
 
     img.src = url;
 }
+
+
+// --- NEW: AI Image Import Logic ---
+export async function handleImageUpload(e, updateUIFunction, showLoading, hideLoading) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    showLoading();
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        const base64ImageData = reader.result.split(',')[1];
+        
+        try {
+            const prompt = `
+                You are an expert in automata theory. Analyze the provided image of a finite automaton.
+                Extract all states and transitions and return them as a valid JSON object.
+                - The JSON object must have two keys: "states" and "transitions".
+                - "states" is an array of objects, each with: "id" (string), "initial" (boolean), "accepting" (boolean). You can ignore x/y coordinates.
+                - "transitions" is an array of objects, each with: "from" (string, the source state id), "to" (string, the destination state id), and "symbol" (string).
+                - An incoming arrow with no source indicates an initial state.
+                - A double circle indicates an accepting (final) state.
+                - For epsilon transitions, use an empty string "" for the symbol.
+                - Ensure the state IDs in the transitions array perfectly match the state IDs in the states array.
+                - Do not include any extra text or explanations outside of the JSON object.
+            `;
+
+            const apiKey = "AIzaSyAJiWZMJlcZAsPzEo8vW35KFH6Yuk8enjc";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: file.type, data: base64ImageData } }
+                    ]
+                }]
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+
+            const result = await response.json();
+            const text = result.candidates[0].content.parts[0].text;
+            
+            const jsonString = text.match(/```json\n([\s\S]*?)\n```/)[1];
+            const parsedJson = JSON.parse(jsonString);
+
+            if (parsedJson.states && parsedJson.transitions) {
+                pushUndo(updateUIFunction);
+                layoutStatesCircular(parsedJson.states); 
+                setMachine({
+                    type: 'DFA', // Default to DFA, user can change
+                    states: parsedJson.states,
+                    transitions: parsedJson.transitions,
+                    alphabet: [...new Set(parsedJson.transitions.map(t => t.symbol).filter(s => s))]
+                });
+                document.getElementById('modeSelect').value = 'DFA';
+                renderAll();
+                window.customAlert('Success', 'Your machine is generated from your image!');
+            } else {
+                throw new Error("Response did not contain valid 'states' or 'transitions'.");
+            }
+
+        } catch (error) {
+            console.error("Error during image processing:", error);
+            window.customAlert('Import Failed', 'soory I could not understand the image or the format was invalid. Please try a clearer image.');
+        } finally {
+            hideLoading();
+            e.target.value = ''; 
+        }
+    };
+    reader.onerror = error => {
+        console.error("Error reading file:", error);
+        window.customAlert('File Error', 'Could not read the selected image file do not be shy try another.');
+        hideLoading();
+    };
+}
+

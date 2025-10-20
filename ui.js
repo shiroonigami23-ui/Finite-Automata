@@ -1,8 +1,9 @@
+
 import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
-import { renderAll } from './renderer.js';
+import { renderAll, layoutStatesCircular } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
 import { validateAutomaton } from './automata.js';
-import { saveMachine, loadMachine, exportPng, handleSaveWithMetadata } from './file.js';
+import { saveMachine, loadMachine, exportPng, handleSaveWithMetadata, handleImageUpload } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
 import { areEquivalent } from './equivalence.js';
@@ -59,6 +60,9 @@ export function initializeUI() {
     const pngNameInput = document.getElementById('pngNameInput');
     const pngExportCancel = document.getElementById('pngExportCancel');
     const pngExportConfirm = document.getElementById('pngExportConfirm');
+    const importImageBtn = document.getElementById('importImageBtn');
+    const importImageInput = document.getElementById('importImageInput');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     if (libSaveCancel && saveLibraryModal) {
         libSaveCancel.addEventListener('click', () => {
@@ -272,6 +276,18 @@ export function initializeUI() {
         });
     }
 
+    if (importImageBtn) {
+        importImageBtn.addEventListener('click', () => importImageInput.click());
+    }
+
+    if (importImageInput) {
+        importImageInput.addEventListener('change', (e) => {
+            const showLoading = () => loadingOverlay.style.display = 'flex';
+            const hideLoading = () => loadingOverlay.style.display = 'none';
+            handleImageUpload(e, updateUndoRedoButtons, showLoading, hideLoading);
+        });
+    }
+
 
     if (undoBtn) undoBtn.addEventListener('click', () => doUndo(updateUndoRedoButtons));
     if (redoBtn) redoBtn.addEventListener('click', () => doRedo(updateUndoRedoButtons));
@@ -431,6 +447,7 @@ export function initializeUI() {
     renderAll();
     updateUndoRedoButtons();
     checkAnswerBtn.style.display = 'none';
+    if(loadingOverlay) lucide.createIcons({nodes: [loadingOverlay]});
 }
 
 function addState(x, y) {
