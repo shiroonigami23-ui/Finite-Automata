@@ -1,7 +1,7 @@
 import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll, layoutStatesCircular } from './renderer.js';
 import { setValidationMessage } from './utils.js';
-import { animateMachineDrawing } from './animation.js';
+import { animateMachineDrawing } from './animation.js'; // Ensure this is imported
 
 // --- Functions for the "Smart Save" feature ---
 function findShortestAcceptedStrings(machine) {
@@ -113,6 +113,10 @@ export function handleSaveWithMetadata() {
 export function loadMachine(e, updateUIFunction) {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Simulate loading state for consistency if you add a universal loading indicator
+    // showLoading("Your machine is being loaded..."); 
+
     const reader = new FileReader();
     reader.onload = ev => {
         try {
@@ -129,15 +133,18 @@ export function loadMachine(e, updateUIFunction) {
                 };
                 
                 document.getElementById('modeSelect').value = machineType;
-                animateMachineDrawing(machineToAnimate);
+                // Pass the machineType to animateMachineDrawing
+                animateMachineDrawing(machineToAnimate, machineType); 
 
             } else {
                 setValidationMessage("Invalid machine file format.", 'error');
             }
         } catch (err) {
             setValidationMessage("Invalid JSON file: " + err.message, 'error');
+        } finally {
+            e.target.value = '';
+            // hideLoading(); // If you implement a universal loading indicator
         }
-        e.target.value = '';
     };
     reader.readAsText(file);
 }
@@ -212,11 +219,12 @@ export function exportPng(fileName = 'automaton') {
 }
 
 
+// --- NEW: AI Image Import Logic ---
 export async function handleImageUpload(e, updateUIFunction, showLoading, hideLoading) {
     const file = e.target.files[0];
     if (!file) return;
 
-    showLoading(`<i data-lucide="loader"></i> Loading Image...`, 'Your image is being uploaded and analyzed.');
+    showLoading("Your image is being loaded..."); // Changed message
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -224,6 +232,7 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
         const base64ImageData = reader.result.split(',')[1];
         
         try {
+            // --- UPDATED, SMARTER PROMPT ---
             const prompt = `
                 You are a meticulous expert in automata theory, specializing in converting visual diagrams into structured data. Your task is to analyze the provided image of a finite automaton and extract its components with extreme precision.
 
@@ -244,9 +253,15 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
 
                 **Step-by-Step Analysis Guide for "detectedType" string:**
                 After extracting the states and transitions, determine the most precise type of automaton:
-                -   **ε-NFA (Epsilon-NFA):** If it contains any epsilon (empty string "") transitions. This takes precedence.
-                -   **DFA (Deterministic Finite Automaton):** If it's not an ε-NFA, has exactly one initial state, and for every state, there is *exactly one* outgoing transition for each symbol in the alphabet.
-                -   **NFA (Non-deterministic Finite Automaton):** If it's not an ε-NFA or a DFA. (e.g., has multiple initial states, a state has multiple transitions for the same symbol, or is missing transitions for some symbols).
+                -   **DFA (Deterministic Finite Automaton):**
+                    -   Must have exactly one initial state.
+                    -   For every state and every symbol in the alphabet, there must be *exactly one* outgoing transition.
+                    -   No epsilon (empty string) transitions.
+                -   **NFA (Non-deterministic Finite Automaton):**
+                    -   If it's not a DFA, but has no epsilon transitions.
+                    -   Can have multiple initial states, or a state might have multiple transitions for the same symbol, or missing transitions for some symbols.
+                -   **ε-NFA (Epsilon-NFA):**
+                    -   If it contains any epsilon (empty string "") transitions, regardless of other properties. This takes precedence over NFA/DFA if epsilon transitions are present.
 
                 **JSON Output Structure:**
                 The final JSON object must have these two top-level keys:
@@ -287,7 +302,7 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
             if (!jsonStringMatch || !jsonStringMatch[1]) {
                  throw new Error("Could not find a valid JSON block in the AI's response.");
             }
-            const parsedResult = JSON.parse(jsonStringMatch[1]);
+            const parsedResult = JSON.parse(jsonStringMatch[1]); // Parse the whole response
 
             if (parsedResult.machine && parsedResult.machine.states && parsedResult.machine.transitions && parsedResult.detectedType) {
                 pushUndo(updateUIFunction);
@@ -296,14 +311,13 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
                 const detectedType = parsedResult.detectedType;
                 
                 const machineToAnimate = {
-                    type: detectedType,
+                    type: detectedType, // Use AI's detected type
                     ...parsedResult.machine,
                     alphabet: [...new Set(parsedResult.machine.transitions.map(t => t.symbol).filter(s => s))]
                 };
-                
-                // Use 'ENFA' for mode select if it's an epsilon NFA
-                document.getElementById('modeSelect').value = detectedType === 'ε-NFA' ? 'ENFA' : detectedType;
-                animateMachineDrawing(machineToAnimate);
+
+                document.getElementById('modeSelect').value = detectedType === 'ε-NFA' ? 'NFA' : detectedType; // Set mode in UI
+                animateMachineDrawing(machineToAnimate, detectedType); // Pass detected type to animation
                 
             } else {
                 throw new Error("AI response did not contain valid 'machine' or 'detectedType'.");
