@@ -1,8 +1,10 @@
 import { MACHINE, setMachine, pushUndo } from './state.js';
 import { renderAll, layoutStatesCircular } from './renderer.js';
-import { setValidationMessage } from './utils.js';
+import { setValidationMessage, fetchWithRetry } from './utils.js';
 import { animateMachineDrawing } from './animation.js';
-
+// NEW: Import the conversion functions we will now use locally
+import { convertNfaToDfa, minimizeDfa } from './automata.js';
+import { authenticateAiAccess } from './ai-auth.js';
 // --- Machine Analysis Helpers for Smart Save ---
 
 /**
@@ -194,42 +196,40 @@ export function saveMachine() {
     const alphabetDisplay = document.getElementById('libAlphabetDisplay');
     if (!modal || !descInput || !alphabetDisplay) return;
 
-    const machineType = MACHINE.type || 'DFA';
+    if (!MACHINE.states || MACHINE.states.length === 0) {
+        window.customAlert("Save Failed", "Please draw a machine before saving.");
+        return;
+    }
 
-    // --- NEW: Smart Title Generation ---
+    const machineType = MACHINE.type || 'DFA';
+    
+    // --- SMART TITLE GENERATION (Simplified & Enhanced) ---
     let autoTitle = analyzeMachineStructure(MACHINE);
     
-    // Fallback to the old logic if analysis returns nothing
     if (!autoTitle) {
         const shortestStrings = findShortestAcceptedStrings(MACHINE);
-        if (shortestStrings.length > 0 && shortestStrings[0] !== "ε") {
-            const examples = shortestStrings.map(s => `"${s}"`).join(', ');
-            autoTitle = `Accepts ${examples}, ...`;
-        } else if (shortestStrings.length > 0) {
-             autoTitle = `Accepts ε and other strings`;
+        
+        if (shortestStrings.length > 0) {
+            const examples = shortestStrings.map(s => `"${s || 'ε'}"`).join(', ');
+            autoTitle = `Accepts short examples: ${examples}`;
         } else if (MACHINE.states.some(s => s.accepting)) {
-            autoTitle = `Has an unreachable language`;
+            autoTitle = `Accepts nothing (Language may be unreachable)`;
         } else {
-            autoTitle = `Accepts nothing (empty language)`;
+            autoTitle = `Accepts nothing (Empty language)`;
         }
     }
     
-    // Prepend the machine type to the generated title
     const finalTitle = `${machineType}: ${autoTitle}`;
     document.getElementById('libTitleInput').value = finalTitle;
-    
-    // --- End of New Logic ---
+    // --- End of Enhanced FA Logic ---
 
+    const acceptedExamples = findShortestAcceptedStrings(MACHINE);
     const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s != null && s !== ''))].sort();
     
-    descInput.value = `Accepts short strings such as: ${findShortestAcceptedStrings(MACHINE).join(', ') || 'none'}.`;
+    descInput.value = `Accepts strings such as: ${acceptedExamples.join(', ') || 'none'}.`;
 
-    if (machineType === 'DFA') {
-        alphabetDisplay.innerHTML = `<strong>Formal Alphabet (auto-detected):</strong> {${alphabet.join(', ') || '∅'}}`;
-        alphabetDisplay.style.display = 'block';
-    } else {
-        alphabetDisplay.style.display = 'none';
-    }
+    alphabetDisplay.innerHTML = `<strong>Formal Alphabet (auto-detected):</strong> {${alphabet.join(', ') || '∅'}}`;
+    alphabetDisplay.style.display = 'block';
 
     document.getElementById('libTypeInput').value = machineType;
     modal.style.display = 'flex';
@@ -389,31 +389,41 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
         
         try {
             const prompt = `
-                You are an expert in automata theory. Analyze the provided image of a finite automaton.
-                Extract all states and transitions and return them as a valid JSON object.
+                You are a meticulous expert in automata theory. Your task is to analyze the provided image of a hand-drawn or diagrammed finite automaton and convert it into a perfectly structured JSON object.
+
+                Follow these steps:
+                1.  **Identify all distinct states** (circles) and their names (e.g., q0, A, s1).
+                2.  **Identify state properties:**
+                    * Find the **initial state** (the one with an incoming arrow that has no source).
+                    * Find all **accepting/final states** (the ones with a double circle).
+                3.  **Trace every transition:**
+                    * For each arrow, identify the 'from' state, the 'to' state, and the 'symbol' written on the label.
+                    * **Crucially:** If a label has multiple symbols separated by a comma (e.g., "0, 1"), you MUST create a separate, individual transition object for EACH symbol.
+                4.  **Construct the JSON:** Assemble the final JSON object based on your findings.
+
+                **JSON Structure Rules:**
                 - The JSON object must have two keys: "states" and "transitions".
-                - "states" is an array of objects, each with: "id" (string), "initial" (boolean), "accepting" (boolean). You can ignore x/y coordinates.
-                - "transitions" is an array of objects, each with: "from" (string, the source state id), "to" (string, the destination state id), and "symbol" (string).
-                - An incoming arrow with no source indicates an initial state.
-                - A double circle indicates an accepting (final) state.
-                - For epsilon transitions, use an empty string "" for the symbol.
-                - Ensure the state IDs in the transitions array perfectly match the state IDs in the states array.
-                - Do not include any extra text or explanations outside of the JSON object.
+                - "states" is an array of objects, each with: "id" (string), "initial" (boolean), "accepting" (boolean).
+                - "transitions" is an array of objects, each with: "from" (string), "to" (string), and "symbol" (string).
+                - For epsilon (ε) transitions, use an empty string "" for the symbol.
+                - Ensure the state IDs in the "transitions" array perfectly match the state IDs you defined in the "states" array.
+
+                Your output must ONLY be a single JSON object inside a \`\`\`json ... \`\`\` block. Do not include any extra text, explanations, or apologies.
             `;
 
-            const apiKey = "AIzaSyAJiWZMJlcZAsPzEo8vW35KFH6Yuk8enjc";
+            const apiKey = "AIzaSyAJiWZMJlcZAsPzEo8vW35KFH6Yuk8enjc"; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             const payload = {
                 contents: [{
                     parts: [
                         { text: prompt },
-                        { inline_data: { mime_type: file.type, data: base64ImageData } }
+                        { inlineData: { mimeType: file.type, data: base64ImageData } }
                     ]
                 }]
             };
 
-            const response = await fetch(apiUrl, {
+            const response = await fetchWithRetry(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -461,4 +471,122 @@ export async function handleImageUpload(e, updateUIFunction, showLoading, hideLo
         window.customAlert('File Error', 'Could not read the selected image file. Please try another.');
         hideLoading();
     };
+}
+
+
+/**
+ * Generates an automaton from a text description or regex using an AI model.
+ * @param {string} promptText The user's input (description or regex).
+ * @param {function} updateUIFunction Function to update UI elements like undo/redo buttons.
+ * @param {function} showLoading Function to display the loading overlay.
+ * @param {function} hideLoading Function to hide the loading overlay.
+ * @param {boolean} isRegex Indicates if the prompt is a regular expression.
+ */
+export async function handleAiGeneration(promptText, updateUIFunction, showLoading, hideLoading, isRegex = false) {
+    const authenticated = await authenticateAiAccess();
+    if (!authenticated) {
+        return;
+    }
+    showLoading();
+
+    try {
+        const userRequestedMode = document.getElementById('modeSelect').value.split('_TO_')[0] || 'DFA';
+        const promptType = isRegex ? "regular expression" : "description";
+        // --- NEW "TEST-DRIVEN" PROMPT FOR AI GENERATION ---
+
+const prompt = `
+You are an expert in automata theory. Your task is to perform a test-driven design process to create the most accurate NFA/ε-NFA for the user's request, then output it as a precise JSON object.
+
+**Step 1: Analyze the User's Goal**
+- User's description of the language: "${promptText}"
+- Your task is to design the simplest possible NFA or ε-NFA for this.
+
+**Step 2: Generate Test Cases (Your "Show Your Work" Step)**
+Based on your analysis of the request, create two lists of examples.
+1.  **Accept List:** Write 3-4 diverse example strings that *must* be accepted by the machine. Include edge cases.
+2.  **Reject List:** Write 3-4 diverse example strings that *must* be rejected by the machine. Include edge cases.
+
+**Step 3: Design the NFA**
+Now, looking ONLY at your own test cases, design the simplest possible NFA or ε-NFA that correctly accepts all strings in your "Accept List" and rejects all strings in your "Reject List".
+
+**Step 4: Final JSON Output**
+Your response MUST be ONLY a single JSON object wrapped in \`\`\`json ... \`\`\`. Do not include your test cases or any other explanation in the final output. The JSON must be perfectly formatted.
+
+-   **"type"**: "NFA" or "ENFA".
+-   **"states"**: Array of objects with "id", "initial" (boolean), "accepting" (boolean).
+-   **"transitions"**: Array of objects with "from", "to", "symbol". Use "" for ε-transitions.
+`;
+        
+        const apiKey = "AIzaSyA_1MpP3zNx5wwGi_Z6KXEpM0IsvKBZQhg";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{ parts: [{ text: prompt }] }]
+        };
+
+        const response = await fetchWithRetry(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed with status ${response.status}`);
         }
+
+        const result = await response.json();
+        const text = result.candidates[0].content.parts[0].text;
+        
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+        if (!jsonMatch || !jsonMatch[1]) {
+            throw new Error("AI response did not contain a valid JSON code block.");
+        }
+        
+        let aiGeneratedMachine = JSON.parse(jsonMatch[1]);
+
+        if (!aiGeneratedMachine.states || !aiGeneratedMachine.transitions) {
+             throw new Error("AI response was missing 'states' or 'transitions'.");
+        }
+        
+        // --- NEW LOGIC START: Local Conversion Pipeline ---
+        // This is where we take the AI's simple NFA and convert it locally.
+        
+        let finalMachine = aiGeneratedMachine;
+        const silentStep = async () => {}; // No-op for non-animated conversions
+        
+        // Add alphabet to the machine for the conversion functions
+        finalMachine.alphabet = [...new Set(finalMachine.transitions.map(t => t.symbol).filter(s => s))];
+
+        if (userRequestedMode === 'DFA') {
+            const dfa = await convertNfaToDfa(finalMachine, silentStep);
+            finalMachine = dfa;
+        } else if (userRequestedMode === 'Minimal DFA') {
+            // Full pipeline: NFA -> DFA -> Minimal DFA
+            const dfa = await convertNfaToDfa(finalMachine, silentStep);
+            const minDfa = await minimizeDfa(dfa, silentStep);
+            finalMachine = minDfa;
+        }
+        // If user requested NFA or ENFA, we just use the AI's output directly.
+
+        // --- NEW LOGIC END ---
+
+        pushUndo(updateUIFunction);
+        layoutStatesCircular(finalMachine.states); 
+        
+        const machineToAnimate = {
+            ...finalMachine,
+            // The type should reflect what the user asked for in the end
+            type: userRequestedMode.includes('DFA') ? 'DFA' : finalMachine.type,
+            alphabet: [...new Set(finalMachine.transitions.map(t => t.symbol).filter(s => s))]
+        };
+        
+        document.getElementById('modeSelect').value = userRequestedMode;
+        animateMachineDrawing(machineToAnimate);
+
+    } catch (error) {
+        console.error("Error during AI generation:", error);
+        window.customAlert('Generation Failed', `Sorry, the AI could not generate a machine from your prompt. Reason: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}

@@ -1,9 +1,8 @@
-
 import { MACHINE, CURRENT_MODE, TRANS_FROM, UNDO_STACK, REDO_STACK, pushUndo, doUndo, doRedo, initializeState, setCurrentMode, setTransFrom, setMachine, simState } from './state.js';
 import { renderAll, layoutStatesCircular } from './renderer.js';
 import { runSimulation, showStep } from './simulation.js';
 import { validateAutomaton } from './automata.js';
-import { saveMachine, loadMachine, exportPng, handleSaveWithMetadata, handleImageUpload } from './file.js';
+import { saveMachine, loadMachine, exportPng, handleSaveWithMetadata, handleImageUpload, handleAiGeneration } from './file.js';
 import { generatePractice, showSolution, resetPractice, checkAnswer } from './practice.js';
 import { setValidationMessage } from './utils.js';
 import { areEquivalent } from './equivalence.js';
@@ -12,8 +11,8 @@ import { animateEnfaToNfa, animateNfaToDfa, animateDfaToMinDfa, animateNfaToMinD
 
 function customAlert(title, message) {
     const alertModal = document.getElementById('alertModal');
-    document.getElementById('alertModalTitle').textContent = title;
-    document.getElementById('alertModalMessage').textContent = message;
+    if (document.getElementById('alertModalTitle')) document.getElementById('alertModalTitle').textContent = title;
+    if (document.getElementById('alertModalMessage')) document.getElementById('alertModalMessage').textContent = message;
     if (alertModal) alertModal.style.display = 'flex';
 }
 window.customAlert = customAlert;
@@ -25,7 +24,19 @@ export function updateUndoRedoButtons() {
     if (redoBtn) redoBtn.disabled = REDO_STACK.length === 0;
 }
 
+// FIX: New function to explicitly hide all modals on initialization
+function hideAllModals() {
+    const modals = ['transitionModal', 'statePropsModal', 'renameModal', 'confirmClearModal', 'alertModal', 'saveLibraryModal', 'exportPngModal'];
+    modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none';
+    });
+}
+
 export function initializeUI() {
+    // FIX: Hide all modals immediately to prevent unwanted pop-ups
+    hideAllModals(); 
+    
     const svg = document.getElementById('dfaSVG');
     const modeSelect = document.getElementById('modeSelect');
     const undoBtn = document.getElementById('undoBtn');
@@ -63,6 +74,13 @@ export function initializeUI() {
     const importImageBtn = document.getElementById('importImageBtn');
     const importImageInput = document.getElementById('importImageInput');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    // NEW: AI Generator UI Elements
+    const aiDescInput = document.getElementById('aiDescInput');
+    const aiGenerateFromDescBtn = document.getElementById('aiGenerateFromDescBtn');
+    const aiRegexInput = document.getElementById('aiRegexInput');
+    const aiGenerateFromRegexBtn = document.getElementById('aiGenerateFromRegexBtn');
+
 
     if (libSaveCancel && saveLibraryModal) {
         libSaveCancel.addEventListener('click', () => {
@@ -106,6 +124,12 @@ export function initializeUI() {
         });
     }
 
+    // FIX: Removed optional chaining from function definition
+    const showLoading = () => { if (loadingOverlay) loadingOverlay.style.display = 'flex'; };
+    const hideLoading = () => { if (loadingOverlay) loadingOverlay.style.display = 'none'; };
+
+
+    // 1. Tool Mode Listeners
     document.querySelectorAll('.toolbar-icon[data-mode]').forEach(tool => {
         tool.addEventListener('click', () => {
             document.querySelectorAll('.toolbar-icon[data-mode]').forEach(t => t.classList.remove('active'));
@@ -119,17 +143,22 @@ export function initializeUI() {
     });
 
     if (svg) {
+        // 2. Canvas Click Listener
         svg.addEventListener('click', (e) => {
             if (e.target.closest('g[data-id]') || e.target.closest('.transition-label-text')) return;
             if (CURRENT_MODE === 'addclick') {
                 const pt = svg.createSVGPoint();
                 pt.x = e.clientX;
                 pt.y = e.clientY;
-                const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-                addState(svgP.x, svgP.y);
+                const ctm = svg.getScreenCTM();
+                if (ctm) {
+                    const svgP = pt.matrixTransform(ctm.inverse());
+                    addState(svgP.x, svgP.y);
+                }
             }
         });
 
+        // 3. State Click Listener
         svg.addEventListener('click', (e) => {
             const stateGroup = e.target.closest('g[data-id]');
             if (!stateGroup) return;
@@ -167,6 +196,7 @@ export function initializeUI() {
             }
         });
 
+        // 4. Transition Click Listener
         svg.addEventListener('click', (e) => {
             const label = e.target.closest('.transition-label-text');
             if (!label || CURRENT_MODE !== 'delete') return;
@@ -183,55 +213,81 @@ export function initializeUI() {
         });
     }
     
-    document.getElementById('transCancel').addEventListener('click', hideTransModal);
-    document.getElementById('transSave').addEventListener('click', () => {
-        const from = document.getElementById('transFrom').value;
-        const to = document.getElementById('transTo').value;
+    if (document.getElementById('transCancel')) document.getElementById('transCancel').addEventListener('click', hideTransModal);
+    if (document.getElementById('transSave')) document.getElementById('transSave').addEventListener('click', (e) => {
+        e.preventDefault(); // Stop default form submission behavior (if it was a form)
+        
+        const from = document.getElementById('transFrom') ? document.getElementById('transFrom').value : null;
+        const to = document.getElementById('transTo') ? document.getElementById('transTo').value : null;
         const symbolInput = document.getElementById('transSymbol');
-        const symbol = symbolInput.value.trim() || 'ε';
-        if (MACHINE.type === 'DFA' && symbol === 'ε') {
+        const rawSymbol = symbolInput ? symbolInput.value.trim() : '';
+        const symbolValue = (rawSymbol === '' || rawSymbol.toLowerCase() === 'ε') ? '' : rawSymbol; // Use "" for epsilon
+
+        if (MACHINE.type === 'DFA' && symbolValue === '') {
             customAlert('Invalid Transition', 'DFA rule: ε-transitions are not allowed.');
             return;
         }
-        const conflict = MACHINE.transitions.find(t => t.from === from && t.symbol === symbol);
+        
+        // Check for existing deterministic conflict BEFORE pushing to history
+        const conflict = MACHINE.transitions.find(t => t.from === from && (t.symbol || '') === symbolValue);
+
         if (MACHINE.type === 'DFA' && conflict) {
-            customAlert('Invalid Transition', `DFA rule: State ${from} is already deterministic on '${symbol}'.`);
-            return;
+            customAlert('Invalid Transition', `DFA rule: State ${from} is already deterministic on '${rawSymbol || 'ε'}'.`);
+            return; // EXIT on conflict
         }
+        
+        // --- Successful Save Path ---
         pushUndo(updateUndoRedoButtons);
-        MACHINE.transitions.push({ from, to, symbol: (symbol === 'ε' ? '' : symbol.charAt(0)) });
+        MACHINE.transitions.push({ from, to, symbol: symbolValue });
         renderAll();
         hideTransModal();
     });
 
-    document.getElementById('propCancel').addEventListener('click', () => document.getElementById('statePropsModal').style.display = 'none');
-    document.getElementById('propSave').addEventListener('click', () => {
+    if (document.getElementById('propCancel')) document.getElementById('propCancel').addEventListener('click', () => {
         const modal = document.getElementById('statePropsModal');
-        const s = MACHINE.states.find(st => st.id === modal.dataset.stateId);
+        if (modal) modal.style.display = 'none';
+    });
+    if (document.getElementById('propSave')) document.getElementById('propSave').addEventListener('click', () => {
+        const modal = document.getElementById('statePropsModal');
+        const stateId = modal ? modal.dataset.stateId : null;
+        if (!stateId) return;
+
+        const s = MACHINE.states.find(st => st.id === stateId);
         if (s) {
             pushUndo(updateUndoRedoButtons);
-            const isInitial = document.getElementById('propInitial').checked;
+            // FIX: Ensure checks are explicit
+            const propInitial = document.getElementById('propInitial');
+            const propFinal = document.getElementById('propFinal');
+            
+            const isInitial = propInitial ? propInitial.checked : false;
+            const isAccepting = propFinal ? propFinal.checked : false;
+            
             if (isInitial && (MACHINE.type === 'DFA')) {
                 MACHINE.states.forEach(x => x.initial = false);
             }
             s.initial = isInitial;
-            s.accepting = document.getElementById('propFinal').checked;
+            s.accepting = isAccepting;
             enforceInitialStateRule();
             renderAll();
         }
-        modal.style.display = 'none';
+        if (modal) modal.style.display = 'none';
     });
 
-    document.getElementById('renameCancel').addEventListener('click', () => document.getElementById('renameModal').style.display = 'none');
-    document.getElementById('renameSave').addEventListener('click', () => {
+    if (document.getElementById('renameCancel')) document.getElementById('renameCancel').addEventListener('click', () => {
         const modal = document.getElementById('renameModal');
-        const oldId = modal.dataset.oldId;
-        const newId = document.getElementById('renameInput').value.trim();
-        if (!newId || newId === oldId || MACHINE.states.find(s => s.id === newId)) {
+        if (modal) modal.style.display = 'none';
+    });
+    if (document.getElementById('renameSave')) document.getElementById('renameSave').addEventListener('click', () => {
+        const modal = document.getElementById('renameModal');
+        const oldId = modal ? modal.dataset.oldId : null;
+        const newIdInput = document.getElementById('renameInput');
+        const newId = newIdInput ? newIdInput.value.trim() : null;
+
+        if (!modal || !oldId || !newId || newId === oldId || MACHINE.states.find(s => s.id === newId)) {
             if (MACHINE.states.find(s => s.id === newId)) {
                 customAlert('Rename Failed', 'A state with that name already exists.');
             }
-            modal.style.display = 'none';
+            if (modal) modal.style.display = 'none';
             return;
         }
         pushUndo(updateUndoRedoButtons);
@@ -241,49 +297,58 @@ export function initializeUI() {
             if (t.to === oldId) t.to = newId;
         });
         renderAll();
-        modal.style.display = 'none';
+        if (modal) modal.style.display = 'none';
     });
 
-    document.getElementById('confirmClearCancel').addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'none');
-    document.getElementById('confirmClearConfirm').addEventListener('click', () => {
+    if (document.getElementById('confirmClearCancel')) document.getElementById('confirmClearCancel').addEventListener('click', () => {
+        const modal = document.getElementById('confirmClearModal');
+        if (modal) modal.style.display = 'none';
+    });
+    if (document.getElementById('confirmClearConfirm')) document.getElementById('confirmClearConfirm').addEventListener('click', () => {
         pushUndo(updateUndoRedoButtons);
         initializeState(updateUndoRedoButtons);
         renderAll();
-        document.getElementById('confirmClearModal').style.display = 'none';
+        if (document.getElementById('confirmClearModal')) document.getElementById('confirmClearModal').style.display = 'none';
     });
     
     if (exportPngBtn) {
         exportPngBtn.addEventListener('click', () => {
             const defaultName = `${MACHINE.type || 'automaton'}-export`;
-            pngNameInput.value = defaultName;
-            exportPngModal.style.display = 'flex';
-            pngNameInput.focus();
-            pngNameInput.select();
+            if(pngNameInput) pngNameInput.value = defaultName;
+            const modal = document.getElementById('exportPngModal');
+            if (modal) modal.style.display = 'flex';
+            if(pngNameInput) {
+                pngNameInput.focus();
+                pngNameInput.select();
+            }
         });
     }
 
     if (pngExportCancel) {
         pngExportCancel.addEventListener('click', () => {
-            exportPngModal.style.display = 'none';
+            const modal = document.getElementById('exportPngModal');
+            if (modal) modal.style.display = 'none';
         });
     }
 
     if (pngExportConfirm) {
         pngExportConfirm.addEventListener('click', () => {
-            const filename = pngNameInput.value.trim();
-            exportPng(filename);
-            exportPngModal.style.display = 'none';
+            const filename = pngNameInput ? pngNameInput.value.trim() : null;
+            if (filename) exportPng(filename);
+            const modal = document.getElementById('exportPngModal');
+            if (modal) modal.style.display = 'none';
         });
     }
 
     if (importImageBtn) {
-        importImageBtn.addEventListener('click', () => importImageInput.click());
+        importImageBtn.addEventListener('click', () => {
+            const input = document.getElementById('importImageInput');
+            if (input) input.click();
+        });
     }
 
-    if (importImageInput) {
-        importImageInput.addEventListener('change', (e) => {
-            const showLoading = () => loadingOverlay.style.display = 'flex';
-            const hideLoading = () => loadingOverlay.style.display = 'none';
+    if (document.getElementById('importImageInput')) {
+        document.getElementById('importImageInput').addEventListener('change', (e) => {
             handleImageUpload(e, updateUndoRedoButtons, showLoading, hideLoading);
         });
     }
@@ -292,9 +357,15 @@ export function initializeUI() {
     if (undoBtn) undoBtn.addEventListener('click', () => doUndo(updateUndoRedoButtons));
     if (redoBtn) redoBtn.addEventListener('click', () => doRedo(updateUndoRedoButtons));
     if (saveMachineBtn) saveMachineBtn.addEventListener('click', saveMachine);
-    if (loadMachineBtn) loadMachineBtn.addEventListener('click', () => document.getElementById('loadFileInput').click());
-    document.getElementById('loadFileInput').addEventListener('change', (e) => loadMachine(e, updateUndoRedoButtons));
-    if (clearCanvasBtn) clearCanvasBtn.addEventListener('click', () => document.getElementById('confirmClearModal').style.display = 'flex');
+    if (loadMachineBtn) loadMachineBtn.addEventListener('click', () => {
+        const fileInput = document.getElementById('loadFileInput');
+        if (fileInput) fileInput.click();
+    });
+    if(document.getElementById('loadFileInput')) document.getElementById('loadFileInput').addEventListener('change', (e) => loadMachine(e, updateUndoRedoButtons));
+    if (clearCanvasBtn) clearCanvasBtn.addEventListener('click', () => {
+        const confirmClearModal = document.getElementById('confirmClearModal');
+        if (confirmClearModal) confirmClearModal.style.display = 'flex';
+    });
 
     if (validateBtn) {
         validateBtn.addEventListener('click', () => {
@@ -344,7 +415,7 @@ export function initializeUI() {
         });
     }
 
-    if(runTestBtn) runTestBtn.addEventListener('click', () => runSimulation(testInput.value));
+    if(runTestBtn) runTestBtn.addEventListener('click', () => runSimulation(testInput ? testInput.value : ''));
     if(genRandBtn) genRandBtn.addEventListener('click', () => {
         const alphabet = [...new Set(MACHINE.transitions.map(t => t.symbol).filter(s => s))]
         const effectiveAlphabet = alphabet.length > 0 ? alphabet : ['0', '1'];
@@ -356,23 +427,85 @@ export function initializeUI() {
     if(stepResetBtn) stepResetBtn.addEventListener('click', () => {
         simState.index = 0;
         simState.steps.length = 0;
-        clearTimeout(simState.timer);
-        document.getElementById('stepLog').innerHTML = '';
-        document.getElementById('testOutput').textContent = 'Ready';
+        if(simState.timer) clearTimeout(simState.timer);
+        const stepLog = document.getElementById('stepLog');
+        if (stepLog) stepLog.innerHTML = '';
+        if (document.getElementById('testOutput')) document.getElementById('testOutput').textContent = 'Ready';
         renderAll();
     });
 
     if(genPracticeBtn) genPracticeBtn.addEventListener('click', () => {
         generatePractice();
-        checkAnswerBtn.style.display = 'inline-flex';
+        if(checkAnswerBtn) checkAnswerBtn.style.display = 'inline-flex';
     });
     if(showSolBtn) showSolBtn.addEventListener('click', () => showSolution(updateUndoRedoButtons));
     if(resetPracticeBtn) resetPracticeBtn.addEventListener('click', () => {
         resetPractice();
-        checkAnswerBtn.style.display = 'none';
+        if(checkAnswerBtn) checkAnswerBtn.style.display = 'none';
     });
     if(checkAnswerBtn) checkAnswerBtn.addEventListener('click', checkAnswer);
+    
+    // --- NEW: AI GENERATOR EVENT LISTENERS ---
+    
+    if (aiGenerateFromDescBtn) {
+        aiGenerateFromDescBtn.addEventListener('click', () => {
+            const promptText = aiDescInput ? aiDescInput.value.trim() : ''; 
+            if (promptText) {
+                handleAiGeneration(promptText, updateUndoRedoButtons, showLoading, hideLoading, false);
+            } else {
+      customAlert('Input Required', 'Please enter a description for the automaton.');
+            }
+        });
+    }
 
+    if (aiGenerateFromRegexBtn) {
+        aiGenerateFromRegexBtn.addEventListener('click', () => {
+            const promptText = aiRegexInput ? aiRegexInput.value.trim() : '';
+            if (promptText) {
+                handleAiGeneration(promptText, updateUndoRedoButtons, showLoading, hideLoading, true);
+            } else {
+                customAlert('Input Required', 'Please enter a regular expression.');
+            }
+        });
+    }
+
+    // --- Navigation Logic ---
+
+/**
+ * Handles the "Back to Main Menu" click event by revealing the splash screen
+ * and hiding the main application content, allowing the user to select a different studio.
+ */
+function handleBackToMenu() {
+    // 1. Get references to main elements (they are assumed to exist in the global index.html)
+    const splashScreen = document.getElementById('splashScreen');
+    const mainApp = document.getElementById('mainApp');
+    const studioContent = document.getElementById('studioContent');
+
+    if (!splashScreen || !mainApp || !studioContent) {
+        console.error("Cannot find splash screen or main app container.");
+        window.customAlert("Error", "Could not find the main menu container to switch back.");
+        return;
+    }
+
+    // 2. Clear out the dynamically loaded FA studio content
+    studioContent.innerHTML = '';
+    
+    // 3. Hide the main app container
+    mainApp.style.display = 'none';
+
+    // 4. Show the splash screen with an animation delay
+    splashScreen.style.display = 'flex';
+    setTimeout(() => {
+        splashScreen.style.opacity = '1';
+    }, 50);
+}
+    
+    const backToMenuBtn = document.getElementById('backToMenuBtn');
+    if (backToMenuBtn) {
+        backToMenuBtn.addEventListener('click', handleBackToMenu);
+    }
+
+    // --- Zoom and Dragging Logic ---
 
     const setZoom = (pct) => {
         const wrapper = document.getElementById('svgWrapper');
@@ -391,11 +524,15 @@ export function initializeUI() {
     let dragging = false, currentStateG = null, dragOffsetX = 0, dragOffsetY = 0;
 
     function getPoint(evt) {
+        const svg = document.getElementById('dfaSVG');
+        if (!svg) return { x: 0, y: 0 }; 
+
         const pt = svg.createSVGPoint();
         const touch = evt.touches ? evt.touches[0] : evt;
         pt.x = touch.clientX;
         pt.y = touch.clientY;
-        return pt.matrixTransform(svg.getScreenCTM().inverse());
+        const ctm = svg.getScreenCTM();
+        return ctm ? pt.matrixTransform(ctm.inverse()) : { x: 0, y: 0 };
     }
 
     function startDrag(e) {
@@ -408,7 +545,9 @@ export function initializeUI() {
         dragging = true; currentStateG = stateG;
         const p = getPoint(e);
         dragOffsetX = p.x - sObj.x; dragOffsetY = p.y - sObj.y;
-        stateG.querySelector('circle').classList.add('state-selected');
+        
+        const circle = stateG.querySelector('circle');
+        if(circle) circle.classList.add('state-selected');
     }
 
     function moveDrag(e) {
@@ -425,7 +564,8 @@ export function initializeUI() {
         if (!dragging) return;
         dragging = false;
         if(currentStateG) {
-            currentStateG.querySelector('circle').classList.remove('state-selected');
+            const circle = currentStateG.querySelector('circle');
+            if(circle) circle.classList.remove('state-selected');
         }
         currentStateG = null;
     }
@@ -441,13 +581,21 @@ export function initializeUI() {
         svg.addEventListener('touchcancel', endDrag);
     }
     
-    document.querySelector('.toolbar-icon[data-mode="addclick"]').classList.add('active');
-    svg.className.baseVal = 'mode-addclick';
+    // --- Initial Setup ---
+    // FIX: Removed optional chaining
+    const toolbarIcon = document.querySelector('.toolbar-icon[data-mode="addclick"]');
+    if (toolbarIcon) toolbarIcon.classList.add('active');
+    
+    if(svg) svg.className.baseVal = 'mode-addclick';
     initializeState(updateUndoRedoButtons);
     renderAll();
     updateUndoRedoButtons();
-    checkAnswerBtn.style.display = 'none';
-    if(loadingOverlay) lucide.createIcons({nodes: [loadingOverlay]});
+    if(checkAnswerBtn) checkAnswerBtn.style.display = 'none';
+    
+    // FIX: Removed optional chaining from lucide.createIcons
+    if(loadingOverlay && typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+        lucide.createIcons({nodes: [loadingOverlay]});
+    }
 }
 
 function addState(x, y) {
@@ -500,6 +648,7 @@ function deleteTransition(from, to, symbol) {
 function renameState(oldId) {
     const modal = document.getElementById('renameModal');
     const input = document.getElementById('renameInput');
+    if (!modal || !input) return;
     input.value = oldId;
     modal.dataset.oldId = oldId;
     modal.style.display = 'flex';
@@ -509,26 +658,39 @@ function renameState(oldId) {
 
 function openPropsModal(stateId) {
     const modal = document.getElementById('statePropsModal');
+    if (!modal) return;
     modal.dataset.stateId = stateId;
     const st = MACHINE.states.find(s => s.id === stateId);
     if (!st) return;
-    document.getElementById('propInitial').checked = st.initial;
-    document.getElementById('propFinal').checked = st.accepting;
+    if (document.getElementById('propInitial')) document.getElementById('propInitial').checked = st.initial;
+    if (document.getElementById('propFinal')) document.getElementById('propFinal').checked = st.accepting;
     modal.style.display = 'flex';
 }
 
 function showTransModal(from, to) {
     const modal = document.getElementById('transitionModal');
-    document.getElementById('transFrom').value = from;
-    document.getElementById('transTo').value = to;
-    document.getElementById('transSymbol').value = '';
+    if (!modal) return;
+    if (document.getElementById('transFrom')) document.getElementById('transFrom').value = from;
+    if (document.getElementById('transTo')) document.getElementById('transTo').value = to;
+    if (document.getElementById('transSymbol')) document.getElementById('transSymbol').value = '';
     modal.style.display = 'flex';
-    document.getElementById('transSymbol').focus();
+    if (document.getElementById('transSymbol')) document.getElementById('transSymbol').focus();
 }
 
 function hideTransModal() {
-    document.getElementById('transitionModal').style.display = 'none';
+    if (document.getElementById('transitionModal')) {
+        document.getElementById('transitionModal').style.display = 'none';
+        
+        // --- CRITICAL FIX: Block the immediate click event ---
+        blockCanvasClick = true;
+        
+        // Re-enable clicks after a short delay (e.g., 50ms)
+        setTimeout(() => {
+            blockCanvasClick = false;
+        }, 50);
+    }
 }
+
 
 function enforceInitialStateRule() {
     if (!MACHINE || !Array.isArray(MACHINE.states)) return;

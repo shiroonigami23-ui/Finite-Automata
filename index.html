@@ -14,12 +14,18 @@
   <div id="splashScreen"
     style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea,#764ba2);z-index:9999;flex-direction:column;gap:20px;color:#fff;transition:opacity 0.8s ease;">
     <h1 style="font-size:3.5rem;margin:0;text-shadow:0 4px 12px rgba(0,0,0,0.4);">
-      Enhanced Studio
+      Enhanced Automata Studio
     </h1>
     <div style="display:flex; gap: 20px;">
-      <button class="splash-nav-btn" data-target="Automata"
+      <!-- Button to start the FA Studio -->
+      <button class="splash-nav-btn" data-target="FA"
         style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); cursor:pointer; font-weight:700; transition: background 0.3s;">
         Finite Automata
+      </button>
+      <!-- Button to switch to the MM Studio -->
+      <button class="splash-nav-btn" data-target="MM"
+        style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); cursor:pointer; font-weight:700; transition: background 0.3s;">
+        Mealy/Moore
       </button>
        <button class="splash-nav-btn" data-target="PDA" disabled
         style="all:unset;padding:15px 30px; border-radius:12px; font-size:1.5rem; background: rgba(255,255,255,0.05); cursor:not-allowed; opacity:0.6; font-weight:700;">
@@ -31,345 +37,175 @@
       </button>
     </div>
   </div>
+  
+  <!-- This DIV will receive the dynamic HTML content for FA or MM Studio -->
   <div id="mainApp" style="display:none">
-    <div class="app-container" role="application" aria-label="Finite Automata Practice Studio">
-      <header class="header">
-        <h1>Finite Automata Practice</h1>
-        <button id="panelToggleBtn" class="panel-toggle-btn">
-            <i data-lucide="menu"></i>
-        </button>
-      </header>
-      <main class="main-content">
-        <aside id="controlPanel" class="control-panel" aria-label="Controls">
-          <details class="control-section" open>
-            <summary>
-                <i data-lucide="sliders-horizontal"></i>
-                <span>Mode & Interaction</span>
-            </summary>
-            <div class="control-section-content">
-              <div style="display:flex;gap:8px;">
-                <select id="modeSelect" aria-label="Mode select">
-                  <option value="DFA">DFA</option>
-                  <option value="NFA">NFA</option>
-                  <option value="ENFA">ε-NFA</option>
-                  <option value="ENFA_TO_NFA">ε-NFA → NFA</option>
-                  <option value="NFA_TO_DFA">NFA → DFA</option>
-                  <option value="NFA_TO_MIN_DFA">NFA → Minimal DFA</option>
-                  <option value="DFA_TO_MIN_DFA">DFA → Minimal DFA</option>
-                </select>
-              </div>
-            </div>
-          </details>
-          <details class="control-section" open>
-            <summary>
-                <i data-lucide="puzzle"></i>
-                <span>Practice Generator</span>
-            </summary>
-            <div class="control-section-content">
-              <div style="margin-bottom:12px">
-                <div style="display:flex;gap:8px">
-                  <select id="practiceMode" style="flex:1;">
-                    <option value="basic">Basic</option>
-                    <option value="medium">Medium</option>
-                    <option value="easy">Easy</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                  <button class="icon-btn" id="genPracticeBtn">Generate</button>
-                </div>
-                <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-                  <button class="icon-btn" id="showSolBtn">Show Solution</button>
-                  <button class="icon-btn" id="resetPractice">Reset</button>
-                  <button class="icon-btn" id="checkAnswerBtn">Check Answer</button>
-                </div>
-                <div id="practiceBox">No practice generated yet.</div>
-              </div>
-            </div>
-          </details>
-          <details class="control-section">
-            <summary>
-                <i data-lucide="flask-conical"></i>
-                <span>Testing</span>
-            </summary>
-             <div class="control-section-content">
-              <div class="controls-group">
-                <div class="test-panel">
-                  <div class="input"><input id="testInput" placeholder="Enter string (e.g., abbab)" /></div>
-                  <button id="runTestBtn" class="run-btn">Run</button>
-                </div>
-                <div id="randomStringBox">
-                  <i data-lucide="dice-5"></i> <button id="genRandBtn" class="icon-btn">Random</button>
-                </div>
-                <details id="testOptionsCollapse">
-                  <summary><i data-lucide="settings-2"></i> Simulation Options</summary>
-                  <div id="testOptions">
-                    <label><input type="radio" name="simMode" value="auto" checked>
-                      Auto</label>
-                    <label><input type="radio" name="simMode" value="manual"> Manual</label>
-                    <label>Speed:
-                      <select id="testSpeed">
-                        <option value="500">Fast</option>
-                        <option value="1500" selected>Normal</option>
-                        <option value="2500">Slow</option>
-                      </select>
-                    </label>
-                    <div id="manualButtons" style="display:none;">
-                      <button id="stepPrev" class="icon-btn">◀ Prev</button>
-                      <button id="stepNext" class="icon-btn">Next ▶</button>
-                      <button id="stepReset" class="icon-btn">⟲ Reset</button>
-                    </div>
-                  </div>
-                </details>
-                <div id="testOutput" class="output-display">Ready</div>
-              </div>
-            
-              <div style="border-top:1px solid #e6eef8;margin-top:12px;padding-top:12px;">
-                <details id="bulkTestSection">
-                  <summary><i data-lucide="test-tubes"></i> Bulk Testing</summary>
-                  <div>
-                    <textarea id="bulkTestInput" placeholder="Enter test strings (one per line)..."></textarea>
-                    <button id="bulkRunBtn" class="icon-btn" style="margin-top:8px;width:100%;">Run Bulk Test</button>
-                    <div id="bulkTestOutput">
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </div>
-          </details>
-          <details class="control-section">
-            <summary>
-                <i data-lucide="folder"></i>
-                <span>File</span>
-            </summary>
-            <div class="control-section-content">
-              <div class="control-row">
-                <button id="saveMachineBtn" title="Save machine (JSON)"><i data-lucide="save"></i> Save</button>
-                <button id="loadMachineBtn" title="Load machine (JSON)"><i data-lucide="folder-open"></i> Load</button>
-              </div>
-              <div class="control-row">
-                <button id="exportPngBtn" title="Export canvas as PNG"><i data-lucide="image"></i> Export PNG</button>
-                <!-- NEW: Import from Image button -->
-                <button id="importImageBtn" title="Import from Image"><i data-lucide="scan-line"></i> Import Image</button>
-              </div>
-              <input type="file" id="loadFileInput" accept=".json" style="display:none" />
-              <!-- NEW: Hidden file input for image import -->
-              <input type="file" id="importImageInput" accept="image/*" style="display:none" />
-            </div>
-          </details>
-          <details class="control-section" id="librarySection">
-            <summary>
-                <i data-lucide="library"></i>
-                <span>Library</span>
-            </summary>
-            <div class="control-section-content">
-              <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
-                <input id="libSearch" placeholder="Search..." />
-                <select id="libFilter">
-                  <option value="all">All Types</option>
-                  <option value="DFA">DFA</option>
-                  <option value="NFA">NFA</option>
-                  <option value="ENFA">ε-NFA</option>
-                </select>
-                <button id="libRefresh" class="icon-btn" title="Refresh library"><i data-lucide="refresh-cw"></i></button>
-              </div>
-              <div id="libraryList">
-                <div>Library empty — click Refresh to load.</div>
-              </div>
-            </div>
-          </details>
-        </aside>
-        
-        <!-- NEW: Wrapper for main content column -->
-        <div class="main-column">
-            <section id="visualization-panel" class="visualization-panel" aria-label="Visualization" style="position: relative;">
-              <div class="visualization-header" style="display:flex;align-items:center;gap:12px;">
-                <div style="flex:1"><strong>Automata Visualization</strong>
-                  <div class="kv">Mode: <span id="modeLabel">DFA</span></div>
-                </div>
-              </div>
-              <div class="canvas-wrapper" id="canvasWrapper">
-                <div class="canvas-top">
-                  <div class="canvas-toolbar" role="toolbar" aria-label="Canvas toolbar">
-                    <div class="toolbar-icon" id="tool-addclick" title="Add state on canvas click" data-mode="addclick"><i
-                        data-lucide="plus-circle"></i></div>
-                    <div class="toolbar-icon" id="tool-move" title="Move states" data-mode="move"><i data-lucide="move"
-                        ></i></div>
-                    <div class="toolbar-icon" id="tool-transition" title="Add transition" data-mode="transition"><i
-                        data-lucide="git-branch"></i></div>
-                    <div class="toolbar-icon" id="tool-rename" title="Rename state" data-mode="rename"><i
-                        data-lucide="edit-3"></i></div>
-                    <div class="toolbar-icon" id="tool-delete" title="Delete state/transition" data-mode="delete"><i
-                        data-lucide="trash-2"></i></div>
-                    <div class="toolbar-icon" id="tool-stateprops" title="Set state properties" data-mode="stateprops"><i
-                        data-lucide="settings"></i></div>
+      <div id="studioContent">
+          <!-- Studio content injected here by unified_main.js -->
+      </div>
+  </div>
     
-                    <button id="validateBtn" class="toolbar-icon" title="Validate Automaton" style="margin-left:8px"><i
-                        data-lucide="check-circle"></i></button>
-    
-                    <div class="toolbar-icon" id="clearCanvasBtn" title="Clear Canvas"><i data-lucide="file-x"></i></div>
-    
-                    <div id="validationLine" class="validation-box"></div>
-    
-                    <button id="undoBtn" class="toolbar-icon" title="Undo" style="margin-left:auto;"><i
-                        data-lucide="corner-up-left"></i></button>
-                    <button id="redoBtn" class="toolbar-icon" title="Redo"><i data-lucide="corner-up-right"></i></button>
-                  </div>
-                </div>
-                <div class="canvas-area">
-                  <div class="svg-canvas" id="svgWrapper" tabindex="0">
-                    <svg id="dfaSVG" viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" role="img"
-                      aria-label="Automaton canvas">
-                      <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                          <polygon points="0 0, 10 3.5, 0 7" fill="#667eea" />
-                        </marker>
-                        <marker id="arrowhead-export" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                          <polygon points="0 0, 10 3.5, 0 7" fill="#000000" />
-                        </marker>
-                      </defs>
-                      <g id="edges"></g>
-                      <g id="states"></g>
-                      <text id="canvasHint" x="700" y="420" text-anchor="middle" fill="#9aa6b2" font-size="18">Tap canvas to
-                        add a state (use ➕ tool)</text>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-    
-              <div class="zoom-controls" style="position: absolute; right: 30px; top: 150px; z-index: 50;">
-                <button id="zoomInBtn" class="toolbar-icon" title="Zoom In"><i data-lucide="zoom-in"></i></button>
-                <input id="zoomSlider" type="range" min="50" max="200" value="100" />
-                <button id="zoomOutBtn" class="toolbar-icon" title="Zoom Out"><i data-lucide="zoom-out"></i></button>
-                <button id="zoomResetBtn" class="toolbar-icon" title="Reset Zoom"><i data-lucide="refresh-ccw"></i></button>
-              </div>
-            </section>
-            
-            <div id="stepLog">Step log appears here.</div>
-        </div>
-        
-      </main>
-    </div>
-    
-    <!-- NEW: Loading Overlay for AI processing -->
-    <div id="loadingOverlay" class="modal-overlay" style="display:none; z-index: 1000; background: rgba(0, 0, 0, 0.6);">
-        <div class="modal-box" style="text-align: center;">
-            <h3><i data-lucide="bot" style="vertical-align: middle;"></i> Analyzing Image...</h3>
-            <p class="modal-description">The AI is converting your drawing into a machine. This may take a moment.</p>
-        </div>
-    </div>
+  <!-- Global Modals (All modals used by both studios live here) -->
+  <div id="loadingOverlay" class="modal-overlay" style="display:none; z-index: 1000; background: rgba(0, 0, 0, 0.6);">
+      <div class="modal-box" style="text-align: center;">
+          <h3><i data-lucide="bot" style="vertical-align: middle;"></i> Analyzing...</h3>
+          <p class="modal-description">The AI is converting your prompt into a machine. This may take a moment.</p>
+      </div>
+  </div>
+  <div id="transitionModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Add Transition</h3>
+          <p class="modal-description">Enter the symbol for the transition. Use a blank input for an epsilon (ε) transition in an NFA.</p>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="transFrom" class="modal-input" readonly />
+              <input id="transTo" class="modal-input" readonly />
+          </div>
+          <input id="transSymbol" class="modal-input" placeholder="Symbol (blank for ε)" />
+          <div class="modal-actions">
+              <button id="transCancel">Cancel</button>
+              <button id="transSave">Save</button>
+          </div>
+      </div>
+  </div>
+  <div id="statePropsModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>State Properties</h3>
+          <p class="modal-description">Set whether this state is an initial or a final (accepting) state.</p>
+          <div class="modal-prop-row">
+              <label><input type="checkbox" id="propInitial"> Initial State</label>
+          </div>
+          <div class="modal-prop-row">
+              <label><input type="checkbox" id="propFinal"> Final State</label>
+          </div>
+          <div class="modal-actions">
+              <button id="propCancel">Cancel</button>
+              <button id="propSave">Save</button>
+          </div>
+      </div>
+  </div>
+  <div id="renameModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Rename State</h3>
+          <p class="modal-description">Enter the new name for the state. It must be unique.</p>
+          <input id="renameInput" class="modal-input" placeholder="New state name" />
+          <div class="modal-actions">
+              <button id="renameCancel">Cancel</button>
+              <button id="renameSave">Save</button>
+          </div>
+      </div>
+  </div>
+  <div id="confirmClearModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Clear Canvas</h3>
+          <p class="modal-description">Are you sure you want to clear the entire canvas? This action can be undone.</p>
+          <div class="modal-actions">
+              <button id="confirmClearCancel">Cancel</button>
+              <button id="confirmClearConfirm" class="danger-btn">Clear Canvas</button>
+          </div>
+      </div>
+  </div>
+  <div id="alertModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3 id="alertModalTitle">Alert</h3>
+          <p id="alertModalMessage" class="modal-description"></p>
+          <div class="modal-actions">
+              <button id="alertOk">OK</button>
+          </div>
+      </div>
+  </div>
+  
+    <div id="aiAuthModal" class="modal-overlay" style="display:none; z-index: 900;">
+      <div class="modal-box" style="text-align: center;">
+          <h3><i data-lucide="lock" style="vertical-align: middle;"></i> AI Generator Access</h3>
+          <p class="modal-description">Please enter the one-time password to unlock AI generation features for this session.</p>
+          <input id="aiPasswordInput" class="modal-input" type="password" placeholder="One-Time Password" />
+          <div class="modal-actions">
+              <button id="aiAuthCancel">Cancel</button>
+              <button id="aiAuthConfirm">Unlock</button>
+          </div>
+      </div>
+  </div>
 
+  <!-- MM-Specific Modals -->
+  <div id="mealyTransitionModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Add Mealy Transition</h3>
+          <p class="modal-description">Enter the input symbol and the corresponding output symbol. (e.g., Input: 0, Output: a)</p>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="mealyTransFrom" class="modal-input" readonly />
+              <input id="mealyTransTo" class="modal-input" readonly />
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+              <input id="mealyTransSymbol" class="modal-input" placeholder="Input Symbol (e.g., 0)" style="flex:1" />
+              <input id="mealyTransOutput" class="modal-input" placeholder="Output Symbol (e.g., a)" style="flex:1" />
+          </div>
+          <div class="modal-actions">
+              <button id="mealyTransCancel">Cancel</button>
+              <button id="mealyTransSave">Save</button>
+          </div>
+      </div>
+  </div>
+  <div id="mooreStatePropsModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Moore State Properties</h3>
+          <p class="modal-description">Set whether this is the initial state and define the output produced when entering this state.</p>
+          <div class="modal-prop-row">
+              <label><input type="checkbox" id="moorePropInitial"> Initial State</label>
+          </div>
+          <div class="modal-prop-row">
+              <label for="moorePropOutput">Output Symbol $\lambda(q)$:</label>
+              <input id="moorePropOutput" class="modal-input" placeholder="Output (e.g., 0 or a)" />
+          </div>
+          <div class="modal-actions">
+              <button id="moorePropCancel">Cancel</button>
+              <button id="moorePropSave">Save</button>
+          </div>
+      </div>
+  </div>
+  
+  <!-- Modal for saving library entry (Global) -->
+  <div id="saveLibraryModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Save to Library File</h3>
+          <p class="modal-description">Review the auto-generated details for your automaton. This will generate a JSON file ready for your library.</p>
+          <input id="libTitleInput" class="modal-input" placeholder="Title (e.g., DFA for even number of 0s)" />
+          <textarea id="libDescInput" class="modal-input" placeholder="Custom notes about the machine..." style="height: 60px; resize: vertical;"></textarea>
+          <div id="libAlphabetDisplay" style="background: #f1f5f9; padding: 8px 10px; border-radius: 8px; font-size: 0.9em; color: #475569; margin-top: 8px; display: none;"></div>
+          <select id="libTypeInput" class="modal-input" style="margin-top: 12px;">
+                <option value="DFA">DFA</option>
+                <option value="NFA">NFA</option>
+                <option value="ENFA">ε-NFA</option>
+                <option value="MOORE">Moore Machine</option>
+                <option value="MEALY">Mealy Machine</option>
+          </select>
+          <div class="modal-actions">
+              <button id="libSaveCancel">Cancel</button>
+              <button id="libSaveConfirm">Save JSON</button>
+          </div>
+      </div>
+  </div>
+  <!-- Modal for exporting PNG (Global) -->
+  <div id="exportPngModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+          <h3>Export as PNG</h3>
+          <p class="modal-description">Enter a name for the PNG file.</p>
+          <input id="pngNameInput" class="modal-input" placeholder="e.g., dfa-ends-with-0" />
+          <div class="modal-actions">
+              <button id="pngExportCancel">Cancel</button>
+              <button id="pngExportConfirm">Export</button>
+          </div>
+      </div>
+  </div>
 
-    <!-- Modals -->
-    <div id="transitionModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3>Add Transition</h3>
-            <p class="modal-description">Enter the symbol for the transition. Use a blank input for an epsilon (ε) transition in an NFA.</p>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-                <input id="transFrom" class="modal-input" readonly />
-                <input id="transTo" class="modal-input" readonly />
-            </div>
-            <input id="transSymbol" class="modal-input" placeholder="Symbol (blank for ε)" />
-            <div class="modal-actions">
-                <button id="transCancel">Cancel</button>
-                <button id="transSave">Save</button>
-            </div>
-        </div>
-    </div>
-    <div id="statePropsModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3>State Properties</h3>
-            <p class="modal-description">Set whether this state is an initial or a final (accepting) state.</p>
-            <div class="modal-prop-row">
-                <label><input type="checkbox" id="propInitial"> Initial State</label>
-            </div>
-            <div class="modal-prop-row">
-                <label><input type="checkbox" id="propFinal"> Final State</label>
-            </div>
-            <div class="modal-actions">
-                <button id="propCancel">Cancel</button>
-                <button id="propSave">Save</button>
-            </div>
-        </div>
-    </div>
-    <div id="renameModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3>Rename State</h3>
-            <p class="modal-description">Enter the new name for the state. It must be unique.</p>
-            <input id="renameInput" class="modal-input" placeholder="New state name" />
-            <div class="modal-actions">
-                <button id="renameCancel">Cancel</button>
-                <button id="renameSave">Save</button>
-            </div>
-        </div>
-    </div>
-    <div id="confirmClearModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3>Clear Canvas</h3>
-            <p class="modal-description">Are you sure you want to clear the entire canvas? This action can be undone.</p>
-            <div class="modal-actions">
-                <button id="confirmClearCancel">Cancel</button>
-                <button id="confirmClearConfirm" class="danger-btn">Clear Canvas</button>
-            </div>
-        </div>
-    </div>
-    <div id="alertModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3 id="alertModalTitle">Alert</h3>
-            <p id="alertModalMessage" class="modal-description"></p>
-            <div class="modal-actions">
-                <button id="alertOk">OK</button>
-            </div>
-        </div>
-    </div>
-    <!-- Modal for saving library entry -->
-    <div id="saveLibraryModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3>Save to Library File</h3>
-            <p class="modal-description">Review the auto-generated details for your automaton. This will generate a JSON file ready for your library.</p>
-            <input id="libTitleInput" class="modal-input" placeholder="Title (e.g., DFA for even number of 0s)" />
-            <textarea id="libDescInput" class="modal-input" placeholder="Custom notes about the machine..." style="height: 60px; resize: vertical;"></textarea>
-            <div id="libAlphabetDisplay" style="background: #f1f5f9; padding: 8px 10px; border-radius: 8px; font-size: 0.9em; color: #475569; margin-top: 8px; display: none;"></div>
-            <select id="libTypeInput" class="modal-input" style="margin-top: 12px;">
-                  <option value="DFA">DFA</option>
-                  <option value="NFA">NFA</option>
-                  <option value="ENFA">ε-NFA</option>
-            </select>
-            <div class="modal-actions">
-                <button id="libSaveCancel">Cancel</button>
-                <button id="libSaveConfirm">Save JSON</button>
-            </div>
-        </div>
-    </div>
-    <!-- Modal for exporting PNG -->
-    <div id="exportPngModal" class="modal-overlay" style="display:none">
-        <div class="modal-box">
-            <h3>Export as PNG</h3>
-            <p class="modal-description">Enter a name for the PNG file.</p>
-            <input id="pngNameInput" class="modal-input" placeholder="e.g., dfa-ends-with-0" />
-            <div class="modal-actions">
-                <button id="pngExportCancel">Cancel</button>
-                <button id="pngExportConfirm">Export</button>
-            </div>
-        </div>
-    </div>
-
+  <!-- Shared Practice Banks (Must be defined globally before unified_main loads the UI) -->
   <script src="practice-bank.js" defer></script>
-  <!-- All JS files are now modules -->
-  <script type="module" src="utils.js"></script>
-  <script type="module" src="state.js"></script>
-  <script type="module" src="renderer.js"></script>
-  <script type="module" src="automata.js"></script>
-  <script type="module" src="equivalence.js"></script>
-  <script type="module" src="simulation.js"></script>
-  <script type="module" src="practice.js"></script>
-  <script type="module" src="file.js"></script>
-  <script type="module" src="animation.js"></script>
-  <script type="module" src="conversion-animation.js"></script>
-  <script type="module" src="library-loader.js"></script>
-  <script type="module" src="ui.js"></script>
-  <script type="module" src="main.js"></script>
+  <script src="moore_mealy_practice_bank.js" defer></script>
+  
+  <script type="module" src="ai-auth.js"></script>
+  <!-- The single entry point that manages all module loading and UI initialization -->
+  <script type="module" src="unified_main.js"></script>
 
 </body>
 
 </html>
 
-                                                   

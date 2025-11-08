@@ -117,6 +117,7 @@ details.control-section {
 
 .control-panel select,
 .control-panel input,
+.control-panel textarea,
 .control-panel .icon-btn,
 .control-panel #practiceBox,
 .control-panel #bulkTestOutput,
@@ -207,6 +208,8 @@ details.control-section {
 .control-section summary [data-lucide='flask-conical'] { stroke: #009688; }
 .control-section summary [data-lucide='folder'] { stroke: #ff9800; }
 .control-section summary [data-lucide='library'] { stroke: #e91e63; }
+.control-section summary [data-lucide='wand-2'] { stroke: #7c3aed; }
+
 
 .toolbar-icon:hover {
   transform: scale(1.15);
@@ -563,6 +566,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     
   .control-panel.open select,
   .control-panel.open input,
+  .control-panel.open textarea,
   .control-panel.open .icon-btn,
   .control-panel.open #practiceBox,
   .control-panel.open #bulkTestOutput,
@@ -608,4 +612,4 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .initial-pulse {
   animation: pulseInitial 2.2s infinite ease-in-out;
-                     }
+}

@@ -1,14 +1,39 @@
 import { animateMachineDrawing } from './animation.js';
 
-const LIB_URL = './library.json';
+// --- Minimal Embedded FA Library Content (Avoids Fetch Error) ---
+const EMBEDDED_LIB_JSON = `
+[
+    {
+        "id": "dfa_even_0s",
+        "title": "DFA: Even number of 0s",
+        "type": "DFA",
+        "description": "Accepts binary strings containing an even number of '0's.",
+        "machine": {
+            "states": [
+                {"id": "qE", "initial": true, "accepting": true, "x": 100, "y": 300},
+                {"id": "qO", "initial": false, "accepting": false, "x": 300, "y": 300}
+            ],
+            "transitions": [
+                {"from": "qE", "to": "qO", "symbol": "0"},
+                {"from": "qE", "to": "qE", "symbol": "1"},
+                {"from": "qO", "to": "qE", "symbol": "0"},
+                {"from": "qO", "to": "qO", "symbol": "1"}
+            ],
+            "alphabet": ["0", "1"]
+        }
+    }
+]
+`;
+// --- End Embedded Library Content ---
+
+// const LIB_URL = './library.json'; // Removed, now using embedded data
 
 async function fetchLibrary() {
   try {
-    const res = await fetch(LIB_URL + '?t=' + Date.now());
-    if (!res.ok) throw new Error('Failed to fetch library.json: ' + res.status);
-    return await res.json();
+    // Parse the embedded JSON string directly
+    return JSON.parse(EMBEDDED_LIB_JSON);
   } catch (e) {
-    console.error(e);
+    console.error("Error parsing FA Library JSON:", e);
     return null;
   }
 }
@@ -37,12 +62,14 @@ function renderEntry(entry) {
   if (hasMachineData) {
       openBtn.innerHTML = '<i data-lucide="play-circle"></i> Open';
       openBtn.onclick = () => {
-          animateMachineDrawing({ ...machineData, type: entry.type || 'DFA', title: entry.title });
+          // Use the unified context setMachine function
+          const machineToLoad = { ...machineData, type: entry.type || 'DFA', title: entry.title };
+          window.StudioContext.loadMachine(machineToLoad);
           
           const modeSelect = document.getElementById('modeSelect');
           if (modeSelect) {
               modeSelect.value = entry.type || 'DFA';
-              modeSelect.dispatchEvent(new Event('change'));
+              // No need to dispatch change event, loading handles setting the type
           }
       };
   } else {
@@ -82,6 +109,8 @@ async function refreshLibrary() {
 
 function renderLibraryItems(data) {
   const listEl = document.getElementById('libraryList');
+  if (!listEl) return;
+    
   listEl.innerHTML = '';
   const q = (document.getElementById('libSearch') || {value:''}).value.trim().toLowerCase();
   const f = (document.getElementById('libFilter') || {value:'all'}).value;
@@ -104,10 +133,11 @@ function renderLibraryItems(data) {
 
 export function initializeLibrary() {
     const refreshBtn = document.getElementById('libRefresh');
-    if (refreshBtn) refreshBtn.onclick = refreshLibrary;
-    
     const search = document.getElementById('libSearch');
     const filter = document.getElementById('libFilter');
+    
+    if (refreshBtn) refreshBtn.onclick = refreshLibrary;
+    
     if (search) search.oninput = () => renderLibraryItems(window._LIB_DATA || []);
     if (filter) filter.onchange = () => renderLibraryItems(window._LIB_DATA || []);
 

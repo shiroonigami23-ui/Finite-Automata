@@ -1,31 +1,45 @@
-// simulation.js
 import { MACHINE, simState } from './state.js';
 import { sleep } from './utils.js';
-import { computeEpsilonClosure } from './automata.js'; // CORRECTED: Added missing import
+import { computeEpsilonClosure } from './automata.js';
 
-export async function runSimulation(inputStr) {
-    simState.steps.length = 0;
-    simState.index = 0;
-    clearTimeout(simState.timer);
-    document.getElementById('stepLog').innerHTML = '';
-    const testOutput = document.getElementById('testOutput');
-    testOutput.textContent = 'Simulating...';
+/**
+ * Runs a simulation on a given machine and input string.
+ * Can operate in UI mode (updating the DOM) or silent mode (returning a result).
+ * @param {string} inputStr The string to test.
+ * @param {object} [machineToTest=MACHINE] The automaton to run against. Defaults to the global MACHINE.
+ * @returns {Promise<{isAccepted: boolean}> | void} If a machineToTest is provided, returns a result object. Otherwise, updates the UI.
+ */
+export async function runSimulation(inputStr, machineToTest = null) {
+    const isSilentMode = machineToTest !== null;
+    const machine = machineToTest || MACHINE;
 
-    const startStates = MACHINE.states.filter(s => s.initial).map(s => s.id);
-
-    if (startStates.length === 0) {
-        testOutput.textContent = 'Error: No initial state defined.';
-        testOutput.style.color = '#e53e3e';
-        return;
+    if (!isSilentMode) {
+        simState.steps.length = 0;
+        simState.index = 0;
+        clearTimeout(simState.timer);
+        document.getElementById('stepLog').innerHTML = '';
+        const testOutput = document.getElementById('testOutput');
+        testOutput.textContent = 'Simulating...';
     }
 
-    let currentStates = (MACHINE.type === 'ENFA') ? computeEpsilonClosure(startStates, MACHINE.transitions) : [...startStates];
+    const startStates = machine.states.filter(s => s.initial).map(s => s.id);
 
-    if (MACHINE.type === 'DFA' && currentStates.length > 1) {
+    if (startStates.length === 0) {
+        if (!isSilentMode) {
+            const testOutput = document.getElementById('testOutput');
+            testOutput.textContent = 'Error: No initial state defined.';
+            testOutput.style.color = '#e53e3e';
+        }
+        return { isAccepted: false };
+    }
+
+    let currentStates = (machine.type === 'ENFA') ? computeEpsilonClosure(startStates, machine.transitions) : [...startStates];
+
+    if (machine.type === 'DFA' && currentStates.length > 1) {
         currentStates = [currentStates[0]];
     }
 
-    simState.steps.push({ start: true, active: [...currentStates] });
+    if (!isSilentMode) simState.steps.push({ start: true, active: [...currentStates] });
 
     let halted = false;
     for (const symbol of inputStr) {
@@ -34,9 +48,9 @@ export async function runSimulation(inputStr) {
         const frame = { before: [...currentStates], symbol: symbol, steps: [], after: [] };
         const nextStates = new Set();
 
-        if (MACHINE.type === 'DFA') {
+        if (machine.type === 'DFA') {
             if (currentStates.length > 0) {
-                const transition = MACHINE.transitions.find(t => t.from === currentStates[0] && t.symbol === symbol);
+                const transition = machine.transitions.find(t => t.from === currentStates[0] && t.symbol === symbol);
                 if (transition) {
                     frame.steps.push({ from: transition.from, to: transition.to, symbol: transition.symbol });
                     nextStates.add(transition.to);
@@ -44,7 +58,7 @@ export async function runSimulation(inputStr) {
             }
         } else {
             for (const stateId of currentStates) {
-                MACHINE.transitions
+                machine.transitions
                     .filter(t => t.from === stateId && t.symbol === symbol)
                     .forEach(t => {
                         frame.steps.push({ from: t.from, to: t.to, symbol: t.symbol });
@@ -53,22 +67,29 @@ export async function runSimulation(inputStr) {
             }
         }
 
-        const afterStates = (MACHINE.type === 'ENFA') ? computeEpsilonClosure([...nextStates], MACHINE.transitions) : [...nextStates];
+        const afterStates = (machine.type === 'ENFA') ? computeEpsilonClosure([...nextStates], machine.transitions) : [...nextStates];
 
         frame.after = afterStates;
-        simState.steps.push(frame);
+        if (!isSilentMode) simState.steps.push(frame);
         currentStates = afterStates;
 
         if (currentStates.length === 0) {
             halted = true;
         }
     }
+    
+    const isAccepted = currentStates.some(sid => machine.states.find(s => s.id === sid && s.accepting));
 
+    if (isSilentMode) {
+        return { isAccepted };
+    }
+    
     simState.steps.push({ end: true, active: [...currentStates] });
-
     document.getElementById('manualButtons').style.display = 'none';
     playAuto();
 }
+
+// --- The rest of simulation.js (showStep, playAuto) remains unchanged ---
 
 export async function showStep(idx) {
     if (idx < 0 || idx >= simState.steps.length) {

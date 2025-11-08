@@ -1,5 +1,6 @@
-// --- Single Source of Truth for Application State ---
-// This module now has ZERO outgoing dependencies, which is critical.
+// --- Single Source of Truth for Mealy/Moore Application State ---
+
+import { renderAll as mmRenderAll } from './moore_mealy_renderer.js'; // Import the correct renderer
 
 export let MACHINE = {};
 export let UNDO_STACK = [];
@@ -8,17 +9,20 @@ export let CURRENT_MODE = 'addclick';
 export let TRANS_FROM = null;
 export let CURRENT_PRACTICE = null;
 
+// The simulation state now tracks input, current output string, and steps.
 export const simState = {
+    input: '',
+    output: '',
     steps: [],
     index: 0,
     timer: null,
 };
 
-// This will hold the renderAll function from renderer.js, passed in from main.js.
-let renderFunction = () => { console.error("Render function not set!"); };
+// This will hold the renderAll function from moore_mealy_renderer.js.
+let renderFunction = mmRenderAll;
 
 /**
- * Injects the main render function into the state module to avoid circular dependencies.
+ * Injects the main render function into the state module.
  * @param {function} fn The renderAll function.
  */
 export function setRenderFunction(fn) {
@@ -27,21 +31,8 @@ export function setRenderFunction(fn) {
 
 // --- State Mutation Functions ---
 
-/**
- * Sets the machine object for the FA studio.
- * NOTE: When called via StudioContext, rendering is handled there.
- * When called internally (like during Undo/Redo), we call renderFunction().
- * @param {object} newMachine The new machine state.
- */
 export function setMachine(newMachine) {
-    MACHINE = {
-        type: 'DFA',
-        states: [],
-        transitions: [],
-        alphabet: [],
-        title: 'Untitled Automaton',
-        ...newMachine
-    };
+    MACHINE = newMachine;
 }
 
 export function setCurrentMode(mode) {
@@ -57,37 +48,51 @@ export function setCurrentPractice(practice) {
 }
 
 export function pushUndo(updateUIFunction) {
+    // Only push the machine state for undo/redo
     UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
     REDO_STACK.length = 0;
-    updateUIFunction(); // This function (e.g., updateUndoRedoButtons) is passed in from the UI module.
+    // updateUIFunction is updateUndoRedoButtons from the UI module.
+    if (updateUIFunction) updateUIFunction(); 
 }
 
+/**
+ * Performs an undo operation and updates the UI buttons.
+ * @param {function} updateUIFunction Function to update undo/redo buttons.
+ */
 export function doUndo(updateUIFunction) {
     if (UNDO_STACK.length > 0) {
         REDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
-        // Note: setMachine is called, but render is handled locally here for undo/redo consistency
-        MACHINE = UNDO_STACK.pop(); 
+        setMachine(UNDO_STACK.pop());
         renderFunction();
-        updateUIFunction();
+        if (updateUIFunction) updateUIFunction();
     }
 }
 
+/**
+ * Performs a redo operation and updates the UI buttons.
+ * @param {function} updateUIFunction Function to update undo/redo buttons.
+ */
 export function doRedo(updateUIFunction) {
     if (REDO_STACK.length > 0) {
         UNDO_STACK.push(JSON.parse(JSON.stringify(MACHINE)));
-        // Note: setMachine is called, but render is handled locally here for undo/redo consistency
-        MACHINE = REDO_STACK.pop();
+        setMachine(REDO_STACK.pop());
         renderFunction();
-        updateUIFunction();
+        if (updateUIFunction) updateUIFunction();
     }
 }
 
+/**
+ * Initializes the state for the Mealy/Moore Studio.
+ * Moore is the default starting type.
+ * @param {function} updateUIFunction 
+ */
 export function initializeState(updateUIFunction) {
     setMachine({
-        type: 'DFA',
+        type: 'MOORE', // Default to Moore Machine
         states: [],
         transitions: [],
-        alphabet: []
+        inputAlphabet: [],
+        outputAlphabet: []
     });
     UNDO_STACK = [];
     REDO_STACK = [];
@@ -96,8 +101,13 @@ export function initializeState(updateUIFunction) {
     setCurrentPractice(null);
     simState.steps = [];
     simState.index = 0;
+    simState.input = '';
+    simState.output = '';
     if (simState.timer) clearTimeout(simState.timer);
     simState.timer = null;
+    
+    // Ensure the render function is correctly pointing to the local one on init
+    setRenderFunction(mmRenderAll);
 
     if (updateUIFunction) updateUIFunction();
 }

@@ -46,3 +46,33 @@ export function addLogMessage(message, icon) {
         });
     }
 }
+
+/**
+ * A wrapper around fetch to automatically retry on transient errors with exponential backoff.
+ * @param {string} url The URL to fetch.
+ * @param {object} options The fetch options.
+ * @param {number} retries Number of retries left.
+ * @returns {Promise<Response>} The fetch response.
+ */
+export async function fetchWithRetry(url, options, retries = 3) {
+    const maxRetries = 3;
+    try {
+        const response = await fetch(url, options);
+        if (response.status === 503 && retries > 0) {
+            // Wait with exponential backoff and jitter
+            const delay = (Math.pow(2, maxRetries - retries) + Math.random()) * 1000;
+            // Do not log retries to the console as errors, it's expected behavior
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(url, options, retries - 1);
+        }
+        return response;
+    } catch (error) {
+        if (retries > 0) {
+            const delay = (Math.pow(2, maxRetries - retries) + Math.random()) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(url, options, retries - 1);
+        } else {
+            throw error;
+        }
+    }
+}
