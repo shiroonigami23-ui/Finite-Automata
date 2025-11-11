@@ -682,12 +682,12 @@ function hideTransModal() {
         document.getElementById('transitionModal').style.display = 'none';
         
         // --- CRITICAL FIX: Block the immediate click event ---
-        blockCanvasClick = true;
+        //blockCanvasClick = true;
         
         // Re-enable clicks after a short delay (e.g., 50ms)
-        setTimeout(() => {
-            blockCanvasClick = false;
-        }, 50);
+        //setTimeout(() => {
+           // blockCanvasClick = false;
+        //}, 50);
     }
 }
 
