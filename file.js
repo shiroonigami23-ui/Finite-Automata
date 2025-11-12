@@ -236,6 +236,7 @@ export function saveMachine() {
 }
 
 export function handleSaveWithMetadata() {
+     if (event) event.stopImmediatePropagation();
     const title = document.getElementById('libTitleInput').value.trim();
     const userDescription = document.getElementById('libDescInput').value.trim();
     const type = document.getElementById('libTypeInput').value;
@@ -307,6 +308,7 @@ export function loadMachine(e, updateUIFunction) {
 }
 
 export function exportPng(fileName = 'automaton') {
+     if (event) event.stopImmediatePropagation();
     const svgEl = document.getElementById("dfaSVG");
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
